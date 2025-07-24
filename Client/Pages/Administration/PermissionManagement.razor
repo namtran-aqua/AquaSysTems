@@ -1,0 +1,55 @@
+﻿@page "/permission-management"
+@inject HttpClient httpClient
+@using AntDesign
+@inject IMessageService Message
+@inject ModalService modal
+@using AquaSolution.Client.Components.Administration
+@using AquaSolution.Shared.Permissions
+<div class="user-management-container">
+    <div class="mb-3">
+        <button @onclick="@(async () => await CreatedPermissionAsync())" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Created Permission
+        </button>
+    </div>
+    <style>
+        .pages-style {
+            height: 30px;
+            font-size: 12px;
+        }
+    </style>
+    <div style="width:100%;overflow-x:scroll ;max-height:75vh; ">
+        <Collapse>
+            @foreach (var menu in Menus)
+            {
+                <Panel Header="@menu.Name" Key="@menu.Id.ToString()">
+                    <Collapse>
+                        @foreach (var pageItem in menu.Pages)
+                        {
+                            <Panel Header="@pageItem.Name" Key="@pageItem.Id.ToString()">
+                                <p><strong>URL:</strong>@pageItem.Url</p>
+                                <Table TItem="HandlePermissionDto" DataSource="pageItem.HandlePermissionDtos" HidePagination Size="TableSize.Small">
+
+                                    <ChildContent Context="perm">
+                                        <PropertyColumn Title="PermissionName" Property="c => c.Action"></PropertyColumn>
+                                        @*           <Button Class="btn btn-danger" Type="ButtonType.Text" OnClick="@(async () => await DeleteAsync(perm))" Style="text-align: left;">
+                                            <Icon Type="delete"/> Delete
+                                        </Button> *@
+                                        <Column Fixed="ColumnFixPlacement.Right" TData="HandlePermissionDto" Title="Acction" Context="row">
+                                            <Template>
+                                                <button class="btn btn-danger"  @onclick="@(async () => await DeleteAsync(perm))" Style="text-align: left;">
+                                                    <Icon Type="delete" /> Delete
+                                                </button>
+                                            </Template>
+                                        </Column>
+                                    </ChildContent>
+                                </Table>
+                            </Panel>
+                        }
+                    </Collapse>
+                </Panel>
+            }
+        </Collapse>
+    </div>
+
+</div>
+<CreatedPermissionModal OnSave="LoadData" @ref="createdPermissionModal" />

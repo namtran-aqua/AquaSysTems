@@ -1,16 +1,80 @@
-﻿using AquaService.Server.Services;
+﻿using AquaSolution.Server.Services.UserService;
+using AquaSolution.Shared.UserManagements;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace AquaSolution.Server.Controllers.UserManagements
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class UserController :ControllerBase
+    public class UserController : ControllerBase
     {
-        [HttpGet("mock-users")]
-        public IActionResult GetMockUsers()
+        private readonly IUserService _userService;
+
+        public UserController(IUserService userService)
         {
-            return Ok(TokenServiceMock.GetMockUsers());
+            _userService = userService;
         }
+
+        [HttpGet("get-curernUser/{userId}")]
+        public async Task<UserDto?> GetCurrentUser(Guid userId)
+        {
+            var currentUser = await _userService.GetCurrentUserAsync(userId);
+            if (currentUser == null)
+                return new UserDto();
+
+            return currentUser;
+        }
+        [HttpGet("get-all")]
+        public async Task<List<UserDto?>> GetAll()
+        {
+            var data = await _userService.GetAllUser();
+
+            return data;
+        }
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return Ok(new { message = "Logged out successfully" });
+        }
+        [HttpPost("create")]
+        public async Task<IActionResult> CreateUser([FromBody] CreatedAndUpdateUserDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _userService.CreatedAsync(dto);
+            if (result)
+                return Ok(new { message = "User created successfully" });
+
+            return StatusCode(500, new { message = "Failed to create user" });
+        }
+        [HttpDelete("delete/{id}")]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            var result = await _userService.DeleteAsync(id);
+            if (result)
+                return Ok(new { success = true, message = "Xóa thành công" });
+
+            return NotFound(new { success = false, message = "User không tồn tại" });
+        }
+        [HttpPut("update")]
+        public async Task<IActionResult> Update([FromBody] CreatedAndUpdateUserDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _userService.UpdateAsync(dto);
+
+            if (result)
+                return Ok(new { success = true, message = "Cập nhật thành công" });
+
+            return BadRequest(new { success = false, message = "Cập nhật thất bại" });
+        }
+
     }
 }

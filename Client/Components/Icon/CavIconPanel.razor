@@ -1,0 +1,13 @@
+﻿@using AntDesign
+<div class="panel-body" style="height: 400px; overflow-y:scroll">
+    <div style="border: 1px  #000000; width: 90%; margin: 0 auto;">
+        <RadioGroup @bind-Value="RadioValue" Size="InputSize.Large" OnChange="OnChange">
+            @foreach (var item in IconList)
+            {
+                <Radio RadioButton Value="@(item)">
+                    <Icon Type="@item" Theme="IconThemeType.Outline" />
+                </Radio>
+            }
+        </RadioGroup>
+    </div>
+</div>

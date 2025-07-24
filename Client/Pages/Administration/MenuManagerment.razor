@@ -1,0 +1,43 @@
+﻿@page "/menu-management"
+@inject HttpClient httpClient
+@using AquaSolution.Client.Components.Administration
+@using AquaSolution.Shared.Menus
+@using AquaSolution.Shared.Pages
+@using AntDesign
+
+<div class="user-management-container">
+    <div class="mb-3">
+
+        <button @onclick="CreatedMenu" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Created Menus
+        </button>
+
+
+    </div>
+    <style>
+        .pages-style {
+            height: 30px;
+            font-size: 12px;
+        }
+    </style>
+    <div style="width:100%;overflow-x:scroll ;max-height:75vh; ">
+        <Collapse>
+            @foreach (var menu in Menus)
+            {
+                <Panel Header="@menu.Name" Key="@menu.Id.ToString()">
+                    <button class="btn btn-primary pages-style" @onclick="@(async () => await CreatedPage(menu))"> 
+                        <i class="fas fa-plus"></i>Created Pages</button>
+                    <Table TItem="PageDto" DataSource="@menu.Pages" HidePagination Size="TableSize.Small">
+                        <ChildContent Context="p">
+                            <PropertyColumn Title="PageMane" Width="250" Property="c => c.Name"></PropertyColumn>
+                            <PropertyColumn Title="URL" Width="300" Property="c => c.Url"></PropertyColumn>
+                            <PropertyColumn Title="Permission" Width="auto" Property="c => c.JoinPermissions"></PropertyColumn>
+                        </ChildContent>
+                    </Table>
+                </Panel>
+            }
+        </Collapse>
+    </div>
+</div>
+<CreatedMenuModal OnSave="LoadMenu" @ref="createdMenuModal"></CreatedMenuModal>
+<CreatedPagesModal OnSave="LoadMenu" @ref="createdPagesModal"></CreatedPagesModal>

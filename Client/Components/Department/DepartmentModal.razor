@@ -1,0 +1,42 @@
+﻿@using AntDesign
+@using AquaSolution.Client.Components.Icon
+@using AquaSolution.Shared.CommonDto
+@using AquaSolution.Shared.Departments
+@using AquaSolution.Shared.Enum
+@inject HttpClient httpClient
+@inject IMessageService Message
+@{
+    RenderFragment footer = @<Template>
+
+        <Button OnClick="@SaveAsync" @key="@( "submit" )"
+                Type="ButtonType.Primary">
+            Save
+        </Button>
+
+        <Button Style="color:#808080" OnClick="@HandleCancel" @key="@("back")">Close</Button>
+
+    </Template>;
+}
+<Modal @bind-Visible="IsModalVisible" Title="@Title" Width="600" Footer="@footer">
+    <EditForm Model="_model" OnValidSubmit="SaveAsync">
+        <DataAnnotationsValidator />
+        <Form @ref="@formRef" TModel="DepartmentDto" Model="_model" Layout="FormLayout.Horizontal"
+              LabelColSpan="6" WrapperColSpan="18">
+            <ChildContent Context="formCtx">
+                <FormItem Required="true" Label="Department Code">
+                    <Input @bind-Value="_model.Code" />
+                </FormItem>
+
+                <FormItem Required="true" Label="Department Name">
+                    <Input @bind-Value="_model.Name" />
+                </FormItem>
+
+                <FormItem Label="Department node">
+                    <TextArea @bind-Value="_model.Note"  Rows="2"/>
+                </FormItem>
+            </ChildContent>
+        </Form>
+
+    </EditForm>
+</Modal>
+

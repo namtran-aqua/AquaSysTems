@@ -1,0 +1,8 @@
+﻿@using AntDesign
+<Modal Visible="@Visible"
+       OnOk="HandleOk"
+       OnCancel="HandleCancel"
+       Draggable="true"
+       DragInViewport="true">
+    <CavIconPanel @bind-RadioValue="IconValue" OnChange="IconValueChanged"></CavIconPanel>
+</Modal>

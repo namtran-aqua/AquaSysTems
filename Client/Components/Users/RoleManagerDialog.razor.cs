@@ -1,4 +1,5 @@
-﻿using AquaSolution.Shared.UserManagements;
+﻿using AquaSolution.Shared.Roles;
+using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Components;
 using System.Net.Http.Json;
 
@@ -14,34 +15,31 @@ namespace AquaSolution.Client.Components.Users
         private bool IsLoading { get; set; }
         private bool HasError { get; set; }
         private string ErrorMessage { get; set; }
-        private string UserId { get; set; }
+        private Guid UserId { get; set; }
         private string Username { get; set; }
 
         [Inject] private HttpClient Http { get; set; }
 
-        public void Show(string userId, List<string> userRoles, string username = null)
+        public void Show(UserDto user)
         {
-            UserId = userId;
-            Username = username ?? "Người dùng";
-            LoadRoles(userRoles);
+            UserId = user.Id;
+            Username = user.FullName;
+            LoadRoles(user.Roles);
             IsVisible = true;
             StateHasChanged();
         }
 
-        private async void LoadRoles(List<string> userRoles)
+        private async void LoadRoles(List<RoleDto> userRoles)
         {
             IsLoading = true;
             HasError = false;
-
+            Roles = new List<RoleDto>();
             try
             {
-                // Load tất cả role từ API
                 Roles = await Http.GetFromJsonAsync<List<RoleDto>>("api/roles/get-all");
-
-                // Đánh dấu role nào user đang có
                 foreach (var role in Roles)
                 {
-                    role.IsSelected = userRoles.Contains(role.Name);
+                    role.IsSelected = userRoles.Select(x=>x.Name).Contains(role.Name);
                 }
             }
             catch (Exception ex)
@@ -64,7 +62,7 @@ namespace AquaSolution.Client.Components.Users
         {
             IsVisible = false;
             Roles = new List<RoleDto>();
-            UserId = null;
+            UserId = Guid.Empty;
             Username = null;
         }
 
@@ -73,17 +71,32 @@ namespace AquaSolution.Client.Components.Users
             IsLoading = true;
             try
             {
-                // Lấy danh sách role được chọn
-                var selectedRoles = Roles
+                var selectedRoles = new List<RoleDto>();
+                var listRoleUpdate = new List<UpdateUserRoleDto>();
+                selectedRoles = Roles
                     .Where(r => r.IsSelected)
-                    .Select(r => r.Name)
                     .ToList();
+                if (selectedRoles.Count > 0)
+                {
+                    foreach (var item in selectedRoles)
+                    {
+                        listRoleUpdate.Add(new UpdateUserRoleDto
+                        {
+                            Id = item.Id,
+                            Name = item.Name,
+                            Description = item.Description,
+                            Permissions =item.Permissions,
+                            IsSelected = item.IsSelected
+                        });
+                    }
+                }
 
-                // Gọi API cập nhật
+
+
                 var response = await Http.PostAsJsonAsync(
-                    $"api/users/{UserId}/roles",
-                    selectedRoles);
-
+                        $"api/roles/{UserId}/Update-user-role",
+                        selectedRoles
+                    );
                 if (response.IsSuccessStatusCode)
                 {
                     Close();

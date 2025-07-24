@@ -1,0 +1,73 @@
+﻿@using AntDesign
+
+@inject IMessageService Message
+@{
+    RenderFragment footer = @<Template>
+
+        <Button OnClick="@SaveAsync" @key="@( "submit" )"
+                Type="ButtonType.Primary">
+            Save
+        </Button>
+
+        <Button Style="color:#808080" OnClick="@Close" @key="@("back")">Close</Button>
+
+    </Template>;
+}
+<Modal @bind-Visible="IsModalVisible" Style="z-index: 9999;width:1000px" Footer="@footer">
+    <Form @ref="@formRef"
+        Model="@CreatedUserDto"
+          Layout="FormLayout.Vertical"
+          OnFinish="SaveAsync"
+          ValidateMode="FormValidateMode.Complex"
+          ValidateOnChange="true">
+        <Row Gutter="16">
+            <Col Span="5">
+            <FormItem Required="true" Label="FirstName">
+                <TextArea ShowCount MinRows="1" MaxRows="1" @bind-Value="@CreatedUserDto.FirstName" AllowClear="true" />
+            </FormItem>
+            </Col>
+            <Col Span="5">
+            <FormItem Required="true" Label="LastName">
+                <TextArea ShowCount MinRows="1" MaxRows="1" @bind-Value="@CreatedUserDto.LastName" AllowClear="true" />
+            </FormItem>
+            </Col>
+            <Col Span="4">
+            <FormItem Required="true" Label="WorkDayId">
+                <TextArea ShowCount MinRows="1" MaxRows="1" @bind-Value="@CreatedUserDto.WorkDayId" AllowClear="true" />
+            </FormItem>
+            </Col>
+            <Col Span="10">
+            <FormItem Required="true" Label="Email">
+                <TextArea ShowCount MinRows="1" MaxRows="1" @bind-Value="@CreatedUserDto.Email" AllowClear="true" />
+            </FormItem>
+            </Col>
+        </Row>
+        <Row Gutter="16">
+            <Col Span="6">
+            <FormItem Required="true" Label="PhoneNumber">
+                <TextArea ShowCount MinRows="1" MaxRows="1" @bind-Value="@CreatedUserDto.PhoneNumber" AllowClear="true" />
+            </FormItem>
+            </Col>
+            <Col Span="8">
+            <FormItem Required="true" Label="User Group">
+                @*   <TextArea ShowCount MinRows="1" MaxRows="1" @bind-Value="@CreatedUserDto.GroupId" AllowClear="true" /> *@
+            </FormItem>
+            </Col>
+            <Col Span="8">
+            <FormItem Required="true" Label="Manager">
+                @*   <TextArea ShowCount MinRows="1" MaxRows="1" @bind-Value="@CreatedUserDto.GroupId" AllowClear="true" /> *@
+            </FormItem>
+            </Col>
+            @if (IsEdit)
+            {
+                <AntDesign.Col Span="2">
+                    <FormItem Required="true" Label="IsActive">
+                        <Switch @bind-Value="@CreatedUserDto.IsActive" />
+                    </FormItem>
+                </AntDesign.Col>
+            }
+
+        </Row>
+    </Form>
+</Modal>
+

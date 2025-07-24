@@ -1,30 +1,40 @@
-﻿
+﻿using AquaService.Shared.AuthModels;
+using AquaSolution.Server.Services.UserService;
+using AquaSolution.Shared.AuthModels;
 using Microsoft.AspNetCore.Mvc;
-using AquaService.Server.Services;
-using AquaService.Shared.AuthModels;
-namespace AquaService.Server.Controllers.Authentications
+
+[ApiController]
+[Route("api/[controller]")]
+public class AuthController : ControllerBase
 {
+    private readonly IUserService _userService;
 
-
-    [ApiController]
-    [Route("api/[controller]")]
-    public class AuthController : ControllerBase
+    public AuthController(IUserService userService)
     {
-        private readonly TokenServiceMock _tokenService;
-        public AuthController(TokenServiceMock tokenService) => _tokenService = tokenService;
-
-        [HttpPost("login")]
-        public IActionResult Login(LoginRequest request)
-        {
-            var token = _tokenService.GenerateToken(request.UserName, request.Password);
-            if (token == null) return Unauthorized();
-
-            return Ok(new LoginResponse
-            {
-                Token = token,
-                Expiration = DateTime.UtcNow.AddHours(2)
-            });
-        }
+        _userService = userService;
     }
 
+    [HttpPost("login")]
+    public async Task<IActionResult> Login(LoginRequest request)
+    {
+        var result = await _userService.LoginAsync(request);
+        if (result == null)
+            return Unauthorized();
+        return Ok(result);
+    }
+    [HttpPost("change-password")]
+    public async Task<IActionResult> ChangePassword(ChangePassRequest request)
+    {
+        try
+        {
+            var success = await _userService.ChangePasswordAsync(request);
+            if (success)
+                return Ok(new { message = "Password changed successfully." });
+            return BadRequest(new { message = "Password change failed." });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }

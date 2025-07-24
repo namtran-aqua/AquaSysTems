@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Components.Web;
+﻿using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using AquaSolution.Client;
 using Blazored.LocalStorage;
@@ -20,7 +20,6 @@ builder.Services.AddHttpClient("ServerAPI", client =>
 {
     client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress);
 });
-
 builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("ServerAPI"));
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<CustomAuthenticationStateProvider>();

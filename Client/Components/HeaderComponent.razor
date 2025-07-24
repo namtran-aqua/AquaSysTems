@@ -1,0 +1,97 @@
+﻿@using AquaSolution.Client.Components.Users
+@inject IJSRuntime JS
+
+<div class="user-dropdown-container">
+    <div class="user-dropdown" id="userDropdown">
+        <div class="user-dropdown-toggle">
+            <div class="user-avatar">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
+                    <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3Zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+                </svg>
+            </div>
+            <span class="text-dark">@users?.FullName</span>
+        </div>
+
+        <div class="user-dropdown-menu">
+            <a @onclick="DetailMyAccount"><i class="fa fa-user me-1"></i> MyUserDetails</a>
+            <a @onclick="ChangePassWord"><i class="fa fa-key me-1"></i> ChangePassword</a>
+            <a @onclick="Logout"><i class="fa fa-sign-out me-1"></i> Logout</a>
+        </div>
+    </div>
+</div>
+<UserDetailModal @ref="@userDetailModal"></UserDetailModal>
+<ChangePassModal @ref="@changePassModal"></ChangePassModal>
+
+<style>
+    .user-dropdown-container {
+        position: fixed;
+        top: 10px;
+        right: 20px;
+        z-index: 999;
+    }
+
+    .user-dropdown {
+        position: relative;
+        display: inline-block;
+    }
+
+    .user-dropdown-toggle {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        padding: 8px 12px;
+    }
+
+    .user-avatar {
+        width: 32px;
+        height: 32px;
+        background-color: #87d068;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 32px;
+        color: white;
+        font-weight: bold;
+        margin-right: 8px;
+    }
+
+    .user-dropdown-menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background-color: white;
+        border-radius: 4px;
+        z-index: 1000;
+        min-width: 160px;
+        margin-top: 4px;
+        background: #cbefc7;
+    }
+
+    .user-dropdown.open .user-dropdown-menu {
+        display: block;
+    }
+
+    .user-dropdown-menu a {
+        display: block;
+        padding: 8px 16px;
+        color: #333;
+        text-decoration: none;
+        font-size: 14px;
+    }
+
+        .user-dropdown-menu a:hover {
+            background-color: #d1dfcf;
+        }
+</style>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JS.InvokeVoidAsync("setupUserDropdown");
+        }
+    }
+
+    
+}

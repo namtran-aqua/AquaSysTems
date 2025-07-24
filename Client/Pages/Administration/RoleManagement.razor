@@ -1,0 +1,69 @@
+﻿@page "/roles-management"
+@using AquaSolution.Client.Components.Roles
+@using AquaSolution.Client.Components.Users
+@using AntDesign
+@inject IMessageService Message
+@using AquaSolution.Shared.UserManagements
+<div class="user-management-container">
+    <div class="mb-3">
+        <button @onclick="ShowAddRole" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Created Roles
+        </button>
+    </div>
+
+    <Table TItem="RoleDto"
+           Size="TableSize.Small"
+           Class="customTable fix-table-header"
+           DataSource="Roles">
+        <ColumnDefinitions Context="row">
+            <PropertyColumn Title="RoleName" Property="c => c.Name"></PropertyColumn>
+            <Column Fixed="ColumnFixPlacement.Right" TData="UserDto" Title="Action" Context="row">
+                <Template>
+                    <div style="display:flex; justify-content:flex-end; gap: 6px;">
+                        <button class="btn btn-secondary btn-sm"
+                                @onclick="@(async () => await ShowPermissionModal(row))">
+                            <Icon Type="edit" /> Permission
+                        </button>
+
+                        <button class="btn btn-danger btn-sm"
+                                @onclick="@(async () => await DeleteRoleAsync(row))">
+                            <Icon Type="delete" /> Delete
+                        </button>
+                    </div>
+                </Template>
+            </Column>
+        </ColumnDefinitions>
+    </Table>
+</div>
+<PermissionModal @ref="permissionModal" OnSave="LoadRoles" />
+#<!-- #region name -->
+@{
+    RenderFragment footer = @<Template>
+
+        <Button OnClick="@Save" @key="@("submit")"
+                Type="ButtonType.Primary">
+            Save
+        </Button>
+
+
+        <Button Style="color:#808080" OnClick="@Close" @key="@("back")">Close</Button>
+
+    </Template>;
+}
+<Modal @bind-Visible="IsVisible"
+       Style="z-index: 9999;width:500px ;height:78vh !important"
+       Footer="@footer" Title="Permission Settings">
+    <Form Model="@createdRoleDto" Layout="FormLayout.Vertical">
+        <Row Gutter="24">
+            <Col Span="24">
+            <FormItem Label="Role Name" Required="true">
+                <TextArea ShowCount MinRows="1" MaxRows="1"
+                          @bind-Value="@createdRoleDto.RoleName"
+                          AllowClear="true" />
+            </FormItem>
+            </Col>
+        </Row>
+    </Form>
+</Modal>
+
+<!-- #endregion -->

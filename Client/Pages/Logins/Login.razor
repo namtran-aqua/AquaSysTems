@@ -1,32 +1,79 @@
 ﻿@page "/login"
+@layout LoginLayout
 @using AquaService.Shared.AuthModels
 @using System.IdentityModel.Tokens.Jwt
-@inject HttpClient Http
-@inject CustomAuthenticationStateProvider AuthProvider
-@inject NavigationManager Nav
 
-<h3>Login</h3>
-<input @bind="username" placeholder="Username" />
-<input @bind="password" placeholder="Password" type="password" />
-<button @onclick="DoLogin">Login</button>
-
-@code {
-    string username = "";
-    string password = "";
-    private async Task DoLogin()
-    {
-        var response = await Http.PostAsJsonAsync("api/auth/login", new LoginRequest { UserName = username, Password = password });
-
-        if (response.IsSuccessStatusCode)
-        {
-            var content = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
-            var handler = new JwtSecurityTokenHandler();
-            var token = handler.ReadJwtToken(content["token"]);
-            var claims = token.Claims.ToList();
-
-            AuthProvider.MarkUserAsAuthenticated(username, claims);
-
-            Nav.NavigateTo("/");
-        }
+<style>
+    .login-page {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background: radial-gradient(circle at 20% 30%, #dce4f7, #f5f8ff);
+        background-image: url('/images/bg-login.png'); /* nếu có */
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: cover;
+        font-family: 'Segoe UI', sans-serif;
     }
-}
+
+    .login-box {
+        background-color: white;
+        padding: 40px;
+        border-radius: 10px;
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
+        width: 400px;
+        text-align: center;
+    }
+
+        .login-box .login-logo img {
+            width: 120px;
+            margin-bottom: 20px;
+        }
+
+        .login-box h4 {
+            margin-bottom: 20px;
+            font-weight: 600;
+            color: #005eb8;
+        }
+
+        .login-box .form-control {
+            margin-bottom: 15px;
+            height: 45px;
+            font-size: 16px;
+        }
+
+    .btn-primary {
+        background-color: #1677ff;
+        border: none;
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+        border-radius: 6px;
+        transition: background-color 0.3s;
+    }
+
+        .btn-primary:hover {
+            background-color: #0d5ed7;
+        }
+
+    .text-center a {
+        color: #1677ff;s
+        text-decoration: none;
+    }
+
+</style>
+<div class="login-page">
+    <div class="login-box">
+        <div class="login-logo">
+            <img src="https://hrmsaquavietnam.com:6969/images/Aqua-Smart%20Home%20-%20blue.png" alt="AQUA smart home" />
+        </div>
+        <h4>Account Login</h4>
+        <input class="form-control" placeholder="Please input a username" @bind="username" @onkeyup="HandleKeyUp" />
+        <input type="password" class="form-control" placeholder="Please input a password" @bind="password" @onkeyup="HandleKeyUp" />
+        <button class="btn btn-primary" @onclick="DoLogin">Login</button>
+        <div class="text-center mt-2">
+            <a href="#">Quên mật khẩu</a>
+        </div>
+    </div>
+</div>

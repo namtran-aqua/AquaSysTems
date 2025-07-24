@@ -8,6 +8,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AquaSolution.Client", "Clie
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AquaSolution.Shared", "Shared\AquaSolution.Shared.csproj", "{DD06A8F6-CD32-482A-8800-C41185DE8C67}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AquaSolution.Data", "AquaSolution.Data\AquaSolution.Data.csproj", "{FA7198DE-D689-4EE2-A664-B4B0D24E47AB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -54,6 +56,18 @@ Global
 		{DD06A8F6-CD32-482A-8800-C41185DE8C67}.Release|x64.Build.0 = Release|Any CPU
 		{DD06A8F6-CD32-482A-8800-C41185DE8C67}.Release|x86.ActiveCfg = Release|Any CPU
 		{DD06A8F6-CD32-482A-8800-C41185DE8C67}.Release|x86.Build.0 = Release|Any CPU
+		{FA7198DE-D689-4EE2-A664-B4B0D24E47AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FA7198DE-D689-4EE2-A664-B4B0D24E47AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FA7198DE-D689-4EE2-A664-B4B0D24E47AB}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{FA7198DE-D689-4EE2-A664-B4B0D24E47AB}.Debug|x64.Build.0 = Debug|Any CPU
+		{FA7198DE-D689-4EE2-A664-B4B0D24E47AB}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{FA7198DE-D689-4EE2-A664-B4B0D24E47AB}.Debug|x86.Build.0 = Debug|Any CPU
+		{FA7198DE-D689-4EE2-A664-B4B0D24E47AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FA7198DE-D689-4EE2-A664-B4B0D24E47AB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FA7198DE-D689-4EE2-A664-B4B0D24E47AB}.Release|x64.ActiveCfg = Release|Any CPU
+		{FA7198DE-D689-4EE2-A664-B4B0D24E47AB}.Release|x64.Build.0 = Release|Any CPU
+		{FA7198DE-D689-4EE2-A664-B4B0D24E47AB}.Release|x86.ActiveCfg = Release|Any CPU
+		{FA7198DE-D689-4EE2-A664-B4B0D24E47AB}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

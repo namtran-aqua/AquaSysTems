@@ -1,0 +1,72 @@
+﻿@using AntDesign
+@using AquaSolution.Shared.CommonDto
+@using AquaSolution.Shared.Enum
+@inject HttpClient httpClient
+@inject IMessageService Message
+@{
+    RenderFragment footer = @<Template>
+
+        <Button OnClick="@SaveAsync" @key="@( "submit" )"
+                Type="ButtonType.Primary">
+            Save
+        </Button>
+
+        <Button Style="color:#808080" OnClick="@Close" @key="@("back")">Close</Button>
+
+    </Template>;
+}
+<Modal @bind-Visible="IsModalVisible" Style="z-index: 9999;width:1000px" Footer="@footer">
+    <Form @ref="@formRef"
+          Model="@HandlePermissionDto"
+          Layout="FormLayout.Vertical"
+          OnFinish="SaveAsync"
+          ValidateMode="FormValidateMode.Complex"
+          ValidateOnChange="true">
+
+        <Row Gutter="24">
+            <Col Span="8">
+            <FormItem Label="Menu" Required="true">
+                <Select TItem="BaseDto" TItemValue="BaseDto"
+                        DataSource="@ListMenu"
+                        @bind-Value="@ValueMenu"
+                        ItemValue="c => c"
+                        ItemLabel="c => c.Name">
+                </Select>
+            </FormItem>
+            </Col>
+            <Col Span="8">
+            <FormItem Label="Pages" Required="true">
+                <Select TItem="BaseDto" TItemValue="BaseDto"
+                        DataSource="@ListPage"
+                        @bind-Value="@ValuePage"
+                        ItemValue="c => c"
+                        ItemLabel="c => c.Name">
+                </Select>
+            </FormItem>
+            </Col>
+            <Col Span="3">
+            <FormItem  Label="Action" Required="true">
+                <Select TItem="PermissionActionType" TItemValue="PermissionActionType"
+                        DataSource="@ListAction"
+                        @bind-Value="@ValueAction"
+                        ItemValue="c => c"
+                        ItemLabel="c => c.ToString()">
+                </Select>
+            </FormItem>
+            </Col>
+            <Col Span="3">
+            <FormItem Label="Type">
+                <Select TItem="PermissionType" TItemValue="PermissionType"
+                        DataSource="@ListType"
+                        @bind-Value="@ValueType"
+                        Disabled="IsDisable"
+                        ItemValue="c => c"
+                        ItemLabel="c => c.ToString()">
+                </Select>
+            </FormItem>
+            </Col>
+        </Row>
+
+    </Form>
+</Modal>
+

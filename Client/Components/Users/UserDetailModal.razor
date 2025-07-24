@@ -1,0 +1,28 @@
+﻿@using AntDesign
+@using AquaSolution.Shared.UserManagements
+
+<Modal @bind-Visible="Visible" Title="User Detail" Width="800" OnOk="SaveAsync" OnCancel="Cancel">
+    <div class="flex gap-4">
+        <!-- Avatar Upload -->
+        <div class="w-1/4 text-center">
+            <Upload @ref="uploadRef" Action="/api/upload/avatar" ShowUploadList="false" OnChange="OnUploadChanged" Name="file">
+                <Avatar Shape="AvatarShape.Circle" Size="AvatarSize.Large" Src="@UserAvatarUrl" />
+                <div class="mt-2">
+                    <Button>Upload Avatar</Button>
+                </div>
+            </Upload>
+        </div>
+        <!-- User Info -->
+        <div class="w-3/4">
+            <Descriptions Title="Thông tin người dùng" Column="2" Bordered>
+                <DescriptionsItem Title="FullName">@User.FullName</DescriptionsItem>
+                <DescriptionsItem Title="WorkDay">@User.WorkDayId</DescriptionsItem>
+                <DescriptionsItem Title="Email">@User.Email</DescriptionsItem>
+                <DescriptionsItem Title="PhoneNumber">@User.PhoneNumber</DescriptionsItem>
+                <DescriptionsItem Title="Group">@User.GroupName</DescriptionsItem>
+                <DescriptionsItem Title="Manager">@User.ManagerName</DescriptionsItem>
+                <DescriptionsItem Title="CreatedDate">@User.Created.ToString("dd/MM/yyyy")</DescriptionsItem>
+            </Descriptions>
+        </div>
+    </div>
+</Modal>

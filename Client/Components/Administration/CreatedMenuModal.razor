@@ -1,0 +1,49 @@
+﻿@using AntDesign
+@using AquaSolution.Client.Components.Icon
+@using AquaSolution.Shared.CommonDto
+@using AquaSolution.Shared.Enum
+@inject HttpClient httpClient
+@inject IMessageService Message
+@{
+    RenderFragment footer = @<Template>
+
+        <Button OnClick="@SaveAsync" @key="@( "submit" )"
+                Type="ButtonType.Primary">
+            Save
+        </Button>
+
+        <Button Style="color:#808080" OnClick="@Close" @key="@("back")">Close</Button>
+
+    </Template>;
+}
+<Modal @bind-Visible="IsModalVisible" Style="z-index: 9999;width:500px" Footer="@footer">
+    <Form @ref="@formRef"
+          Model="@HandleMenuDto"
+          Layout="FormLayout.Vertical"
+          OnFinish="SaveAsync"
+          ValidateMode="FormValidateMode.Complex"
+          ValidateOnChange="true">
+        <Row Gutter="24">
+            <Col Span="12">
+            <FormItem Label="Menu Name" Required="true">
+                <TextArea ShowCount MinRows="1" MaxRows="1"
+                          @bind-Value="@HandleMenuDto.Name"
+                          AllowClear="true" />
+            </FormItem>
+            </Col>
+            <Col Span="12">
+            <FormItem Label="Icon">
+                <Button OnClick="() => { _visible = true; }">Icon Library</Button>
+                <CavModalIcon @bind-IconValue="HandleMenuDto.Icon" @bind-Visible="_visible"/>
+                  @if (!string.IsNullOrEmpty(HandleMenuDto.Icon))
+                {
+                    <Icon Type="@HandleMenuDto.Icon" Style="font-size:30px" Theme="IconThemeType.Outline"></Icon>
+                    <Text>@HandleMenuDto.Icon</text>
+                }
+            </FormItem>
+            </Col>
+        </Row>
+    </Form>
+</Modal>
+
+

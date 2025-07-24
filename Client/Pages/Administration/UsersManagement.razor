@@ -1,0 +1,59 @@
+﻿@page "/user-management"
+@using AquaSolution.Client.Components.Users
+@using AntDesign
+@inject ModalService modal
+@inject NavigationManager Navigation
+@inject IMessageService Message
+@using AquaSolution.Shared.UserManagements
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthStateProvider
+<div class="user-management-container">
+    <div class="mb-3">
+
+        <button @onclick="AddUserDialog" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Created User
+        </button>
+
+    </div>
+    <div style="width:100%;overflow-x:scroll ;max-height:75vh; ">
+        <Table TItem="UserDto"
+               Size="TableSize.Small"
+               Class="customTable fix-table-header"
+               DataSource="users">
+            <ColumnDefinitions Context="row">
+                <PropertyColumn Fixed="ColumnFixPlacement.Left" Title="Fullname" Property="c => c.FullName"></PropertyColumn>
+                <PropertyColumn Title="WorkDayId" Property="c => c.WorkDayId"></PropertyColumn>
+                <PropertyColumn Title="GroupUser" Property="c => c.WorkDayId"></PropertyColumn>
+                <PropertyColumn Title="Email" Property="c => c.Email"></PropertyColumn>
+                <PropertyColumn Title="IsActive" Property="c => c.IsActive"></PropertyColumn>
+                <Column Fixed="ColumnFixPlacement.Right" TData="UserDto" Width="50px" Title="Action" Context="row">
+                    <Template>
+                        <Popover Title="Actions" Trigger="new Trigger[] { Trigger.Click }" Placement="Placement.Bottom">
+                            <ChildContent>
+                                <Button Icon="menu" />
+                            </ChildContent>
+                            <ContentTemplate>
+                                <div style="display: flex; flex-direction: column; gap: 4px; padding: 8px;">
+                                    <Button Type="ButtonType.Text" OnClick="@(async () => await EditUser(row))" Style="text-align: left;">
+                                        <Icon Type="plus" /> Edit
+                                    </Button>
+                                    <Button Type="ButtonType.Text" OnClick="@(async () => await ShowRoleDialog(row))" Style="text-align: left;">
+                                        <Icon Type="edit" /> RolesManagement
+                                    </Button>
+                                    <Button Type="ButtonType.Text" OnClick="@(async () => await DeleteAsync(row))" Style="text-align: left;">
+                                        <Icon Type="delete" /> Delete
+                                    </Button>
+                                </div>
+                            </ContentTemplate>
+                        </Popover>
+                    </Template>
+                </Column>
+            </ColumnDefinitions>
+        </Table>
+    </div>
+</div>
+
+
+<RoleManagerDialog @ref="roleManagerDialog"
+                   OnSave="HandleSaved" />
+<UserModal @ref="userModal" OnSave="HandleSaved"></UserModal>

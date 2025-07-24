@@ -14,7 +14,7 @@ namespace AquaSolution.Client.Components.Users
         private string Password { get; set; }
         private bool IsVisible { get; set; }
         private bool IsLoading { get; set; }
-        private bool IsEditing => !string.IsNullOrEmpty(User.Id);
+        private bool IsEditing => User.Id !=Guid.Empty;
         private string Title => IsEditing ? "Sửa người dùng" : "Thêm người dùng";
 
         [Inject] private HttpClient Http { get; set; }
@@ -24,7 +24,7 @@ namespace AquaSolution.Client.Components.Users
             User = new UserDto
             {
                 Id = user.Id,
-                UserName = user.UserName,
+                FirstName = user.FullName,
                 Email = user.Email
             };
             Password = string.Empty;
@@ -52,7 +52,7 @@ namespace AquaSolution.Client.Components.Users
                 {
                     var newUser = new
                     {
-                        User.UserName,
+                        User.FullName,
                         User.Email,
                         Password
                     };

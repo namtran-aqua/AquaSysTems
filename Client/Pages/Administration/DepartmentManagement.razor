@@ -1,0 +1,50 @@
+﻿@page "/department-management"
+@using AquaSolution.Client.Components.Department
+@using AquaSolution.Client.Components.Users
+@using AntDesign
+@inject ModalService modal
+@inject NavigationManager Navigation
+@inject IMessageService Message
+@using AquaSolution.Shared.Departments
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthStateProvider
+<div class="user-management-container">
+    <div class="mb-3">
+
+        <button @onclick="CreatedDeparment" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Created Department
+            </button>
+    </div>
+    <div style="width:100%;overflow-x:scroll ;max-height:75vh; ">
+        <Table TItem="DepartmentDto"
+               Size="TableSize.Small"
+               Class="customTable fix-table-header"
+               DataSource="ListDepartment">
+            <ColumnDefinitions Context="row">
+                <PropertyColumn Title="Code" Property="c => c.Code"></PropertyColumn>
+                <PropertyColumn Title="Name" Property="c => c.Name"></PropertyColumn>
+                <PropertyColumn Title="Node" Property="c => c.Note"></PropertyColumn>
+                <Column Fixed="ColumnFixPlacement.Right" TData="DepartmentDto" Width="50px" Title="Action" Context="row">
+                    <Template>
+                        <Popover Title="Actions" Trigger="new Trigger[] { Trigger.Click }" Placement="Placement.Bottom">
+                            <ChildContent>
+                                <Button Icon="menu" />
+                            </ChildContent>
+                            <ContentTemplate>
+                                <div style="display: flex; flex-direction: column; gap: 4px; padding: 8px;">
+                                    <Button Type="ButtonType.Text" OnClick="@(async () => await EditDeparment(row))" Style="text-align: left;">
+                                        <Icon Type="plus" /> Edit
+                                    </Button>
+                                    <Button Type="ButtonType.Text" OnClick="@(async () => await DeleteAsync(row))" Style="text-align: left;">
+                                        <Icon Type="delete" /> Delete
+                                    </Button>
+                                </div>
+                            </ContentTemplate>
+                        </Popover>
+                    </Template>
+                </Column>
+            </ColumnDefinitions>
+        </Table>
+    </div>
+</div>
+<DepartmentModal OnSave="LoadDataAsync" @ref="@departmentModal"></DepartmentModal>
