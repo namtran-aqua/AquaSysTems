@@ -16,10 +16,10 @@ namespace AquaSolution.Data.Data
         {
             if (context.tbl_Users.Any()) return; // tránh seed lại
 
-            //    // ----- MENU & PAGE -----
-             //  var menuUser = new Menu { Id = Guid.NewGuid(), Name = "Administration", Icon = "global", Order = 1 };
-            //    var menuRole = new Menu { Id = Guid.NewGuid(), Name = "Quản lý Role", Icon = "role-icon", Order = 2 };
-            //    var menuPermission = new Menu { Id = Guid.NewGuid(), Name = "Quản lý Permission", Icon = "perm-icon", Order = 3 };
+            // ----- MENU & PAGE -----
+            //var menuUser = new Menu { Id = Guid.NewGuid(), Name = "Administration", Icon = "global", Order = 1 };
+            //var menuRole = new Menu { Id = Guid.NewGuid(), Name = "Quản lý Role", Icon = "role-icon", Order = 2 };
+            //var menuPermission = new Menu { Id = Guid.NewGuid(), Name = "Quản lý Permission", Icon = "perm-icon", Order = 3 };
 
             //var pages = new List<Page>
             //    {
@@ -87,7 +87,7 @@ namespace AquaSolution.Data.Data
 
 
             //    //// ----- ROLE -----
-                var adminRole = new Role { Id = Guid.NewGuid(), Name = "Admin" };
+            var adminRole = new Role { Id = Guid.NewGuid(), Name = "Admin" };
 
 
                 var roles = new[] { adminRole };
@@ -117,12 +117,12 @@ namespace AquaSolution.Data.Data
             //    }
 
             //    //// Save to context
-            //    context.tbl_Menus.AddRange(menuUser, menuRole, menuPermission);
+              //  context.tbl_Menus.AddRange(menuUser, menuRole, menuPermission);
             //    context.tbl_Pages.AddRange(pages);
             //    context.tbl_Permissions.AddRange(permissions);
-            //    context.tbl_Roles.AddRange(roles);
-            //    context.tbl_Users.AddRange(users);
-            //    context.tbl_UserRoles.AddRange(userRoles);
+                  context.tbl_Roles.AddRange(roles);
+                  context.tbl_Users.AddRange(users);
+                  context.tbl_UserRoles.AddRange(userRoles);
             //    context.tbl_RolePermissions.AddRange(rolePermissions);
 
             context.SaveChanges();
