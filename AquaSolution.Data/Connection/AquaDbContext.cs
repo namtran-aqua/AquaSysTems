@@ -26,6 +26,7 @@ namespace AquaSolution.Data.Connection
         public DbSet<Department> tbl_Departments { get; set; }
         public DbSet<Factory> tbl_Factorys { get; set; }
         public DbSet<Position> tbl_Positions { get; set; }
+        public DbSet<ApprovalFlow> tbl_ApprovalFlow { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -40,6 +41,9 @@ namespace AquaSolution.Data.Connection
             modelBuilder.ApplyConfiguration(new DepartmentConfiguration());   
             modelBuilder.ApplyConfiguration(new FactoryConfiguration());
             modelBuilder.ApplyConfiguration(new PositionConfiguration());
+            modelBuilder.ApplyConfiguration(new ApprovalFlowConfiguration());
+
+
         }
     }
 }

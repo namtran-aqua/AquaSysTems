@@ -37,7 +37,7 @@ namespace AquaSolution.Client.Pages.Administration
         }
         private async Task EditDeparment(DepartmentDto deparmentDto) 
         {
-            await departmentModal.Showmodal(deparmentDto, false);
+            await departmentModal.Showmodal(deparmentDto, true);
         }
         private async Task DeleteAsync(DepartmentDto deparmentDto)
         {

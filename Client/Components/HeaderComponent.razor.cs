@@ -10,9 +10,8 @@ namespace AquaSolution.Client.Components
 {
     public partial class HeaderComponent
     {
-        private bool isOpen = false;
-        [Parameter] public CurrentUserInfo? users { get; set; }
-        private UserDto ? userDto { get; set; }
+        [Parameter] public UserDto userDto { get; set; } = new UserDto();
+        [Parameter] public CurrentUserInfo? CurrentUser { get; set; }
         private UserDetailModal userDetailModal = new UserDetailModal();
         private ChangePassModal changePassModal = new ChangePassModal();
         [Inject] private HttpClient Http { get; set; } = default!;
@@ -35,16 +34,33 @@ namespace AquaSolution.Client.Components
         }
         private async Task DetailMyAccount()
         {
-
-                userDto = await Http.GetFromJsonAsync<UserDto>($"api/user/get-curernUser/{users.UserId}");
-                await userDetailModal.ShowModal(userDto);
+                await userDetailModal.ShowModal(userDto, CurrentUser,true);
         }
         private void  ChangePassWord()
         {
-
-            changePassModal.ShowModal(users.UserId);
+            changePassModal.ShowModal(userDto.Id);
         }
-
-
+        #region Notify
+        private bool isDropdownVisible { get; set; } = false;
+        private async Task HandleNotificationClick()
+        {
+            //await actionModal.ShowModal(notify, false);
+            //int statusNotifiCation = 2;
+            //if (notify.StatusNotifiCation == StatusNotifiCation.NoConfirm)
+            //{
+            //    statusNotifiCation = 0;
+            //}
+            //if (notify.StatusNotifiCation == StatusNotifiCation.TechnicalConfirm)
+            //{
+            //    statusNotifiCation = 1;
+            //}
+            //var url = $"SysRequest/UpdateStatusNotifi?id={notify.Id}&statusNotifiCation={statusNotifiCation}";
+            //var success = await HttpService.PostJson(url, 1);
+        }
+        private void ToggleDropdown()
+        {
+            isDropdownVisible = !isDropdownVisible;
+        }
+        #endregion
     }
 }

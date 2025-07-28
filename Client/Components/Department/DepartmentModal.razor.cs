@@ -1,5 +1,6 @@
 ﻿using AntDesign;
 using AquaSolution.Shared.Departments;
+using AquaSolution.Shared.Enum;
 using AquaSolution.Shared.Menus;
 using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Components;
@@ -18,6 +19,7 @@ namespace AquaSolution.Client.Components.Department
         private Form<DepartmentDto> formRef = new();
         private bool IsEdit {  get; set; }
         private string Title { get; set; }
+        private List<DepartmentType> ListDepartmentType = new List<DepartmentType>();
         #endregion
         #region Innit
         public async Task Showmodal(DepartmentDto departmentDto,bool isEdit)
@@ -32,8 +34,25 @@ namespace AquaSolution.Client.Components.Department
                 Title = "Created Department";
             }
             _model = departmentDto;
+            GetDepartmentType();
             IsModalVisible = true;
             await InvokeAsync(StateHasChanged);
+        }
+        private void GetDepartmentType()
+        {
+            ListDepartmentType = Enum.GetValues(typeof(DepartmentType))
+                    .Cast<DepartmentType>()
+                    .ToList();
+            if (_model != null)
+            {
+                DepartmentType = ListDepartmentType
+                         .FirstOrDefault(x => x == _model.DepartmentType);
+            }
+            else
+            {
+                DepartmentType = ListDepartmentType
+                        .First();
+            }
         }
         #endregion
         #region Action
@@ -48,14 +67,29 @@ namespace AquaSolution.Client.Components.Department
             }
             if (IsEdit)
             {
+                _model.DepartmentType = DepartmentType;
                 await UpdateAsync(_model);
             }
             else
             {
+                _model.DepartmentType = DepartmentType;
                 await CreatedAsync(_model);
             }
             IsModalVisible = false;
             await OnSave.InvokeAsync();
+        }
+        private DepartmentType _departmentType;
+        private DepartmentType DepartmentType
+        {
+            get => _departmentType;
+            set
+            {
+                if (_departmentType != value)
+                {
+                    _departmentType = value;
+                }
+
+            }
         }
         #endregion
         #region Handle Data

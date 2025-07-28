@@ -3,6 +3,7 @@ using AquaSolution.Data.Data.Entities;
 using AquaSolution.Data.Repositories;
 using AquaSolution.Server.Services.UserService;
 using AquaSolution.Shared.AuthModels;
+using AquaSolution.Shared.CommonDto;
 using AquaSolution.Shared.PasswordHelpers;
 using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Authentication;
@@ -23,7 +24,9 @@ public class UserService : IUserService
     private readonly IRepository<Menu> _menuRepo;
     private readonly IRepository<Page> _pageRepo;
     private readonly IRepository<Groups> _groupRepo;
-
+    private readonly IRepository<Department> _departmentRepo;
+    private readonly IRepository<Factory> _factoryRepo;
+    private readonly IRepository<Position> _positionRepo;
     private readonly IConfiguration _config;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private ClaimsPrincipal user;
@@ -37,7 +40,10 @@ public class UserService : IUserService
         IRepository<Menu> menuRepo,
         IRepository<Page> pageRepo,
         IRepository<Groups> groupRepo,
-    IConfiguration config)
+        IRepository<Department> departmentRepo,
+        IRepository<Factory> factoryRepo,
+        IRepository<Position> positionRepo,
+        IConfiguration config)
     {
         _userRepo = userRepo;
         _userRoleRepo = userRoleRepo;
@@ -49,6 +55,9 @@ public class UserService : IUserService
         _menuRepo = menuRepo;
         _pageRepo = pageRepo;
         _groupRepo = groupRepo;
+        _departmentRepo = departmentRepo;
+        _factoryRepo = factoryRepo;
+        _positionRepo = positionRepo;
     }
 
     public async Task<LoginResponse?> LoginAsync(LoginRequest loginRequest)
@@ -94,7 +103,7 @@ public class UserService : IUserService
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            var expires = DateTime.UtcNow.AddMinutes(30);
+            var expires = DateTime.UtcNow.AddSeconds(5);
 
             var token = new JwtSecurityToken(
                 claims: claims,
@@ -116,133 +125,222 @@ public class UserService : IUserService
     public async Task<UserDto?> GetCurrentUserAsync(Guid userId)
     {
 
-        var user = await _userRepo.FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted && u.IsActive);
-        if (user == null)
-            return null;
-        var group = await _groupRepo.FirstOrDefaultAsync(x => x.Id == user.GroupId);
-        var manager = await _userRepo.FirstOrDefaultAsync(x => x.Id == user.ManagerId);
-        var userDto = new UserDto
+        try
         {
-            Id = user.Id,
-            WorkDayId = user.WorkDayId,
-            FirstName = user.FirstName,
-            LastName = user.LastName,
-            FullName = user.FullName,
-            Email = user.Email,
-            PhoneNumber = user.PhoneNumber,
-            GroupId = user.GroupId,
-            GroupName = group?.Name,
-            ManagerName = manager?.FullName,
-            ManagerId = user?.ManagerId,
-            Created = user.CreatedTime,
-            IsDeleted = user.IsDeleted,
-            IsActive = user.IsActive
-        };
-
-        var userRoles = await _userRoleRepo.WhereAsync(ur => ur.UserId == user.Id);
-        var roleIds = userRoles.Select(ur => ur.RoleId).Distinct().ToList();
-        var roles = await _roleRepo.WhereAsync(r => roleIds.Contains(r.Id));
-
-        foreach (var role in roles)
-        {
-            var roleDto = new RoleDto
+            var user = await _userRepo.FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null)
+                return null;
+            var group = await _groupRepo.FirstOrDefaultAsync(x => x.Id == user.GroupId);
+            var manager = await _userRepo.FirstOrDefaultAsync(x => x.Id == user.ManagerId);
+            var department = await _departmentRepo.FirstOrDefaultAsync(x => x.Id == user.DepartmentId);
+            var factory = await _factoryRepo.FirstOrDefaultAsync(x => x.Id == user.FactoryId);
+            var position = await _positionRepo.FirstOrDefaultAsync(x => x.Id == user.PositionId);
+            var userDto = new UserDto
             {
-                Id = role.Id,
-                Name = role.Name,
-                IsSelected = true
+                Id = user.Id,
+                WorkDayId = user.WorkDayId,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                FullName = user.FullName,
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
+                GroupId = user.GroupId,
+                GroupName = group?.Name,
+                ManagerName = manager?.FullName,
+                ManagerId = user?.ManagerId,
+                CreatedTime = user.CreatedTime,
+                IsDeleted = user.IsDeleted,
+                Avatar = user.Avatar,
+                DepartmentName = department?.Name,
+                FactoryName = factory?.Name,
+                PositionName = position?.Name,
+                IsActive = user.IsActive
             };
 
-            var rolePermissions = await _rolePermissionRepo
-                .WhereAsync(rp => rp.RoleId == role.Id);
+            var userRoles = await _userRoleRepo.WhereAsync(ur => ur.UserId == user.Id);
+            var roleIds = userRoles.Select(ur => ur.RoleId).Distinct().ToList();
+            var roles = await _roleRepo.WhereAsync(r => roleIds.Contains(r.Id));
 
-            var permissionIds = rolePermissions.Select(rp => rp.PermissionId).Distinct().ToList();
-            var permissions = await _permissionRepo.WhereAsync(p => permissionIds.Contains(p.Id));
-
-            // 👉 Tách PageId
-            var pageIds = permissions
-                .Where(p => p.PageId.HasValue)
-                .Select(p => p.PageId!.Value)
-                .Distinct()
-                .ToList();
-
-            // Gán vào RoleDto nếu bạn cần dùng sau
-            roleDto.PageId = pageIds;
-
-            // Optional: xử lý phân quyền theo Menu/Page/Action như cũ
-            var menuIds = permissions.Select(p => p.MenuId).Distinct().ToList();
-            var menus = await _menuRepo.WhereAsync(m => menuIds.Contains(m.Id));
-            var pages = await _pageRepo.WhereAsync(p => pageIds.Contains(p.Id));
-
-            var menuDict = menus.ToDictionary(m => m.Id, m => m.Name);
-            var pageDict = pages.ToDictionary(p => p.Id, p => p.Name);
-
-            foreach (var perm in permissions)
+            foreach (var role in roles)
             {
-                // Bỏ qua nếu không có MenuId hoặc PageId
-                if (!perm.MenuId.HasValue || !perm.PageId.HasValue)
-                    continue;
+                var roleDto = new RoleDto
+                {
+                    Id = role.Id,
+                    Name = role.Name,
+                    IsSelected = true
+                };
 
-                // Lấy tên menu và tên page từ dictionary
-                if (!menuDict.TryGetValue(perm.MenuId.Value, out var menuName)) continue;
-                if (!pageDict.TryGetValue(perm.PageId.Value, out var pageName)) continue;
+                var rolePermissions = await _rolePermissionRepo
+                    .WhereAsync(rp => rp.RoleId == role.Id);
 
-                var pageId = perm.PageId.Value;
-                var action = perm.Action.ToString();
+                var permissionIds = rolePermissions.Select(rp => rp.PermissionId).Distinct().ToList();
+                var permissions = await _permissionRepo.WhereAsync(p => permissionIds.Contains(p.Id));
 
-                // Ghép pageName và pageId để tạo key
-                var pageKey = $"{pageName};{pageId}";
+                // 👉 Tách PageId
+                var pageIds = permissions
+                    .Where(p => p.PageId.HasValue)
+                    .Select(p => p.PageId!.Value)
+                    .Distinct()
+                    .ToList();
 
-                if (!roleDto.Permissions.ContainsKey(menuName))
-                    roleDto.Permissions[menuName] = new Dictionary<string, List<string>>();
+                // Gán vào RoleDto nếu bạn cần dùng sau
+                roleDto.PageId = pageIds;
 
-                if (!roleDto.Permissions[menuName].ContainsKey(pageKey))
-                    roleDto.Permissions[menuName][pageKey] = new List<string>();
+                // Optional: xử lý phân quyền theo Menu/Page/Action như cũ
+                var menuIds = permissions.Select(p => p.MenuId).Distinct().ToList();
+                var menus = await _menuRepo.WhereAsync(m => menuIds.Contains(m.Id));
+                var pages = await _pageRepo.WhereAsync(p => pageIds.Contains(p.Id));
 
-                if (!roleDto.Permissions[menuName][pageKey].Contains(action))
-                    roleDto.Permissions[menuName][pageKey].Add(action);
+                var menuDict = menus.ToDictionary(m => m.Id, m => m.Name);
+                var pageDict = pages.ToDictionary(p => p.Id, p => p.Name);
+
+                foreach (var perm in permissions)
+                {
+                    // Bỏ qua nếu không có MenuId hoặc PageId
+                    if (!perm.MenuId.HasValue || !perm.PageId.HasValue)
+                        continue;
+
+                    // Lấy tên menu và tên page từ dictionary
+                    if (!menuDict.TryGetValue(perm.MenuId.Value, out var menuName)) continue;
+                    if (!pageDict.TryGetValue(perm.PageId.Value, out var pageName)) continue;
+
+                    var pageId = perm.PageId.Value;
+                    var action = perm.Action.ToString();
+
+                    // Ghép pageName và pageId để tạo key
+                    var pageKey = $"{pageName};{pageId}";
+
+                    if (!roleDto.Permissions.ContainsKey(menuName))
+                        roleDto.Permissions[menuName] = new Dictionary<string, List<string>>();
+
+                    if (!roleDto.Permissions[menuName].ContainsKey(pageKey))
+                        roleDto.Permissions[menuName][pageKey] = new List<string>();
+
+                    if (!roleDto.Permissions[menuName][pageKey].Contains(action))
+                        roleDto.Permissions[menuName][pageKey].Add(action);
+                }
+
+
+                userDto.Roles.Add(roleDto);
             }
 
-
-            userDto.Roles.Add(roleDto);
+            return userDto;
         }
-
-        return userDto;
+        catch(Exception ex)
+        {
+            throw ex;
+        }
+       
 
     }
 
     public async Task<List<UserDto>> GetAllUser()
     {
-        var users = await _userRepo.GetAllAsync();
-        var userRoles = await _userRoleRepo.GetAllAsync();
-        var roles = await _roleRepo.GetAllAsync();
-
-        var result = users.Select(user => new UserDto
-        {
-            Id = user.Id,
-            WorkDayId = user.WorkDayId,
-            FirstName = user.FirstName,
-            LastName = user.LastName,
-            FullName = user.FullName,
-            Email = user.Email,
-            PhoneNumber = user.PhoneNumber,
-            GroupId = user.GroupId,
-            Created = user.CreatedTime,
-            IsDeleted = user.IsDeleted,
-            IsActive = user.IsActive,
-            Roles = userRoles
-                    .Where(ur => ur.UserId == user.Id)
-                    .Join(
-                        roles,
-                        ur => ur.RoleId,
-                        r => r.Id,
-                        (ur, r) => new RoleDto
+        var ListUser = new List<UserDto>();
+        //-------------------------
+        var user = from queryableUser in await _userRepo.GetQueryableAsync()
+                   join department in await _departmentRepo.GetQueryableAsync()
+                   on queryableUser.DepartmentId equals department.Id
+                        into d1
+                   from department in d1.DefaultIfEmpty()
+                   join factory in await _factoryRepo.GetQueryableAsync()
+                   on queryableUser.FactoryId equals factory.Id
+                    into f1
+                   from factory in f1.DefaultIfEmpty()
+                   join position in await _positionRepo.GetQueryableAsync()
+                   on queryableUser.PositionId equals position.Id
+                    into p1
+                   from position in p1.DefaultIfEmpty()
+                   join manager in await _userRepo.GetQueryableAsync()
+                   on queryableUser.ManagerId equals manager.Id
+                   into m1
+                   from manager in m1.DefaultIfEmpty()
+                   select new UserDto
+                   {
+                       Id = queryableUser.Id,
+                       WorkDayId = queryableUser.WorkDayId,
+                       FirstName = queryableUser.FirstName,
+                       LastName = queryableUser.LastName,
+                       FullName = queryableUser.FullName,
+                       Email = queryableUser.Email,
+                       NormalizedEmail = queryableUser.NormalizedEmail,
+                       PhoneNumber = queryableUser.PhoneNumber,
+                       ManagerId = queryableUser.ManagerId,
+                       CreatedTime = queryableUser.CreatedTime,
+                       UpdatedTime = queryableUser.UpdatedTime,
+                       CreatedBy = queryableUser.CreatedBy,
+                       UpdateBy = queryableUser.UpdateBy,
+                       Avatar = queryableUser.Avatar ==null ? "/uploads/avatars/default.jpg": queryableUser.Avatar,
+                       DepartmentId = queryableUser.DepartmentId,
+                       DepartmentName = department.Name,
+                       FactoryId = queryableUser.FactoryId,
+                       FactoryName = factory.Name,
+                       PositionId = queryableUser.PositionId,
+                       PositionName = position.Name,
+                       ManagerName = manager.FullName,
+                       IsActive = queryableUser.IsActive,
+                   };
+        var userlist = user.ToList();
+        var userIds = userlist.Select(u => u.Id).ToList();
+        var userRoles =
+                    from ur in await _userRoleRepo.GetQueryableAsync()
+                    join r in await _roleRepo.GetQueryableAsync()
+                    on ur.RoleId equals r.Id
+                    where userIds.Contains(ur.UserId)
+                    select new
+                    {
+                        ur.UserId,
+                        Role = new RoleDto
                         {
                             Id = r.Id,
                             Name = r.Name
-                        })
-                    .ToList()
-        }).ToList();
-        return result;
+                        }
+                    };
+        var listRole = userRoles.ToList();
+        foreach (var userItem in userlist)
+        {
+            userItem.Roles = userRoles
+                .Where(ur => ur.UserId == userItem.Id)
+                .Select(ur => ur.Role)
+                .ToList();
+        }
+        if (userlist.Count > 0)
+        {
+            return userlist;
+        }
+        return new List<UserDto>();
+        //-------------------
+        //var users = await _userRepo.GetAllAsync();
+        //var userRoles = await _userRoleRepo.GetAllAsync();
+        //var roles = await _roleRepo.GetAllAsync();
+
+        //var result = users.Select(user => new UserDto
+        //{
+        //    Id = user.Id,
+        //    WorkDayId = user.WorkDayId,
+        //    FirstName = user.FirstName,
+        //    LastName = user.LastName,
+        //    FullName = user.FullName,
+        //    Email = user.Email,
+        //    PhoneNumber = user.PhoneNumber,
+        //    GroupId = user.GroupId,
+        //    CreatedTime = user.CreatedTime,
+        //    IsDeleted = user.IsDeleted,
+        //    IsActive = user.IsActive,
+        //    Roles = userRoles
+        //            .Where(ur => ur.UserId == user.Id)
+        //            .Join(
+        //                roles,
+        //                ur => ur.RoleId,
+        //                r => r.Id,
+        //                (ur, r) => new RoleDto
+        //                {
+        //                    Id = r.Id,
+        //                    Name = r.Name
+        //                })
+        //            .ToList()
+        //}).ToList();
+        //return result;
     }
     public async Task LogoutAsync()
     {
@@ -272,12 +370,15 @@ public class UserService : IUserService
                 Email = createdUserDto.Email,
                 PhoneNumber = createdUserDto.PhoneNumber,
                 CreatedTime = createdUserDto.CreatedTime,
-                ManagerId = createdUserDto.Manager,
+                ManagerId = createdUserDto.ManagerId,
                 GroupId = createdUserDto.GroupId,
                 PasswordHash = hashedPassword,
                 NormalizedEmail = createdUserDto.Email?.ToUpper(),
                 IsActive = true,
                 CreatedBy = createdUserDto.CreatedBy,
+                DepartmentId = createdUserDto.DepartmentId,
+                PositionId = createdUserDto.PositionId,
+                FactoryId = createdUserDto.FactoryId,
 
             };
             await _userRepo.InsertAsync(user);
@@ -313,12 +414,15 @@ public class UserService : IUserService
             user.FullName = updateUserDto.FullName;
             user.Email = updateUserDto.Email;
             user.PhoneNumber = updateUserDto.PhoneNumber;
-            user.ManagerId = updateUserDto.Manager;
+            user.ManagerId = updateUserDto.ManagerId;
             user.GroupId = updateUserDto.GroupId;
             user.NormalizedEmail = updateUserDto.Email?.ToUpper();
             user.IsActive = updateUserDto.IsActive;
             user.UpdateBy = updateUserDto.UpdateBy;
             user.UpdatedTime = updateUserDto.UpdatedTime;
+            user.DepartmentId = updateUserDto.DepartmentId;
+            user.FactoryId = updateUserDto.FactoryId;
+            user.PositionId = updateUserDto.PositionId;
             await _userRepo.UpdateAsync(user);
             return true;
         }
@@ -355,5 +459,32 @@ public class UserService : IUserService
         return true;
     }
 
+    public async Task<bool> ChangeAvataAsync(AvataDto avataDto)
+    {
+        var user = await _userRepo.FirstOrDefaultAsync(x => x.Id == avataDto.UserId);
+        if (user != null)
+        {
+            user.Avatar = avataDto.URLAvatarNew;
+            return await _userRepo.UpdateAsync(user);
+        }
+        return false;
+    }
 
+    public async Task<List<UserContributerDto>> GetContributer()
+    {
+        var data = from user in await _userRepo.GetQueryableAsync()
+                   select new UserContributerDto
+                   {
+                       Id = user.Id,
+                       Name = user.FullName,
+                       FactoryId =user.FactoryId,
+                       DepartmentId =user.DepartmentId,
+                   };
+        var listUser = data.ToList();
+        if (listUser != null)
+        {
+            return listUser;
+        }
+        return new List<UserContributerDto>();
+    }
 }

@@ -1,0 +1,71 @@
+﻿@using AntDesign
+@using AquaSolution.Client.Components.Icon
+@using AquaSolution.Shared.CommonDto
+@using AquaSolution.Shared.Position
+@using AquaSolution.Shared.Enum
+@inject HttpClient httpClient
+@inject IMessageService Message
+
+@{
+    RenderFragment footer = @<Template>
+        <Button OnClick="@SaveAsync" @key="@("submit")" Type="ButtonType.Primary">
+            Save
+        </Button>
+
+        <Button Style="color:#808080" OnClick="@HandleCancel" @key="@("back")">
+            Close
+        </Button>
+    </Template>;
+}
+
+<Modal @bind-Visible="IsModalVisible" Title="@Title" Width="600" Footer="@footer">
+    <Form @ref="@formRef"
+          Model="@_model"
+          Layout="FormLayout.Vertical"
+          OnFinish="SaveAsync"
+          ValidateMode="FormValidateMode.Complex"
+          ValidateOnChange="true"
+          Context="formCtx">
+
+        <Row Gutter="24">
+            <Col Span="12">
+            <FormItem Required="true" Label="Position Code">
+                <Input @bind-Value="_model.Code" />
+            </FormItem>
+            </Col>
+
+            <Col Span="12">
+            <FormItem Required="true" Label="Position Name">
+                <Input @bind-Value="_model.Name" />
+            </FormItem>
+            </Col>
+        </Row>
+
+        <Row Gutter="24">
+            <Col Span="12">
+            <FormItem Label="PositionType" Required="true">
+                <Select TItem="PositionType"
+                        TItemValue="PositionType"
+                        DataSource="@ListPositionType"
+                        @bind-Value="@PositionType"
+                        ItemValue="c => c"
+                        ItemLabel="c => c.ToString()">
+                </Select>
+            </FormItem>
+            </Col>
+            <Col Span="12">
+            <FormItem Label="Description">
+                <Input @bind-Value="_model.Description" />
+            </FormItem>
+            </Col>
+        </Row>
+        <Row Gutter="24">
+            <Col Span="24">
+            <FormItem Label="Note">
+                <TextArea @bind-Value="_model.Note" Rows="2"></TextArea>
+            </FormItem>
+            </Col>
+        </Row>
+
+    </Form>
+</Modal>

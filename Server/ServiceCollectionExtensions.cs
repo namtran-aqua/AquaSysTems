@@ -1,8 +1,11 @@
 ﻿using AquaSolution.Data.Repositories;
+using AquaSolution.Server.Services.ApprovalFlowService;
 using AquaSolution.Server.Services.DepartmentService;
+using AquaSolution.Server.Services.FactoryService;
 using AquaSolution.Server.Services.MenusService;
 using AquaSolution.Server.Services.PageManagement;
 using AquaSolution.Server.Services.PermissionService;
+using AquaSolution.Server.Services.PositionService;
 using AquaSolution.Server.Services.RolePermissionService;
 using AquaSolution.Server.Services.RoleService;
 using AquaSolution.Server.Services.UserService;
@@ -25,6 +28,9 @@ namespace AquaSolution.Server
             services.AddScoped<IPageService, PageService>();
             services.AddScoped<IRolePermissionService, RolePermissionService>();
             services.AddScoped<IDepartmentService, DepartmentService>();
+            services.AddScoped<IFactoryService, FactoryService>();
+            services.AddScoped<IPositionService, PositionService>();
+            services.AddScoped<IApprovalFlowService, ApprovalFlowService>();
 
             return services;
         }

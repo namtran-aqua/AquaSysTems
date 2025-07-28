@@ -1,5 +1,6 @@
 ﻿using AquaService.Shared.AuthModels;
 using AquaSolution.Shared.AuthModels;
+using AquaSolution.Shared.CommonDto;
 using AquaSolution.Shared.UserManagements;
 
 namespace AquaSolution.Server.Services.UserService
@@ -14,5 +15,7 @@ namespace AquaSolution.Server.Services.UserService
         Task<bool> DeleteAsync(Guid userId);
         Task<bool> UpdateAsync(CreatedAndUpdateUserDto createdUserDto);
         Task<bool> ChangePasswordAsync(ChangePassRequest changePassRequest);
+        Task<bool> ChangeAvataAsync(AvataDto avataDto);
+        Task<List<UserContributerDto>> GetContributer();
     }
 }

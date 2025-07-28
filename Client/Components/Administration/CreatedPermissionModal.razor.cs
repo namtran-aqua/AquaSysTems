@@ -114,6 +114,16 @@ namespace AquaSolution.Client.Components.Administration
         #region Action
         private async Task SaveAsync()
         {
+            var valid = formRef.Validate();
+            if (!valid)
+            {
+                return;
+            }
+            if (ValuePage == null)
+            {
+                await Message.Error("Page cannot be blank");
+                return;
+            }
             HandlePermissionDto = new HandlePermissionDto
             {
                 Action = ValueAction,

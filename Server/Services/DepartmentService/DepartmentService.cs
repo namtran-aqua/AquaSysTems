@@ -19,6 +19,8 @@ namespace AquaSolution.Server.Services.DepartmentService
                 Name = departmentDto.Name,
                 Code = departmentDto.Code,
                 Note = departmentDto.Note,
+                DepartmentType = departmentDto.DepartmentType,
+                DesCription = departmentDto.Description,
             };
             await _departmentRepo.InsertAsync(department);
             var boolReturn = await _departmentRepo.SaveChangesAsync();
@@ -44,6 +46,8 @@ namespace AquaSolution.Server.Services.DepartmentService
                                       Name = department.Name,
                                       Code = department.Code,
                                       Note = department.Note,
+                                      Description = department.DesCription,
+                                      DepartmentType = department.DepartmentType,
                                   };
                 var listDepartment = departments.ToList();
                 if (listDepartment.Count == 0)
@@ -61,7 +65,12 @@ namespace AquaSolution.Server.Services.DepartmentService
         {
             var deparment = await _departmentRepo.GetByIdAsync(departmentDto.Id);
             if(deparment == null) return false;
-            return await _departmentRepo.DeleteAsync(deparment);
+            deparment.Note = departmentDto.Note;
+            deparment.Code = departmentDto.Code;
+            deparment.Name = departmentDto.Name;
+            deparment.DesCription = departmentDto.Description;
+            deparment.DepartmentType =departmentDto.DepartmentType;
+            return await _departmentRepo.UpdateAsync(deparment);
         }
     }
 }

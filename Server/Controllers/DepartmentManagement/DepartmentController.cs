@@ -2,7 +2,7 @@
 using AquaSolution.Shared.Departments;
 using Microsoft.AspNetCore.Mvc;
 
-namespace AquaSolution.Server.Controllers
+namespace AquaSolution.Server.Controllers.DepartmentManagement
 {
     [ApiController]
     [Route("api/[controller]")]

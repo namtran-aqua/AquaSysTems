@@ -28,4 +28,10 @@
     <ProjectReference Include="..\Shared\AquaSolution.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="appsettings.data.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

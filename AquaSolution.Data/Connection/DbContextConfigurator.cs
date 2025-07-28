@@ -8,7 +8,7 @@ namespace AquaSolution.Data.Connection
         {
          var configuration = new ConfigurationBuilder()
         .SetBasePath(AppContext.BaseDirectory)
-        .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+        .AddJsonFile("appsettings.data.json", optional: false, reloadOnChange: true)
         .Build();
             var connectionString = configuration.GetConnectionString("DefaultConnection");
 

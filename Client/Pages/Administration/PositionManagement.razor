@@ -1,5 +1,59 @@
-﻿<h3>PositionManagement</h3>
+﻿@page "/position-management"
+@using AquaSolution.Client.Components.Position
+@using AquaSolution.Client.Components.Users
+@using AntDesign
+@inject ModalService modal
+@inject NavigationManager Navigation
+@inject IMessageService Message
+@using AquaSolution.Shared.Position
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthStateProvider
+<PageTitle>Position</PageTitle>
+<div class="user-management-container">
+    <div class="mb-3">
+        <style>
+            .custom-button-type {
+                height: 30px;
+                font-size: 12px;
+            }
+        </style>
+        <button @onclick="CreatedPosition" class="btn btn-primary custom-button-type">
+            <Icon Type="plus" />Created
+        </button>
+    </div>
+    <div style="width:100%;overflow-x:scroll ;max-height:75vh; ">
+        <Table TItem="PositionDto"
+               Size="TableSize.Small"
+               Class="customTable fix-table-header"
+               DataSource="ListPosition">
+            <ColumnDefinitions Context="row">
+                <PropertyColumn Title="Code" Property="c => c.Code"></PropertyColumn>
+                <PropertyColumn Title="Name" Property="c => c.Name"></PropertyColumn>
+                <PropertyColumn Title="Description" Property="c => c.Description"></PropertyColumn>
+                <PropertyColumn Title="PositionType" Property="c => c.PositionType"></PropertyColumn>
 
-@code {
-
-}
+                <PropertyColumn Title="Note" Property="c => c.Note"></PropertyColumn>
+                <Column Fixed="ColumnFixPlacement.Right" TData="PositionDto" Width="50px" Title="Action" Context="row">
+                    <Template>
+                        <Popover Title="Actions" Trigger="new Trigger[] { Trigger.Click }" Placement="Placement.Bottom">
+                            <ChildContent>
+                                <Button Icon="menu" />
+                            </ChildContent>
+                            <ContentTemplate>
+                                <div style="display: flex; flex-direction: column; gap: 4px; padding: 8px;">
+                                    <Button Type="ButtonType.Text" OnClick="@(async () => await EditPosition(row))" Style="text-align: left;">
+                                        <Icon Type="plus" /> Edit
+                                    </Button>
+                                    <Button Type="ButtonType.Text" OnClick="@(async () => await DeleteAsync(row))" Style="text-align: left;">
+                                        <Icon Type="delete" /> Delete
+                                    </Button>
+                                </div>
+                            </ContentTemplate>
+                        </Popover>
+                    </Template>
+                </Column>
+            </ColumnDefinitions>
+        </Table>
+    </div>
+</div>
+<PositionModal OnSave="LoadDataAsync" @ref="@positionModal"></PositionModal> 

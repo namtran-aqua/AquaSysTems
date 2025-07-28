@@ -25,10 +25,22 @@ namespace AquaSolution.Data.Data.MappingConfigurations
 
             builder.Property(e => e.Email)
                    .HasMaxLength(1000);
-            builder.HasOne<Groups>() 
+
+            builder.HasOne<Department>() 
                    .WithMany()
-                   .HasForeignKey(u => u.GroupId)
+                   .HasForeignKey(u => u.DepartmentId)
                    .OnDelete(DeleteBehavior.Restrict);
-                    }
+
+            builder.HasOne<Factory>() 
+                   .WithMany()
+                   .HasForeignKey(u => u.FactoryId)
+                   .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne<Position>() 
+                   .WithMany()
+                   .HasForeignKey(u => u.PositionId)
+                   .OnDelete(DeleteBehavior.Restrict);
+
+
+        }
     }
 }

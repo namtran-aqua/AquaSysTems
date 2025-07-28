@@ -8,11 +8,17 @@
 @using AquaSolution.Shared.Departments
 @using Microsoft.AspNetCore.Components.Authorization
 @inject AuthenticationStateProvider AuthStateProvider
+<PageTitle>Department</PageTitle>
 <div class="user-management-container">
     <div class="mb-3">
-
-        <button @onclick="CreatedDeparment" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Created Department
+        <style>
+            .custom-button-type {
+                height: 30px;
+                font-size: 12px;
+            }
+        </style>
+        <button @onclick="CreatedDeparment" class="btn btn-primary custom-button-type">
+                <Icon Type="plus" />Created 
             </button>
     </div>
     <div style="width:100%;overflow-x:scroll ;max-height:75vh; ">
@@ -23,7 +29,10 @@
             <ColumnDefinitions Context="row">
                 <PropertyColumn Title="Code" Property="c => c.Code"></PropertyColumn>
                 <PropertyColumn Title="Name" Property="c => c.Name"></PropertyColumn>
-                <PropertyColumn Title="Node" Property="c => c.Note"></PropertyColumn>
+                <PropertyColumn Title="Description" Property="c => c.Description"></PropertyColumn>
+                <PropertyColumn Title="DepartmentType" Property="c => c.DepartmentType"></PropertyColumn>
+
+                <PropertyColumn Title="Note" Property="c => c.Note"></PropertyColumn>
                 <Column Fixed="ColumnFixPlacement.Right" TData="DepartmentDto" Width="50px" Title="Action" Context="row">
                     <Template>
                         <Popover Title="Actions" Trigger="new Trigger[] { Trigger.Click }" Placement="Placement.Bottom">

@@ -19,18 +19,18 @@
 <Modal @bind-Visible="_visible" Title="ChangePassword" Width="600" Footer="@footer">
     <EditForm Model="_model" OnValidSubmit="SaveAsync">
         <DataAnnotationsValidator />
-        <Form TModel="ChangePassRequest" Model="_model" Layout="FormLayout.Horizontal"
+        <Form @ref="@formRef"  TModel="ChangePassRequest" Model="_model" Layout="FormLayout.Horizontal"
               LabelColSpan="6" WrapperColSpan="18">
             <ChildContent Context="formCtx">
-                <FormItem Label="Old Password">
+                <FormItem Required="true" Label="Old Password">
                     <InputPassword @bind-Value="_model.OldPassword" />
                 </FormItem>
 
-                <FormItem Label="New Password">
+                <FormItem Required="true" Label="New Password">
                     <InputPassword @bind-Value="_model.NewPassword" />
                 </FormItem>
 
-                <FormItem Label="Confirm Password">
+                <FormItem Required="true" Label="Confirm Password">
                     <InputPassword @bind-Value="_model.ConfirmPassword" />
                 </FormItem>
             </ChildContent>

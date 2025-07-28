@@ -1,8 +1,10 @@
 ﻿using AquaSolution.Server.Services.RoleService;
+using AquaSolution.Server.SignalR;
 using AquaSolution.Shared.Roles;
 using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace AquaSolution.Server.Controllers.UserManagements
 {
@@ -11,10 +13,11 @@ namespace AquaSolution.Server.Controllers.UserManagements
     public class RolesController : ControllerBase
     {
         private readonly IRoleService _roleService;
-
-        public RolesController(IRoleService roleService)
+        private readonly IHubContext<SignalrHub> _hubContext;
+        public RolesController(IRoleService roleService, IHubContext<SignalrHub> hubContext)
         {
             _roleService = roleService;
+            _hubContext = hubContext;
         }
 
         [HttpGet("get-all")]
@@ -47,6 +50,7 @@ namespace AquaSolution.Server.Controllers.UserManagements
             var success = await _roleService.UpdateUserRolesAsync(userId, roles);
             if (success)
             {
+                await _hubContext.Clients.All.SendAsync("ReloadMenu");
                 return Ok(new { message = "Update successfully" });
             }
             else

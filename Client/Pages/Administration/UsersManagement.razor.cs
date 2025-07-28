@@ -6,6 +6,8 @@ using AquaSolution.Shared.CommonDto;
 using AquaSolution.Shared.Enum;
 using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.SignalR.Client;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 
@@ -17,30 +19,50 @@ namespace AquaSolution.Client.Pages.Administration
         #region Declaration
         [Inject] private HttpClient Http { get; set; }
         private List<UserDto> users = new();
+        private List<UserDto> userFilter = new();
         private bool isLoading = true;
         private RoleManagerDialog roleManagerDialog;
         private UserDto selectedUser;
         private HasPermission hasPermission = new();
         private UserModal userModal;
         private UserDto CurrenUser {  get; set; }
+        private UserDetailModal detailModal;
         private bool Created {  get; set; }
         private Guid PageId { get; set; }
         #endregion
         #region Innit
         protected override async Task OnInitializedAsync()
         {
-            var uri = new Uri(Navigation.Uri);
-            var currentPath = uri.AbsolutePath.ToString();
-            PageId = await Http.GetFromJsonAsync<Guid>($"api/Page/GetPageIdByUrl{currentPath}");
+            await GetPage();
             await CheckPermission();
             await LoadUsers();
             isLoading = false;
+        }
+        private async Task GetPage()
+        {
+            var baseUri = new Uri(Navigation.BaseUri);
+            var uri = new Uri(Navigation.Uri);
+
+            var basePath = baseUri.AbsolutePath.TrimEnd('/');
+            var fullPath = uri.AbsolutePath;
+
+            string currentPath;
+            if (!string.IsNullOrEmpty(basePath))
+                currentPath = fullPath.Replace(basePath, "");
+            else
+                currentPath = fullPath;
+
+            currentPath = currentPath.TrimStart('/');
+
+            PageId = await Http.GetFromJsonAsync<Guid>($"api/Page/GetPageIdByUrl/{currentPath}");
+
         }
         private async Task LoadUsers()
         {
             try
             {
                 users = await Http.GetFromJsonAsync<List<UserDto>>("api/user/get-all");
+                userFilter = users;
             }
             catch (Exception ex)
             {
@@ -68,9 +90,13 @@ namespace AquaSolution.Client.Pages.Administration
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 Email = user.Email,
-                Manager= user.ManagerId,
+                ManagerId= user.ManagerId,
                 PhoneNumber = user.PhoneNumber,
                 GroupId = user.GroupId,
+                DepartmentId = user.DepartmentId,
+                FactoryId = user.FactoryId,
+                PositionId = user.PositionId,
+                IsActive =user.IsActive
             };
            await userModal.ShowModelAsync(true, updateDto, CurrenUser);
         }
@@ -104,6 +130,10 @@ namespace AquaSolution.Client.Pages.Administration
             }
             await InvokeAsync(StateHasChanged);
         }
+        private async Task DetailUser(UserDto user)
+        {
+            await detailModal.ShowModal(user, new CurrentUserInfo(),false);
+        }
         #endregion
         #region Handle Data
         private async Task HandleSaved()
@@ -111,6 +141,71 @@ namespace AquaSolution.Client.Pages.Administration
             await LoadUsers();
         }
 
+        #endregion
+        #region Search
+        private string? WorkDayId { get; set; }
+        private string? FullName { get; set; }
+        private string? Email { get; set; }
+        private async Task HandleKeyDown(KeyboardEventArgs e)
+        {
+            if (e.Key == "Enter")
+            {
+                await Search();
+            }
+        }
+        private void WorkDayIdInputChanged(ChangeEventArgs e)
+        {
+            WorkDayId = e.Value?.ToString();
+        }
+        private void FullNameInputChanged(ChangeEventArgs e)
+        {
+            FullName = e.Value?.ToString();
+        }
+        private void EmailInputChanged(ChangeEventArgs e)
+        {
+            Email = e.Value?.ToString();
+        }
+        private async Task Search()
+        {
+            try
+            {
+                var workDayId = WorkDayId?.Trim().ToLower();
+                var fullName = FullName?.Trim().ToLower();
+                var email = Email?.Trim().ToLower();
+
+                var filtered = users
+                    .Where(x =>
+                        (string.IsNullOrWhiteSpace(workDayId) || (x.WorkDayId != null && x.WorkDayId.ToLower().Contains(workDayId))) &&
+                        (string.IsNullOrWhiteSpace(fullName) || (x.FullName != null && x.FullName.ToLower().Contains(fullName))) &&
+                        (string.IsNullOrWhiteSpace(email) || (x.Email != null && x.Email.ToLower().Contains(email)))
+                    )
+                    .ToList();
+
+                // Nếu không nhập gì cả, show toàn bộ
+                if (string.IsNullOrWhiteSpace(workDayId) &&
+                    string.IsNullOrWhiteSpace(fullName) &&
+                    string.IsNullOrWhiteSpace(email))
+                {
+                    filtered = users;
+                }
+
+                userFilter = filtered;
+                StateHasChanged();
+            }
+            catch (System.Exception ex)
+            {
+                Console.WriteLine("Lỗi trong Search(): " + ex.Message);
+            }
+        }
+        private Task Reset()
+        {
+            WorkDayId = null;
+            FullName = null;
+            Email = null;
+            userFilter = users;
+            StateHasChanged();
+            return Task.CompletedTask;
+        }
         #endregion
     }
 }

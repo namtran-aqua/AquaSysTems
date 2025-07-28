@@ -5,18 +5,20 @@
 @inject ModalService modal
 @using AquaSolution.Client.Components.Administration
 @using AquaSolution.Shared.Permissions
+<PageTitle>Permission</PageTitle>
 <div class="user-management-container">
-    <div class="mb-3">
-        <button @onclick="@(async () => await CreatedPermissionAsync())" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Created Permission
-        </button>
-    </div>
     <style>
-        .pages-style {
+        .custom-button-type {
             height: 30px;
             font-size: 12px;
         }
     </style>
+    <div class="mb-3">
+        <button @onclick="@(async () => await CreatedPermissionAsync())" class="btn btn-primary custom-button-type">
+            <Icon Type="plus" />Created Permission
+        </button>
+    </div>
+ 
     <div style="width:100%;overflow-x:scroll ;max-height:75vh; ">
         <Collapse>
             @foreach (var menu in Menus)
@@ -31,12 +33,9 @@
 
                                     <ChildContent Context="perm">
                                         <PropertyColumn Title="PermissionName" Property="c => c.Action"></PropertyColumn>
-                                        @*           <Button Class="btn btn-danger" Type="ButtonType.Text" OnClick="@(async () => await DeleteAsync(perm))" Style="text-align: left;">
-                                            <Icon Type="delete"/> Delete
-                                        </Button> *@
                                         <Column Fixed="ColumnFixPlacement.Right" TData="HandlePermissionDto" Title="Acction" Context="row">
                                             <Template>
-                                                <button class="btn btn-danger"  @onclick="@(async () => await DeleteAsync(perm))" Style="text-align: left;">
+                                                <button class="btn btn-danger custom-button-type" @onclick="@(async () => await DeleteAsync(perm))" Style="text-align: left;">
                                                     <Icon Type="delete" /> Delete
                                                 </button>
                                             </Template>

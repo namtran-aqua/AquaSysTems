@@ -1,53 +1,30 @@
 ﻿@using AntDesign
 @inject IJSRuntime JSRuntime
 @{
-	RenderFragment footer = @<Template>
+    RenderFragment footer = @<Template>
 
-		<Button  OnClick="@Save" @key="@("submit")"
-				Type="ButtonType.Primary">
-			Save
-		</Button>
-		
+        <Button OnClick="@Save" @key="@("submit")"
+                Type="ButtonType.Primary">
+            Save
+        </Button>
 
-		<Button Style="color:#808080" OnClick="@Close" @key="@("back")">Close</Button>
 
-	</Template>;
+        <Button Style="color:#808080" OnClick="@Close" @key="@("back")">Close</Button>
+
+    </Template>;
 }
-<Modal @bind-Visible="IsVisible" 
-Style="z-index: 9999;width:1000px ;height:78vh !important"
+<Modal @bind-Visible="IsVisible"
+       Style="z-index: 9999;width:1000px ;height:80vh !important ; margin-top:-80px"
        Footer="@footer" Title="Permission Settings">
-    <div class="modal-body" style="width:100%;overflow-x:scroll ;max-height:55vh; ">
+    <div class="modal-body" style="width:100%;overflow-x:scroll ;max-height:60vh; ">
 
         <Collapse Accordion="false">
-@*             @foreach (var group in listAllPermission)
-            {
-                <Panel Header=@($"View: {group.MenuName} ({group.Permissions?.Count ?? 0} quyền)") Key="@group.MenuId.ToString()">
-                    @if (group.Permissions?.Any() == true)
-                    {
-                        <ul style="list-style-type: none; padding-left: 0;">
-                            @foreach (var child in group.Permissions.OrderBy(x=>x.Action))
-                            {
-                                <li class="mb-2">
-                                    <Checkbox Checked="@child.IsChecked"
-                                              CheckedChanged="(e => TogglePermission(e, child.PermissionId))">
-                                        @child.PermissionName
-                                    </Checkbox>
-                                </li>
-                            }
-                        </ul>
-                    }
-                    else
-                    {
-                        <div>No permissions available.</div>
-                    }
-                </Panel>
-            } *@
             @foreach (var group in listAllPermission)
             {
-                <Panel Header=@($"View: {group.MenuName} ({group.Permissions?.Count ?? 0} Permission)") Key="@group.MenuId.ToString()">
+                <Panel Header=@($"{group.MenuName} ({group.Permissions?.Count ?? 0} Permission)") Key="@group.MenuId.ToString()">
                     @if (group.Permissions?.Any() == true)
                     {
-                        @foreach (var actionGroup in group.Permissions.GroupBy(p => p.Action))
+                        @*  @foreach (var actionGroup in group.Permissions.GroupBy(p => p.Action))
                         {
                             <h4 style="margin-top: 1rem;">@actionGroup.Key</h4>
                             <ul style="list-style-type: none; padding-left: 0;">
@@ -61,7 +38,39 @@ Style="z-index: 9999;width:1000px ;height:78vh !important"
                                     </li>
                                 }
                             </ul>
+                        } *@
+                        var listMenu = group.Permissions.Where(x => x.PageId == null).ToList();
+                        if (listMenu.Any())
+                        {
+                            <li class="mb-2">
+                                <Checkbox Checked="@listMenu.First().IsChecked"
+                                          CheckedChanged="(e => TogglePermission(e, listMenu.First().PermissionId))">
+                                    <h6>@listMenu.First().PermissionName</h6>
+                                </Checkbox>
+                            </li>
                         }
+                        var listGroup = group.Permissions.Where(x => x.PageId != null).ToList();
+
+                        @foreach (var pageGroup in listGroup.GroupBy(p => p.PageName))
+                        {
+                            @*   <h6 style="margin-top: 1rem;">@pageGroup.Key</h6>
+                            <ul style="list-style-type: none; padding-left: 0;"> *@
+                            <Collapse Accordion="false">
+                                <Panel Header="@pageGroup.Key" Key="@pageGroup.Key">
+                                    @foreach (var child in pageGroup)
+                                    {
+                                        <li class="mb-2">
+                                            <Checkbox Checked="@child.IsChecked"
+                                                      CheckedChanged="(e => TogglePermission(e, child.PermissionId))">
+                                                @child.PermissionName
+                                            </Checkbox>
+                                        </li>
+                                    }
+                                </Panel>
+                            </Collapse>
+                            @*    </ul> *@
+                        }
+
                     }
                     else
                     {

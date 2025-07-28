@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AquaSolution.Shared.Enum;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,6 +13,8 @@ namespace AquaSolution.Data.Data.Entities
         public string Name { get; set; }
         public string Code { get; set; }
         public string? Note { get; set; }
+        public string? Description { get; set; }
+        public FactoryType FactoryType { get; set; }
         public DateTime CreatedDate { get; set; }
     }
 }

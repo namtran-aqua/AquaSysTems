@@ -15,7 +15,7 @@ namespace AquaSolution.Shared.Permissions
         public Guid? PageId { get; set; }
         public string PageName { get; set; } = default!;
         public string? Action { get; set; } = default!;
-        public string PermissionName => $"{Action}: {(string.IsNullOrWhiteSpace(PageName) ?"-----Menu - " + MenuName : PageName)}";
+        public string PermissionName => $"{Action}: {(string.IsNullOrWhiteSpace(PageName) ?"Menu Permission - " + MenuName : PageName)}";
 
         public bool IsChecked { get; set; }
     }

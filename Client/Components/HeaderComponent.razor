@@ -1,20 +1,16 @@
 ﻿@using AquaSolution.Client.Components.Users
 @inject IJSRuntime JS
-
 <div class="user-dropdown-container">
     <div class="user-dropdown" id="userDropdown">
-        <div class="user-dropdown-toggle">
-            <div class="user-avatar">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
-                    <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3Zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
-                </svg>
-            </div>
-            <span class="text-dark">@users?.FullName</span>
+        <div class="user-dropdown-toggle d-flex align-items-center gap-2">
+            <img src="@(!string.IsNullOrWhiteSpace(userDto?.Avatar) ? userDto.Avatar : "/uploads/avatars/default.jpg")"
+                 alt="Avatar"
+                 class="avatar-img" />
+            <span class="text-dark">@userDto?.FullName</span>
         </div>
-
         <div class="user-dropdown-menu">
-            <a @onclick="DetailMyAccount"><i class="fa fa-user me-1"></i> MyUserDetails</a>
-            <a @onclick="ChangePassWord"><i class="fa fa-key me-1"></i> ChangePassword</a>
+            <a @onclick="DetailMyAccount"><i class="fa fa-user me-1"></i> My profile</a>
+            <a @onclick="ChangePassWord"><i class="fa fa-key me-1"></i> Change Password</a>
             <a @onclick="Logout"><i class="fa fa-sign-out me-1"></i> Logout</a>
         </div>
     </div>
@@ -23,11 +19,21 @@
 <ChangePassModal @ref="@changePassModal"></ChangePassModal>
 
 <style>
+
     .user-dropdown-container {
         position: fixed;
-        top: 10px;
+        margin-top: -5px;
+        top:10px;
         right: 20px;
         z-index: 999;
+    }
+
+    .avatar-img {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1px solid #ccc;
     }
 
     .user-dropdown {
@@ -39,21 +45,8 @@
         display: flex;
         align-items: center;
         cursor: pointer;
-        padding: 8px 12px;
+        padding: 5px 12px;
     }
-
-    .user-avatar {
-        width: 32px;
-        height: 32px;
-        background-color: #87d068;
-        border-radius: 50%;
-        text-align: center;
-        line-height: 32px;
-        color: white;
-        font-weight: bold;
-        margin-right: 8px;
-    }
-
     .user-dropdown-menu {
         display: none;
         position: absolute;

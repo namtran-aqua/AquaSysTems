@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AquaSolution.Shared.Enum;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -14,6 +15,9 @@ namespace AquaSolution.Shared.Departments
         public string Name { get; set; }
         [Required]
         public string Code { get; set; }
+        public string? Description { get; set; }
+        public DepartmentType DepartmentType { get; set; }
+
         public string? Note { get; set; }
         public DateTime CreatedDate { get; set; }
     }

@@ -18,7 +18,6 @@ namespace AquaSolution.Shared.UserManagements
         public string FullName { get; set; }
         [Required(ErrorMessage = "Email is required")]
         public string Email { get; set; }
-        public Guid? Manager { get; set; }
         public string PhoneNumber { get; set; }
         public Guid? GroupId { get; set; }
         public DateTime CreatedTime { get; set; }
@@ -27,5 +26,9 @@ namespace AquaSolution.Shared.UserManagements
         public string? UpdateBy { get; set; }
         public string CreatedBy { get; set; } = string.Empty;
         public string? AvatarUrl { get; set; }
+        public Guid? DepartmentId { get; set; }
+        public Guid? ManagerId { get; set; }
+        public Guid? PositionId { get; set; }
+        public Guid? FactoryId { get; set; }
     }
 }

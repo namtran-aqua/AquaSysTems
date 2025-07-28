@@ -1,0 +1,42 @@
+﻿@page "/approval-flow-management"
+@using AntDesign
+@using AquaSolution.Shared.ApprovalFlows
+@inject ModalService modal
+@inject NavigationManager Navigation
+@inject IMessageService Message
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthStateProvider
+<PageTitle>Approval Flow</PageTitle>
+<div class="user-management-container">
+    <div class="mb-3">
+        <style>
+            .custom-button-type {
+                height: 30px;
+                font-size: 12px;
+            }
+        </style>
+        <button @onclick="CreatedApprovalFlow" class="btn btn-primary custom-button-type">
+            <Icon Type="plus" />Created Flow
+        </button> 
+    </div>
+    <div style="width:100%;overflow-x:scroll ;max-height:75vh; ">
+        <Collapse>
+            @foreach (var group in groupedList)
+            {
+                <Panel Header="@($"{group.PositionName} - {group.System}")">
+                    <Table PaginationPosition="false" DataSource="@group.Items">
+                        <ChildContent Context="p">
+                            <PropertyColumn Title="CurrenStep" Width="150" Property="c => c.CurrentStep"></PropertyColumn>
+                            <PropertyColumn Title="NextStep" Width="150" Property="c => c.NextStep"></PropertyColumn>
+                            <PropertyColumn Title="UserApproveName" Width="auto" Property="c => c.UserApproveName"></PropertyColumn>
+                            <PropertyColumn Title="ApprovalSettingType" Width="auto" Property="c => c.ApprovalSettingType"></PropertyColumn>
+                        </ChildContent>
+                    </Table>
+                </Panel>
+            }
+        </Collapse>
+
+    </div>
+   
+</div>
+@* <FactoryModal OnSave="LoadDataAsync" @ref="@factoryModal"></FactoryModal>  *@

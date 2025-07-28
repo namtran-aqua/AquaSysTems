@@ -20,11 +20,18 @@ namespace AquaSolution.Data.Data.MappingConfigurations
                    .HasMaxLength(50);
 
             builder.Property(d => d.Note)
-                   .HasMaxLength(250);
+                   .HasMaxLength(2400);
+            builder.Property(d => d.DesCription)
+                   .HasMaxLength(2400);
 
             builder.Property(d => d.CreatedDate)
                    .IsRequired()
                    .HasDefaultValueSql("GETDATE()");
+
+            builder.Property(e => e.Type)
+                  .HasConversion<string>()
+                  .IsRequired()
+                  .HasMaxLength(50);
         }
     }
 }

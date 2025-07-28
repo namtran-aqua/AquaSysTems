@@ -1,5 +1,6 @@
 ﻿@using AntDesign
-
+@using AquaSolution.Shared.CommonDto;
+@using AquaSolution.Shared.UserManagements
 @inject IMessageService Message
 @{
     RenderFragment footer = @<Template>
@@ -13,9 +14,9 @@
 
     </Template>;
 }
-<Modal @bind-Visible="IsModalVisible" Style="z-index: 9999;width:1000px" Footer="@footer">
+<Modal @bind-Visible="IsModalVisible" Style="z-index: 9999;width:1000px;margin-top:-75px" Footer="@footer">
     <Form @ref="@formRef"
-        Model="@CreatedUserDto"
+          Model="@CreatedUserDto"
           Layout="FormLayout.Vertical"
           OnFinish="SaveAsync"
           ValidateMode="FormValidateMode.Complex"
@@ -49,19 +50,51 @@
             </FormItem>
             </Col>
             <Col Span="8">
-            <FormItem Required="true" Label="User Group">
-                @*   <TextArea ShowCount MinRows="1" MaxRows="1" @bind-Value="@CreatedUserDto.GroupId" AllowClear="true" /> *@
+            <FormItem Required="true" Label="Position">
+                <Select TItem="BaseDto" TItemValue="BaseDto"
+                        DataSource="@ListPosition"
+                        @bind-Value="@ValuePosition"
+                        ItemValue="c => c"
+                        ItemLabel="c => c.Name">
+                </Select>
             </FormItem>
             </Col>
             <Col Span="8">
-            <FormItem Required="true" Label="Manager">
-                @*   <TextArea ShowCount MinRows="1" MaxRows="1" @bind-Value="@CreatedUserDto.GroupId" AllowClear="true" /> *@
+            <FormItem Required="true" Label="Factory">
+                <Select TItem="BaseDto" TItemValue="BaseDto"
+                        DataSource="@ListFactory"
+                        @bind-Value="@ValueFactory"
+                        ItemValue="c => c"
+                        ItemLabel="c => c.Name">
+                </Select>
+            </FormItem>
+            </Col>
+        </Row>
+        <Row Gutter="16">
+            <Col Span="12">
+            <FormItem Required="true" Label="Department">
+                <Select TItem="BaseDto" TItemValue="BaseDto"
+                        DataSource="@ListDepartment"
+                        @bind-Value="@ValueDepartment"
+                        ItemValue="c => c"
+                        ItemLabel="c => c.Name">
+                </Select>
+            </FormItem>
+            </Col>
+            <Col Span="12">
+            <FormItem Label="Manager">
+                <Select TItem="UserContributerDto" TItemValue="UserContributerDto"
+                        DataSource="@Listmanager"
+                        @bind-Value="@ValueManager"
+                        ItemValue="c => c"
+                        ItemLabel="c => c.Name">
+                </Select>
             </FormItem>
             </Col>
             @if (IsEdit)
             {
                 <AntDesign.Col Span="2">
-                    <FormItem Required="true" Label="IsActive">
+                    <FormItem Label="IsActive">
                         <Switch @bind-Value="@CreatedUserDto.IsActive" />
                     </FormItem>
                 </AntDesign.Col>

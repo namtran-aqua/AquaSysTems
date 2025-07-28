@@ -1,6 +1,7 @@
 ﻿using AntDesign;
 using AquaSolution.Shared.AuthModels;
 using AquaSolution.Shared.CommonDto;
+using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Components;
 using OneOf.Types;
 using System.ComponentModel.DataAnnotations;
@@ -14,6 +15,7 @@ namespace AquaSolution.Client.Components.Users
         [Inject] private HttpClient Http { get; set; }
         private bool _visible;
         private ChangePassRequest _model = new();
+        private Form<ChangePassRequest> formRef;
         private Guid UserId { get; set; }
         public void ShowModal(Guid userId)
         {
@@ -25,6 +27,11 @@ namespace AquaSolution.Client.Components.Users
 
         private async Task SaveAsync()
         {
+            var valid = formRef.Validate();
+            if (!valid)
+            {
+                return;
+            }
             _model.UserId = UserId;
             var response = await Http.PostAsJsonAsync("api/auth/change-password", _model);
             if (response.IsSuccessStatusCode)

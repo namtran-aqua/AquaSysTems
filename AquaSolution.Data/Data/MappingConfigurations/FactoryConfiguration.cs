@@ -20,7 +20,11 @@ namespace AquaSolution.Data.Data.MappingConfigurations
                    .HasMaxLength(50);
 
             builder.Property(d => d.Note)
-                   .HasMaxLength(250);
+                   .HasMaxLength(2400);
+            builder.Property(e => e.FactoryType)
+                   .HasConversion<string>()
+                   .IsRequired()
+                   .HasMaxLength(50);
 
             builder.Property(d => d.CreatedDate)
                    .IsRequired()
