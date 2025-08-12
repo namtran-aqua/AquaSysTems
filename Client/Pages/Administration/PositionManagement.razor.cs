@@ -1,5 +1,5 @@
 ﻿using AquaSolution.Client.Common;
-using AquaSolution.Client.Components.Position;
+using AquaSolution.Client.Components.Administration.Position;
 using AquaSolution.Shared.CommonDto;
 using AquaSolution.Shared.Position;
 using Microsoft.AspNetCore.Components;

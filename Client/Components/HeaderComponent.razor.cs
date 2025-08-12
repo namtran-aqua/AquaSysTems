@@ -1,5 +1,5 @@
 ﻿using AntDesign;
-using AquaSolution.Client.Components.Users;
+using AquaSolution.Client.Components.Administration.Users;
 using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;

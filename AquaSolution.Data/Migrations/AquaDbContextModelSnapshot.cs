@@ -207,6 +207,83 @@ namespace AquaSolution.Data.Migrations
                     b.ToTable("tbl_Inventory", (string)null);
                 });
 
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.InventoryPeriod", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("CreatedById")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<int>("Month")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("tbl_InventoryPeriods", (string)null);
+                });
+
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.InventoryPeriodDetail", b =>
+                {
+                    b.Property<Guid>("InventoryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("InventoryPeriodId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("ActualQuantity")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("DateManufacture")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ExpiryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ProductType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal?>("RemainingValidity")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("SystemQuantity")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("InventoryId", "InventoryPeriodId");
+
+                    b.HasIndex("InventoryPeriodId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("tbl_InventoryPeriodDetails", (string)null);
+                });
+
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.MedicalSuplies", b =>
                 {
                     b.Property<Guid>("ProducId")
@@ -356,6 +433,68 @@ namespace AquaSolution.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("tbl_Positions", (string)null);
+                });
+
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.Prescription", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<Guid>("PharmacyManagerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("RequestId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RequestId");
+
+                    b.ToTable("tbl_Prescriptions", (string)null);
+                });
+
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.PrescriptionDetail", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ExpirationDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ManufacturingDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("PrescriptionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PrescriptionId");
+
+                    b.ToTable("tbl_PrescriptionDetails", (string)null);
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.Product", b =>
@@ -539,6 +678,42 @@ namespace AquaSolution.Data.Migrations
                     b.ToTable("tbl_SysTemHistorys", (string)null);
                 });
 
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.Treatment", b =>
+                {
+                    b.Property<Guid>("RequestId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CheckInTime")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<string>("Diagnose")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<Guid>("PharmacyManagerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("TreatmentType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Treatments")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("RequestId");
+
+                    b.ToTable("tbl_Treatments", (string)null);
+                });
+
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -646,7 +821,7 @@ namespace AquaSolution.Data.Migrations
                     b.ToTable("tbl_UserRoles", (string)null);
                 });
 
-            modelBuilder.Entity("AquaSolution.Data.Data.Entities.WarehouseImport", b =>
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.WarehouseExport", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -657,9 +832,8 @@ namespace AquaSolution.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
@@ -681,8 +855,88 @@ namespace AquaSolution.Data.Migrations
                     b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("WarehouseImportType")
-                        .HasColumnType("int");
+                    b.Property<string>("WarehouseExportType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("tbl_WarehouseExports", (string)null);
+                });
+
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.WarehouseExportDetail", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("DateManufacture")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ExpiryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ProductType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("decimal(18, 4)");
+
+                    b.Property<Guid>("WarehouseExportId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("WarehouseExportId");
+
+                    b.ToTable("tbl_WarehouseExportDetails", (string)null);
+                });
+
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.WarehouseImport", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("WarehouseImportType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("Id");
 
@@ -741,6 +995,21 @@ namespace AquaSolution.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.InventoryPeriodDetail", b =>
+                {
+                    b.HasOne("AquaSolution.Data.Data.Entities.InventoryPeriod", null)
+                        .WithMany()
+                        .HasForeignKey("InventoryPeriodId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AquaSolution.Data.Data.Entities.Product", null)
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.MedicalSuplies", b =>
                 {
                     b.HasOne("AquaSolution.Data.Data.Entities.Product", null)
@@ -764,6 +1033,24 @@ namespace AquaSolution.Data.Migrations
                     b.HasOne("AquaSolution.Data.Data.Entities.Menu", null)
                         .WithMany()
                         .HasForeignKey("MenuId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.Prescription", b =>
+                {
+                    b.HasOne("AquaSolution.Data.Data.Entities.RequestClinic", null)
+                        .WithMany()
+                        .HasForeignKey("RequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.PrescriptionDetail", b =>
+                {
+                    b.HasOne("AquaSolution.Data.Data.Entities.Prescription", null)
+                        .WithMany()
+                        .HasForeignKey("PrescriptionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -837,6 +1124,21 @@ namespace AquaSolution.Data.Migrations
                     b.HasOne("AquaSolution.Data.Data.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.WarehouseExportDetail", b =>
+                {
+                    b.HasOne("AquaSolution.Data.Data.Entities.Product", null)
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AquaSolution.Data.Data.Entities.WarehouseExport", null)
+                        .WithMany()
+                        .HasForeignKey("WarehouseExportId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

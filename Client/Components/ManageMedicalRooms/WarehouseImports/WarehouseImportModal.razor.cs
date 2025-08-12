@@ -39,7 +39,7 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.WarehouseImports
         }
         private async Task LoadProduct()
         {
-            _products = await Http.GetFromJsonAsync<List<ProductDto>>("api/product/get-all");
+            _products = await Http.GetFromJsonAsync<List<ProductDto>>("api/product/get-all-by-import");
         }
         private async Task SetDataView()
         {
@@ -138,18 +138,18 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.WarehouseImports
                 }
 
             }
-            createdWarehouseImportDto.WarehouseImportDto.CreatedBy = CurrenUser.FullName;
+            createdWarehouseImportDto.WarehouseImportDto.CreatedBy = CurrenUser.Id;
             var response = await Http.PostAsJsonAsync("api/WarehouseImport/import", createdWarehouseImportDto);
             if (response.IsSuccessStatusCode)
             {
                 await Message.Success("Success!");
+                IsVisible = false;
+                await OnSaved.InvokeAsync();
             }
             else
             {
                 await Message.Error("Error!");
             }
-            IsVisible = false;
-            await OnSaved.InvokeAsync();
         }
         private void Close()
         {

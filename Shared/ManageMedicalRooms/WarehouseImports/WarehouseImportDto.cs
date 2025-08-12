@@ -14,7 +14,7 @@ namespace AquaSolution.Shared.ManageMedicalRooms.WarehouseImports
         public string? Description { get; set; }
         public string? Note { get; set; }
         public DateTime CreatedDate { get; set; }
-        public string CreatedBy { get; set; }
+        public Guid CreatedBy { get; set; }
         public DateTime? UpdatedDate { get; set; }
         public string? UpdatedBy { get; set; }
         public WarehouseImportType WarehouseImportType { get; set; }

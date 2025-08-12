@@ -22,7 +22,7 @@ namespace AquaSolution.Client.Pages.ManageMedicalRooms.Productions
         }
         private async Task LoadData()
         {
-            _products = await Http.GetFromJsonAsync<List<ProductDto>>("api/product/get-all");
+            _products = await Http.GetFromJsonAsync<List<ProductDto>>("api/product/get-all-by-import");
             _products = _products.Where(x=>x.ProductType == ProductType.Medicine).ToList();
             await InvokeAsync(StateHasChanged);
         }

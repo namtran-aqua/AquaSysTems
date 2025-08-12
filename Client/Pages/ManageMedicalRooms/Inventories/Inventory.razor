@@ -1,7 +1,8 @@
 ﻿@page "/inventory-management"
 @using AquaSolution.Client.Components.ManageMedicalRooms.Products
+@using AquaSolution.Client.Components.ManageMedicalRooms.WarehouseExports
 @using AquaSolution.Client.Components.ManageMedicalRooms.WarehouseImports
-@using AquaSolution.Client.Components.Users
+@using AquaSolution.Client.Components.Administration.Users
 @using AntDesign
 @inject ModalService modal
 @inject NavigationManager Navigation
@@ -18,7 +19,7 @@
         }
 
         .fix-table-header table {
-            width: max-content;
+            
             border-collapse: collapse;
         }
 
@@ -48,6 +49,10 @@
         .ant-table-row {
             text-align: center;
         }
+
+        .ant-table-content {
+            min-height: 65vh !important;
+        }
     </style>
     <button @onclick="ImportWarehouse" class="btn btn-primary custom-button-type">
         <Icon Type="plus" />ImportWarehouse
@@ -57,7 +62,7 @@
     </button>
 
 </div>
-<div style="width:100%;overflow-x:scroll ;max-height:75vh; ">
+<div style="width:100%;overflow-x:scroll ;max-height:70vh; ">
     <Table TItem="InventoryDto"
            Size="TableSize.Small"
            Class="customTable fix-table-header"
@@ -67,7 +72,7 @@
             <PropertyColumn Width="250" Title="ProductName" Property="c => c.ProductName"></PropertyColumn>
             <PropertyColumn Width="80" Title="Unit" Property="c => c.Unit"></PropertyColumn>
             <PropertyColumn Width="180" Title="ProductType" Property="c => c.ProductType"></PropertyColumn>
-            <PropertyColumn Width="100" Title="QuanTity" Property="c => c.Quantity"></PropertyColumn>
+            <PropertyColumn Width="100" Title="QuanTity" Property="c => c.QuantityFormatted"></PropertyColumn>
             <PropertyColumn Width="80" Title="ManufacturingDate" Property="c => c.ManufacturingDate" Format="yyyy/MM/dd"></PropertyColumn>
             <PropertyColumn Width="80" Title="ExpirationDate" Property="c => c.ExpirationDate" Format="yyyy/MM/dd"></PropertyColumn>
             <PropertyColumn Width="80" Title="expired" Property="c => c.expired"></PropertyColumn>
@@ -75,3 +80,4 @@
     </Table>
 </div>
 <WarehouseImportModal OnSaved="LoadDataAsync" @ref="@_warehouseImportModal"></WarehouseImportModal> 
+<WarehouseExportModal OnSaved="LoadDataAsync" @ref="@_warehouseExportModal"></WarehouseExportModal> 

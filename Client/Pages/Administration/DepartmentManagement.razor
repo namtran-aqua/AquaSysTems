@@ -1,6 +1,6 @@
 ﻿@page "/department-management"
-@using AquaSolution.Client.Components.Department
-@using AquaSolution.Client.Components.Users
+@using AquaSolution.Client.Components.Administration.Department
+@using AquaSolution.Client.Components.Administration.Users
 @using AntDesign
 @inject ModalService modal
 @inject NavigationManager Navigation
@@ -21,7 +21,7 @@
                 <Icon Type="plus" />Created 
             </button>
     </div>
-    <div style="width:100%;overflow-x:scroll ;max-height:75vh; ">
+    <div style="width:100%;overflow-x:scroll ;max-height:70vh; ">
         <Table TItem="DepartmentDto"
                Size="TableSize.Small"
                Class="customTable fix-table-header"

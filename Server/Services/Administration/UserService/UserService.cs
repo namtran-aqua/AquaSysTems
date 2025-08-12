@@ -147,14 +147,18 @@ public class UserService : IUserService
                 GroupId = user.GroupId,
                 GroupName = group?.Name,
                 ManagerName = manager?.FullName,
-                ManagerId = user?.ManagerId,
+                ManagerId = user.ManagerId==null?Guid.Empty: user.ManagerId.Value,
                 CreatedTime = user.CreatedTime,
                 IsDeleted = user.IsDeleted,
                 Avatar = user.Avatar,
                 DepartmentName = department?.Name,
+                DepartmentId = user.DepartmentId,
+                PositionId = user.PositionId,
+                FactoryId = user.FactoryId,
                 FactoryName = factory?.Name,
                 PositionName = position?.Name,
-                IsActive = user.IsActive
+                IsActive = user.IsActive,
+                ManagerWorkDay =manager?.WorkDayId,
             };
 
             var userRoles = await _userRoleRepo.WhereAsync(ur => ur.UserId == user.Id);
@@ -265,7 +269,7 @@ public class UserService : IUserService
                        Email = queryableUser.Email,
                        NormalizedEmail = queryableUser.NormalizedEmail,
                        PhoneNumber = queryableUser.PhoneNumber,
-                       ManagerId = queryableUser.ManagerId,
+                       ManagerId = queryableUser.ManagerId == null ? Guid.Empty : queryableUser.ManagerId.Value,
                        CreatedTime = queryableUser.CreatedTime,
                        UpdatedTime = queryableUser.UpdatedTime,
                        CreatedBy = queryableUser.CreatedBy,
@@ -279,6 +283,7 @@ public class UserService : IUserService
                        PositionName = position.Name,
                        ManagerName = manager.FullName,
                        IsActive = queryableUser.IsActive,
+                       ManagerWorkDay = manager.WorkDayId
                    };
         var userlist = user.ToList();
         var userIds = userlist.Select(u => u.Id).ToList();
@@ -309,38 +314,6 @@ public class UserService : IUserService
             return userlist;
         }
         return new List<UserDto>();
-        //-------------------
-        //var users = await _userRepo.GetAllAsync();
-        //var userRoles = await _userRoleRepo.GetAllAsync();
-        //var roles = await _roleRepo.GetAllAsync();
-
-        //var result = users.Select(user => new UserDto
-        //{
-        //    Id = user.Id,
-        //    WorkDayId = user.WorkDayId,
-        //    FirstName = user.FirstName,
-        //    LastName = user.LastName,
-        //    FullName = user.FullName,
-        //    Email = user.Email,
-        //    PhoneNumber = user.PhoneNumber,
-        //    GroupId = user.GroupId,
-        //    CreatedTime = user.CreatedTime,
-        //    IsDeleted = user.IsDeleted,
-        //    IsActive = user.IsActive,
-        //    Roles = userRoles
-        //            .Where(ur => ur.UserId == user.Id)
-        //            .Join(
-        //                roles,
-        //                ur => ur.RoleId,
-        //                r => r.Id,
-        //                (ur, r) => new RoleDto
-        //                {
-        //                    Id = r.Id,
-        //                    Name = r.Name
-        //                })
-        //            .ToList()
-        //}).ToList();
-        //return result;
     }
     public async Task LogoutAsync()
     {

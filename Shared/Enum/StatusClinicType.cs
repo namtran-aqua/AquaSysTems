@@ -10,6 +10,7 @@ namespace AquaSolution.Shared.Enum
     {
         New,
         Approval,
+        Rejected,
         Done
     }
 }

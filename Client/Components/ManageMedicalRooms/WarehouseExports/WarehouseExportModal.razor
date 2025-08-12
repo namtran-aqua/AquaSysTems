@@ -1,0 +1,176 @@
+﻿@using AntDesign
+@using AquaSolution.Shared.Enum;
+@using AquaSolution.Shared.CommonDto;
+@using AquaSolution.Shared.ManageMedicalRooms.WarehouseExports
+@using AquaSolution.Shared.UserManagements
+@using AquaSolution.Shared.ManageMedicalRooms.Products
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IMessageService Message
+@{
+    RenderFragment footer = @<Template>
+    @if (!IsView)
+    {
+            <Button OnClick="@SaveAsync" @key="@( "submit" )"
+                    Type="ButtonType.Primary">
+                Save
+            </Button>
+    }
+        <Button Style="color:#808080" OnClick="@Close" @key="@("back")">Close</Button>
+    </Template>;
+}
+<style>
+    .ant-card-body {
+        padding: 10px !important;
+    }
+
+    .ant-modal-body {
+        height: 83vh !important;
+    }
+
+    .fix-table-header table {
+        
+        border-collapse: collapse;
+    }
+
+        .fix-table-header table thead th {
+            position: sticky !important;
+            z-index: 8 !important;
+            top: 0;
+            background-color: #fff;
+        }
+</style>
+
+<Modal @bind-Visible="IsVisible" Style="z-index: 9999;width:1050px;margin-top:-90px" Footer="@footer" Header="@null">
+    <Form @ref="formRef"
+          Model="@createdWarehouseExportDto"
+          Layout="FormLayout.Vertical"
+          OnFinish="SaveAsync"
+          ValidateMode="FormValidateMode.Complex"
+          ValidateOnChange="true">
+        <!-- === Header: Thông tin nhập kho === -->
+        <Card>
+            <Row Gutter="16" Style="height:65px">
+                <Col Span="8">
+                <FormItem Required="true" Label="Code">
+                    <Input Disabled="IsView" @bind-Value="createdWarehouseExportDto.WarehouseExportDto.Code" />
+                </FormItem>
+                </Col>
+                <Col Span="8">
+                <FormItem Required="true" Label="Name">
+                    <Input Disabled="IsView" @bind-Value="createdWarehouseExportDto.WarehouseExportDto.Name" />
+                </FormItem>
+                </Col>
+
+                <Col Span="8">
+                <FormItem Label="WarehouseExportTypeValue" Required="true">
+                    <Select TItem="WarehouseExportType"
+                            Disabled="IsView"
+                            TItemValue="WarehouseExportType"
+                            DataSource="@ListWarehouseExportType"
+                            @bind-Value="@WarehouseExportTypeValue"
+                            ItemValue="c => c"
+                            ItemLabel="c => c.ToString()">
+                    </Select>
+                </FormItem>
+                </Col>
+
+            </Row>
+            <Row Gutter="16" Style="height:90px">
+                <Col Span="12">
+                <FormItem Label="Note">
+                    <TextArea Disabled="IsView" @bind-Value="createdWarehouseExportDto.WarehouseExportDto.Note" MaxRows="2" />
+                </FormItem>
+                </Col>
+                <Col Span="12">
+                <FormItem Label="Description">
+                    <TextArea Disabled="IsView" @bind-Value="createdWarehouseExportDto.WarehouseExportDto.Description" MaxRows="2" />
+                </FormItem>
+                </Col>
+            </Row>
+        </Card>
+        <Card>
+            <div style="width:100%;overflow-x:hidden ;max-height:41vh; ">
+                @if (!IsView)
+                {
+                    <Button Style=" position: sticky !important; z-index: 8 !important;top: 0;" OnClick="@AddDetailRow">
+                        <Icon Type="plus" />AddDtail
+                    </Button>
+                }
+                <Table @ref="tableRef"
+                       TItem="WarehouseExportDetailDto"
+                       Size="TableSize.Small"
+                       Class="CustomTable  fix-table-header"
+                       PaginationPosition="false"
+                       DataSource="createdWarehouseExportDto.WarehouseExportDetailDtos">
+                    <ColumnDefinitions Context="row2">
+                        <Column Width="270" TData="WarehouseExportDetailDto" Title="Product">
+                            <Template>
+                                <Select TItem="ProductExportDto" TItemValue="ProductExportDto"
+                                        DataSource="@_products"
+                                        @bind-Value="@row2.productDto"
+                                        ItemValue="c => c"
+                                        Disabled="IsView"
+                                        ItemLabel="c => c.Name">
+                                    <ItemTemplate Context="item">
+                                        <div style="white-space: normal;">
+                                            @((MarkupString)item.Title)
+                                        </div>
+                                        @if (item != @_products.Last())
+                                        {
+                                            <hr style="margin: 4px 0;height:2px" />
+                                        }
+                                    </ItemTemplate>
+                                </Select>
+
+                            </Template>
+                        </Column>
+
+                        <Column Width="110" TData="WarehouseExportDetailDto" Title="Unit">
+                            <Template>
+                                <Input Disabled="true" @bind-Value="row2.productDto.Unit" />
+                            </Template>
+                        </Column>
+                        <Column Width="100" TData="WarehouseExportDetailDto" Title="Quantity">
+                            <Template>
+                                <AntDesign.InputNumber Step="1" TValue="decimal"
+                                                       Precision="1" Disabled="IsView" @bind-Value="row2.Quantity" />
+
+                            </Template>
+                        </Column>
+                        <Column Width="130" TData="WarehouseExportDetailDto" Title="ProductType">
+                            <Template>
+                                <Input Disabled="true" @bind-Value="row2.productDto.ProductType" />
+                            </Template>
+                        </Column>
+
+                        <Column Width="150" TData="WarehouseExportDetailDto" Title="DateManufacture">
+                            <Template>
+                                <DatePicker Disabled="true" @bind-Value="row2.productDto.ManufacturingDate" />
+                            </Template>
+                        </Column>
+                        <Column Width="150" TData="WarehouseExportDetailDto" Title="ExpiryDate">
+                            <Template>
+                                <DatePicker Disabled="true" @bind-Value="row2.productDto.ExpirationDate" />
+                            </Template>
+                        </Column>
+                        @if (!IsView)
+                        {
+                            <Column Fixed="ColumnFixPlacement.Right" TData="ProductDto" Width="30px" Context="row">
+                                <Template>
+                                    <div style="display: flex; flex-direction: column; gap: 4px; padding: 8px;">
+                                        <Button Type="ButtonType.Text" OnClick="@(async () => await RemoveDetailRow(row2))" Style="text-align: left;">
+                                            <Icon Type="delete" />
+                                        </Button>
+                                    </div>
+                                </Template>
+                            </Column>
+                        }
+
+                    </ColumnDefinitions>
+                </Table>
+            </div>
+        </Card>
+    </Form>
+
+</Modal>

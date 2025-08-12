@@ -12,7 +12,10 @@ namespace AquaSolution.Data.Data.MappingConfigurations
             builder.HasKey(e => e.Id);
             builder.Property(e => e.Code).IsRequired().HasMaxLength(100);
             builder.Property(e => e.Name).IsRequired().HasMaxLength(500);
-
+            builder.Property(e => e.WarehouseExportType)
+                .HasConversion<string>()
+                .IsRequired()
+                .HasMaxLength(50);
         }
     
     }

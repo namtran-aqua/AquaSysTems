@@ -15,10 +15,16 @@ namespace AquaSolution.Server.Controllers.ManageMedicalRooms.ProductManagement
             _productService = productService;
         }
 
-        [HttpGet("get-all")]
-        public async Task<IActionResult> GetAll()
+        [HttpGet("get-all-by-import")]
+        public async Task<IActionResult> GetAllByImport()
         {
-            var result = await _productService.GetListProduct();
+            var result = await _productService.GetListProductByImport();
+            return Ok(result);
+        }
+        [HttpGet("get-all-by-export")]
+        public async Task<IActionResult> GetAllByExport()
+        {
+            var result = await _productService.GetListProductByExport();
             return Ok(result);
         }
 

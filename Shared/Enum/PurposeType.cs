@@ -9,6 +9,6 @@ namespace AquaSolution.Shared.Enum
     public enum PurposeType
     {
         SickLeave,
-        AssigMedicationRequesternee
+        MedicationRequest
     }
 }

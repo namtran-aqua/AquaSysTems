@@ -1,9 +1,7 @@
 ﻿using AquaSolution.Client.Common;
-using AquaSolution.Client.Components.Department;
-using AquaSolution.Client.Components.Users;
+using AquaSolution.Client.Components.Administration.Department;
 using AquaSolution.Shared.CommonDto;
 using AquaSolution.Shared.Departments;
-using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Components;
 using System.Net.Http.Json;
 

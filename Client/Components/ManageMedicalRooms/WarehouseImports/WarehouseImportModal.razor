@@ -34,7 +34,7 @@
     }
 
     .fix-table-header table {
-        width: max-content;
+        
         border-collapse: collapse;
     }
 
@@ -58,12 +58,12 @@
             <Row Gutter="16" Style="height:65px">
                 <Col Span="8">
                 <FormItem Required="true" Label="Code">
-                    <Input @bind-Value="createdWarehouseImportDto.WarehouseImportDto.Code" />
+                    <Input Disabled="IsView" @bind-Value="createdWarehouseImportDto.WarehouseImportDto.Code" />
                 </FormItem>
                 </Col>
                 <Col Span="8">
                 <FormItem Required="true" Label="Name">
-                    <Input @bind-Value="createdWarehouseImportDto.WarehouseImportDto.Name" />
+                    <Input Disabled="IsView" @bind-Value="createdWarehouseImportDto.WarehouseImportDto.Name" />
                 </FormItem>
                 </Col>
                
@@ -71,6 +71,7 @@
                 <FormItem Label="WarehouseImportTypeValue" Required="true">
                     <Select TItem="WarehouseImportType"
                             TItemValue="WarehouseImportType"
+                            Disabled="IsView"
                             DataSource="@ListWarehouseImportType"
                             @bind-Value="@WarehouseImportTypeValue"
                             ItemValue="c => c"
@@ -83,12 +84,12 @@
             <Row Gutter="16" Style="height:90px">
                 <Col Span="12">
                 <FormItem Label="Note">
-                    <TextArea @bind-Value="createdWarehouseImportDto.WarehouseImportDto.Note" MaxRows="2" />
+                    <TextArea Disabled="IsView" @bind-Value="createdWarehouseImportDto.WarehouseImportDto.Note" MaxRows="2" />
                 </FormItem>
                 </Col>
                 <Col Span="12">
                 <FormItem Label="Description">
-                    <TextArea @bind-Value="createdWarehouseImportDto.WarehouseImportDto.Description" MaxRows="2" />
+                    <TextArea Disabled="IsView" @bind-Value="createdWarehouseImportDto.WarehouseImportDto.Description" MaxRows="2" />
                 </FormItem>
                 </Col>
             </Row>
@@ -127,12 +128,13 @@
                     </Column>
                     <Column Width="100" TData="WarehouseImportDetailDto" Title="Quantity">
                         <Template>
-                            <Input Disabled="IsView" @bind-Value="row2.Quantity" />
+                                <AntDesign.InputNumber Step="1" TValue="decimal"
+                                                       Precision="1" Disabled="IsView" @bind-Value="row2.Quantity" />
                         </Template>
                     </Column>
                     <Column Width="130" TData="WarehouseImportDetailDto" Title="ProductType">
                         <Template>
-                            <Input Disabled="IsView" @bind-Value="row2.productDto.ProductType" />
+                            <Input Disabled="true" @bind-Value="row2.productDto.ProductType" />
                         </Template>
                     </Column>
 
@@ -148,7 +150,7 @@
                     </Column>
                     @if (!IsView)
                     {
-                        <Column Fixed="ColumnFixPlacement.Right" TData="ProductDto" Width="50px" Title="Action" Context="row">
+                        <Column Fixed="ColumnFixPlacement.Right" TData="ProductDto" Width="30px"  Context="row">
                             <Template>
                                 <div style="display: flex; flex-direction: column; gap: 4px; padding: 8px;">
                                     <Button Type="ButtonType.Text" OnClick="@(async () => await RemoveDetailRow(row2))" Style="text-align: left;">

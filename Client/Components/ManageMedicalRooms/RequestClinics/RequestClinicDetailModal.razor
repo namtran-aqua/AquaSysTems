@@ -1,0 +1,130 @@
+﻿@using AntDesign
+@using AquaSolution.Client.Common
+@using AquaSolution.Shared.Enum;
+@using AquaSolution.Shared.CommonDto;
+@using AquaSolution.Shared.ManageMedicalRooms.WarehouseExports
+@using AquaSolution.Shared.UserManagements
+@using AquaSolution.Shared.ManageMedicalRooms.Products
+@using Microsoft.AspNetCore.Components.Authorization
+@using AquaSolution.Shared.ManageMedicalRooms.RequestClinics
+@using AquaSolution.Shared.Administration.UserManagements;
+@inject HttpClient httpClient;
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IMessageService Message
+
+
+@{
+    RenderFragment footer = @<Template>
+    @if (!IsView)
+    {
+        if (IsApproval)
+        {
+
+                <Button OnClick="@Approval" @key="@( "submit" )"
+                        Type="ButtonType.Primary">
+                    Approval
+                </Button>
+        }
+        if (IsRejected)
+        {
+                <Button OnClick="@Rejected" @key="@( "rejected" )"
+                        Style="color:red">
+                    Rejected
+                </Button>
+        }
+
+    }
+        <Button Style="color:#808080" OnClick="@Close" @key="@("back")">Close</Button>
+    </Template>;
+}
+<style>
+    .ant-descriptions-item-label {
+        font-weight: bold;
+    }
+</style>
+<Modal @bind-Visible="IsVisible" Style="z-index: 9999;width:1050px;margin-top:-90px" Footer="@footer" Header="@null">
+
+    <div class="modal-body" style="width:100%;overflow-x:scroll ;max-height:70vh; ">
+        <Collapse DefaultActiveKey="@(new[] { "1" })">
+            <Panel Class="customInfo" Header="Request Info" Key="1">
+                <Descriptions Style="margin-bottom: 24px;" Column="4">
+                    <DescriptionsItem Title="@("- Reson")" Span="3">@(MyRequestClinicDto.RequestTitle)</DescriptionsItem>
+                    <DescriptionsItem Title="@("Status")" Span="1">
+                        <span style="color:@GetTagColor.GetTagColorCss(MyRequestClinicDto.Status.ToString())">
+                            @MyRequestClinicDto.Status
+                        </span>
+                    </DescriptionsItem>
+                    <DescriptionsItem Title="@("- RequesterName")" Span="2">@MyRequestClinicDto.UserRequestName</DescriptionsItem>
+                    <DescriptionsItem Title="@("- RequesterWokrDay")" Span="2">@(MyRequestClinicDto.WorkDayUserRequestId)</DescriptionsItem>
+                    <DescriptionsItem Title="@("- EmailRequester")" Span="2">@(MyRequestClinicDto.EmailRequestter)</DescriptionsItem>
+                    <DescriptionsItem Title="@("- ManagerName")" Span="2">@(MyRequestClinicDto.ManagerName)</DescriptionsItem>
+                    <DescriptionsItem Title="@("- PurposeType")" Span="2">@(MyRequestClinicDto.PurposeType)</DescriptionsItem>
+
+                    @if (MyRequestClinicDto.TreatmentId != null)
+                    {
+                        <DescriptionsItem Title="@("- Diagnose")" Span="2">@(MyRequestClinicDto.Diagnose)</DescriptionsItem>
+                        <DescriptionsItem Title="@("- Treatments")" Span="2">@(MyRequestClinicDto.Treatments)</DescriptionsItem>
+                        <DescriptionsItem Title="@("- TreatmentType")" Span="2">@(MyRequestClinicDto.TreatmentType)</DescriptionsItem>
+                        <DescriptionsItem Title="@("- TreatmentNote")" Span="4">@(MyRequestClinicDto.TreatmentNote)</DescriptionsItem>
+                    }
+
+                    @if (MyRequestClinicDto.UserRequestId != MyRequestClinicDto.CreatedBy)
+                    {
+                        <DescriptionsItem Title="@("- CreatedByname")" Span="2">@(MyRequestClinicDto.CreatedName)</DescriptionsItem>
+                        <DescriptionsItem Title="@("- CreatedWorkDay")" Span="2">@(MyRequestClinicDto.CreatedWorkDay)</DescriptionsItem>
+                    }
+
+                    <DescriptionsItem Span="4" Title="@("- CreatedDate")">
+                        @(MyRequestClinicDto.CreatedDate.ToString("dd/MM/yyyy HH:mm") ?? "No Time")
+                    </DescriptionsItem>
+                    @if (MyRequestClinicDto.ApprovalById != null)
+                    {
+                        <DescriptionsItem Title="@("- ApprovalBy")" Span="2">@(MyRequestClinicDto.ApprovalByName)</DescriptionsItem>
+                        <DescriptionsItem Span="2" Title="@("- ApprovalDate")">
+                            @(MyRequestClinicDto.ApprovalDate?.ToString("dd/MM/yyyy HH:mm") ?? "No Time")
+                        </DescriptionsItem>
+                    }
+
+                    @if (MyRequestClinicDto.RejectById != null)
+                    {
+                        <DescriptionsItem Title="@("- RejectByName")" Span="2">@(MyRequestClinicDto.RejectByName)</DescriptionsItem>
+                        <DescriptionsItem Span="2" Title="@("- RejectDate")">
+                            @(MyRequestClinicDto.RejectDate?.ToString("dd/MM/yyyy HH:mm") ?? "No Time")
+                        </DescriptionsItem>
+
+                    }
+
+                    @if (MyRequestClinicDto.PharmacyManagerId != null)
+                    {
+                        <DescriptionsItem Title="@("- Nurse")" Span="2">@(MyRequestClinicDto.PharmacyManagerName)</DescriptionsItem>
+                        <DescriptionsItem Span="2" Title="@("- SuccesDate")">
+                            @(MyRequestClinicDto.SuccesDate?.ToString("dd/MM/yyyy HH:mm") ?? "No Time")
+                        </DescriptionsItem>
+
+                    }
+
+                    <DescriptionsItem Title="@("- Note")" Span="4">
+                        @(MyRequestClinicDto.Note)
+                    </DescriptionsItem>
+
+                </Descriptions>
+            </Panel>
+            @if (MyRequestClinicDto.PrescriptionDetail != null && MyRequestClinicDto.PrescriptionDetail.Count > 0)
+            {
+                <Panel Class="customDocument" Header="Detail Prescription" Key="2">
+                    <Table DataSource="@MyRequestClinicDto.PrescriptionDetail" HidePagination Size="TableSize.Small">
+                        <ChildContent Context="item">
+                            <Column Title="ProductName" TData="string">@item.ProductName</Column>
+                            <Column Title="Unit" TData="string">@item.Unit</Column>
+                            <Column Title="Quantity" TData="string">@item.Quantity</Column>
+                            <Column Title="ProductType" TData="string">@item.ProductType</Column>
+                            <Column Title="ExpirationDate" TData="string">@item.ExpirationDate?.ToString("yyyy/MM/dd")</Column>
+                            <Column Title="ManufacturingDate" TData="string">@item.ManufacturingDate?.ToString("yyyy/MM/dd")</Column>
+                        </ChildContent>
+                    </Table>
+                </Panel>
+            }
+
+        </Collapse>
+    </div>
+</Modal>

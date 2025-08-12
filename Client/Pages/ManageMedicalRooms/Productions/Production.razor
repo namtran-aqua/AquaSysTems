@@ -1,6 +1,6 @@
 ﻿@page "/product-management"
 @using AquaSolution.Client.Components.ManageMedicalRooms.Products
-@using AquaSolution.Client.Components.Users
+@using AquaSolution.Client.Components.Administration.Users
 @using AntDesign
 @inject ModalService modal
 @inject NavigationManager Navigation
@@ -8,16 +8,16 @@
 @using AquaSolution.Shared.ManageMedicalRooms.Products
 @using Microsoft.AspNetCore.Components.Authorization
 @inject AuthenticationStateProvider AuthStateProvider
+
 <PageTitle>Product</PageTitle>
-    <div class="mb-3">
-        <style>
-            .custom-button-type {
-                height: 30px;
-                font-size: 12px;
-            }
+<div class="mb-3">
+    <style>
+        .custom-button-type {
+            height: 30px;
+            font-size: 12px;
+        }
 
         .fix-table-header table {
-            width: max-content;
             border-collapse: collapse;
         }
 
@@ -28,6 +28,9 @@
                 background-color: #fff;
             }
 
+        .ant-table-content {
+            min-height: 65vh !important;
+        }
         .ant-table-pagination {
             position: fixed;
             bottom: 0;
@@ -41,50 +44,62 @@
         }
 
         .ant-table-cell {
-            text-align:center !important;
+            text-align: center !important;
         }
 
-        .ant-table-row{
-            text-align:center;
+        .ant-table-row {
+            text-align: center;
         }
-        </style>
+    </style>
+    @if (Created)
+    {
         <button @onclick="CreatedAsync" class="btn btn-primary custom-button-type">
             <Icon Type="plus" />Created
         </button>
-    </div>
-    <div style="width:100%;overflow-x:scroll ;max-height:75vh; ">
-        <Table TItem="ProductDto"
-               Size="TableSize.Small"
-               Class="customTable fix-table-header"
-               DataSource="_products">
-            <ColumnDefinitions Context="row">
-            <PropertyColumn Width="150" Title="Code" Property="c => c.Code"></PropertyColumn>
-            <PropertyColumn Width="250" Title="Name" Property="c => c.Name"></PropertyColumn>
-            <PropertyColumn Width="80" Title="Unit" Property="c => c.Unit"></PropertyColumn>
-            <PropertyColumn Width="180" Title="ProductType" Property="c => c.ProductType"></PropertyColumn>
-            <PropertyColumn Width="400" Title="Note" Property="c => c.Note"></PropertyColumn>
-            <PropertyColumn Width="80" Title="IsHide" Property="c => c.IsHide"></PropertyColumn>
+    }
+</div>
+<div style="width:100%;overflow-x:scroll ;max-height:70vh; ">
+    <Table TItem="ProductDto"
+           Size="TableSize.Small"
+           Class="customTable fix-table-header"
+           DataSource="_products">
+        <ColumnDefinitions Context="row">
+            <PropertyColumn Title="Code" Property="c => c.Code"></PropertyColumn>
+            <PropertyColumn Title="Name" Property="c => c.Name"></PropertyColumn>
+            <PropertyColumn Title="Unit" Property="c => c.Unit"></PropertyColumn>
+            <PropertyColumn Title="ProductType" Property="c => c.ProductType"></PropertyColumn>
+            <PropertyColumn Title="Note" Property="c => c.Note"></PropertyColumn>
+            <PropertyColumn Title="IsHide" Property="c => c.IsHide"></PropertyColumn>
 
-                <Column Fixed="ColumnFixPlacement.Right" TData="ProductDto" Width="50px" Title="Action" Context="row">
-                    <Template>
-                        <Popover Title="Actions" Trigger="new Trigger[] { Trigger.Click }" Placement="Placement.Bottom">
-                            <ChildContent>
-                                <Button Icon="menu" />
-                            </ChildContent>
-                            <ContentTemplate>
-                                <div style="display: flex; flex-direction: column; gap: 4px; padding: 8px;">
+            <Column Fixed="ColumnFixPlacement.Right" TData="ProductDto" Width="50px" Title="Action" Context="row">
+                <Template>
+                    <Popover Title="Actions" Trigger="new Trigger[] { Trigger.Click }" Placement="Placement.Bottom">
+                        <ChildContent>
+                            <Button Icon="menu" />
+                        </ChildContent>
+                        <ContentTemplate>
+                            <div style="display: flex; flex-direction: column; gap: 4px; padding: 8px;">
+
+                                @if (Edited)
+                                {
+
                                     <Button Type="ButtonType.Text" OnClick="@(async () => await EditAsync(row))" Style="text-align: left;">
                                         <Icon Type="plus" /> Edit
                                     </Button>
+                                }
+                                @if (Deleted)
+                                {
                                     <Button Type="ButtonType.Text" OnClick="@(async () => await DeleteAsync(row))" Style="text-align: left;">
                                         <Icon Type="delete" /> Delete
                                     </Button>
-                                </div>
-                            </ContentTemplate>
-                        </Popover>
-                    </Template>
-                </Column>
-            </ColumnDefinitions>
-        </Table>
-    </div>
+                                }
+
+                            </div>
+                        </ContentTemplate>
+                    </Popover>
+                </Template>
+            </Column>
+        </ColumnDefinitions>
+    </Table>
+</div>
 <ProductModal OnSave="LoadData" @ref="@ProductModal"></ProductModal> 
