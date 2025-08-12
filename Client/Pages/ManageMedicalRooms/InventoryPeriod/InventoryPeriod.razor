@@ -1,0 +1,80 @@
+﻿@page "/medical-history-management"
+@using AquaSolution.Client.Components.ManageMedicalRooms.InventoryPeriod
+@using AquaSolution.Client.Components.ManageMedicalRooms.Treatments
+@using AquaSolution.Client.Components.Administration.Users
+@using AntDesign
+@using AquaSolution.Shared.ManageMedicalRooms.RequestClinics
+@inject ModalService modal
+@inject NavigationManager Navigation
+@inject IMessageService Message
+@using AquaSolution.Shared.ManageMedicalRooms.InventoryPeriod
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthStateProvider
+<PageTitle>Inventory</PageTitle>
+<div class="mb-3">
+    <style>
+        .custom-button-type {
+            height: 30px;
+            font-size: 12px;
+        }
+
+        .fix-table-header table {
+            
+            border-collapse: collapse;
+        }
+
+            .fix-table-header table thead th {
+                position: sticky !important;
+                z-index: 8 !important;
+                top: 0;
+                background-color: #fff;
+            }
+
+        .ant-table-pagination {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            z-index: 999;
+            background: white;
+            padding: 8px;
+            text-align: center;
+            box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.1);
+            width: 173vh !important;
+        }
+
+        .ant-table-cell {
+            text-align: center !important;
+        }
+
+        .ant-table-row {
+            text-align: center;
+        }
+
+        .ant-table-content {
+            min-height: 65vh !important;
+        }
+    </style>
+    <button @onclick="CreatedAsync" class="btn btn-primary custom-button-type">
+        <Icon Type="plus" />Created
+    </button>
+</div>
+<div style="width:100%;overflow-x:scroll ;max-height:70vh; ">
+    <Table TItem="InventoryPeriodDto"
+           Size="TableSize.Small"
+           Class="customTable fix-table-header"
+           DataSource="inventoryPeriodDtos">
+        <ColumnDefinitions Context="row">
+            <PropertyColumn Width="100" Title="Code" Property="c => c.Code"></PropertyColumn>
+            <PropertyColumn Width="150" Title="Name" Property="c => c.Name">
+                <Template>
+                    <a href="javascript:void(0);" @onclick="() => View(row)">
+                        @row.Name
+                    </a>
+                </Template>
+            </PropertyColumn>
+            <PropertyColumn Width="200" Title="CreatedBy" Property="c => c.CreatedByName"></PropertyColumn>
+            <PropertyColumn Width="160" Title="TimeCreated" Property="c => c.CreatedDate" Format="dd/MM/yyy"></PropertyColumn>
+        </ColumnDefinitions>
+    </Table> 
+</div>
+<InventoryPeriodModal OnSaved="LoadDataAsync" @ref="@InventoryPeriodModal"></InventoryPeriodModal>

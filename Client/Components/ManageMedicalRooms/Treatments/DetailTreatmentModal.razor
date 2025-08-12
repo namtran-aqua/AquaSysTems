@@ -1,0 +1,102 @@
+﻿@using AntDesign
+@using AquaSolution.Client.Common
+@using AquaSolution.Shared.Enum
+@inject IJSRuntime JSRuntime
+@{
+    RenderFragment footer = @<Template>
+
+        <Button Style="color:#808080" OnClick="@Close" @key="@("back")">Close</Button>
+
+    </Template>;
+}
+<style>
+    .ant-modal-body{
+        height: 75vh !important;
+    }
+    .ant-descriptions-item-label {
+        font-weight: bold;
+    }
+</style>
+<Modal @bind-Visible="IsVisible"
+       Style="z-index: 9999;width:1000px ;height:80vh !important ; margin-top:-80px"
+       Footer="@footer" Title="Request Detail">
+    <div class="modal-body" style="width:100%;overflow-x:scroll ;max-height:70vh; ">
+        <Collapse DefaultActiveKey="@(new[] { "1" })">
+            <Panel Class="customInfo" Header="Request Info" Key="1">
+                <Descriptions Style="margin-bottom: 24px;" Column="4">
+                    <DescriptionsItem Title="@("- Reson")" Span="3">@(_medicalHistoryDto.RequestTitle)</DescriptionsItem>
+                    <DescriptionsItem Title="@("Status")" Span="1">
+                        <span style="color:@GetTagColor.GetTagColorCss(_medicalHistoryDto.Status.ToString())">
+                            @_medicalHistoryDto.Status
+                        </span>
+                    </DescriptionsItem>
+                    <DescriptionsItem Title="@("- RequesterName")" Span="2">@_medicalHistoryDto.UserRequestName</DescriptionsItem>
+                    <DescriptionsItem Title="@("- RequesterWokrDay")" Span="2">@(_medicalHistoryDto.WorkDayUserRequestId)</DescriptionsItem>
+                    <DescriptionsItem Title="@("- EmailRequester")" Span="2">@(_medicalHistoryDto.EmailRequestter)</DescriptionsItem>
+                    <DescriptionsItem Title="@("- ManagerName")" Span="2">@(_medicalHistoryDto.ManagerName)</DescriptionsItem>
+                    @if (_medicalHistoryDto.TreatmentId !=null)
+                    {
+                        <DescriptionsItem Title="@("- Diagnose")" Span="2">@(_medicalHistoryDto.Diagnose)</DescriptionsItem>
+                        <DescriptionsItem Title="@("- Treatments")" Span="2">@(_medicalHistoryDto.Treatments)</DescriptionsItem>
+                        <DescriptionsItem Title="@("- TreatmentType")" Span="2">@(_medicalHistoryDto.TreatmentType)</DescriptionsItem>
+                        <DescriptionsItem Title="@("- TreatmentNote")" Span="4">@(_medicalHistoryDto.TreatmentNote)</DescriptionsItem>
+                    }
+     
+                    @if (_medicalHistoryDto.UserRequestId != _medicalHistoryDto.CreatedBy)
+                    {
+                        <DescriptionsItem Title="@("- CreatedByname")" Span="2">@(_medicalHistoryDto.CreatedName)</DescriptionsItem>
+                        <DescriptionsItem Title="@("- CreatedWorkDay")" Span="2">@(_medicalHistoryDto.CreatedWorkDay)</DescriptionsItem>
+                    }
+                    <DescriptionsItem Span="4" Title="@("- CreatedDate")">
+                        @(_medicalHistoryDto.CreatedDate.ToString("dd/MM/yyyy") ?? "No Time")
+                    </DescriptionsItem>
+                    @if (_medicalHistoryDto.ApprovalById != null)
+                    {
+                        <DescriptionsItem Title="@("- ApprovalBy")" Span="2">@(_medicalHistoryDto.ApprovalByName)</DescriptionsItem>
+                        <DescriptionsItem Span="2" Title="@("- ApprovalDate")">
+                            @(_medicalHistoryDto.ApprovalDate?.ToString("dd/MM/yyyy") ?? "No Time")
+                        </DescriptionsItem>
+
+                    }
+                    @if (_medicalHistoryDto.RejectById != null)
+                    {
+                        <DescriptionsItem Title="@("- RejectByName")" Span="2">@(_medicalHistoryDto.RejectByName)</DescriptionsItem>
+                        <DescriptionsItem Span="2" Title="@("- RejectDate")">
+                            @(_medicalHistoryDto.RejectDate?.ToString("dd/MM/yyyy") ?? "No Time")
+                        </DescriptionsItem>
+
+                    }
+                    @if (_medicalHistoryDto.PharmacyManagerId != null)
+                    {
+                        <DescriptionsItem Title="@("- Nurse")" Span="2">@(_medicalHistoryDto.PharmacyManagerName)</DescriptionsItem>
+                        <DescriptionsItem Span="2" Title="@("- SuccesDate")">
+                            @(_medicalHistoryDto.SuccesDate?.ToString("dd/MM/yyyy") ?? "No Time")
+                        </DescriptionsItem>
+
+                    }
+                    <DescriptionsItem Title="@("- Note")" Span="4">
+                        @(_medicalHistoryDto.Note)
+                    </DescriptionsItem>
+
+                </Descriptions>
+            </Panel>
+       
+                <Panel Class="customDocument" Header="Detail Prescription" Key="2">
+                    <Table DataSource="@_medicalHistoryDto.PrescriptionDetail" HidePagination Size="TableSize.Small">
+                        <ChildContent Context="item">
+                            <Column Title="ProductName" TData="string">@item.ProductName</Column>
+                            <Column Title="Unit" TData="string">@item.Unit</Column>
+
+                            <Column Title="Quantity" TData="string">@item.Quantity</Column>
+
+                            <Column Title="ProductType" TData="string">@item.ProductType</Column>
+
+                            <Column Title="ExpirationDate" TData="string">@item.ExpirationDate?.ToString("yyyy/MM/dd")</Column>
+                            <Column Title="ManufacturingDate" TData="string">@item.ManufacturingDate?.ToString("yyyy/MM/dd")</Column>
+
+                        </ChildContent>
+                    </Table>
+                </Panel>
+        </Collapse>
+    </div>
+</Modal>

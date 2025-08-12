@@ -37,8 +37,14 @@ namespace AquaSolution.Data.Connection
         public DbSet<RequestClinic> tbl_RequestClinic { get; set; }
         public DbSet<WarehouseImport> tbl_WarehouseImport { get; set; }
         public DbSet<WarehouseImportDetail> tbl_WarehouseImportDetail { get; set; }
-
+        public DbSet<WarehouseExport> tbl_WarehouseExport { get; set; }
+        public DbSet<WarehouseExportDetail> tbl_WarehouseExportDetail { get; set; }
         public DbSet<SysTemHistory> tbl_SysTemHistory { get; set; }
+        public DbSet<Treatment> tbl_Treatment { get; set; }
+        public DbSet<Prescription> tbl_Prescription { get; set; }
+        public DbSet<PrescriptionDetail> tbl_PrescriptionDetail { get; set; }
+        public DbSet<InventoryPeriod> tbl_InventoryPeriod { get; set; }
+        public DbSet<InventoryPeriodDetail> tbl_InventoryPeriodDetail { get; set; }
 
 
         #endregion
@@ -66,7 +72,14 @@ namespace AquaSolution.Data.Connection
             modelBuilder.ApplyConfiguration(new MedicineConfiguration());
             modelBuilder.ApplyConfiguration(new WarehouseImportDetailConfiguration());
             modelBuilder.ApplyConfiguration(new WarehouseImportConfiguration());
+            modelBuilder.ApplyConfiguration(new WarehouseExportDetailConfiguration());
+            modelBuilder.ApplyConfiguration(new WarehouseExportConfiguration());
             modelBuilder.ApplyConfiguration(new SysTemHistoryConfiguration());
+            modelBuilder.ApplyConfiguration(new TreatmentConfiguration());
+            modelBuilder.ApplyConfiguration(new PrescriptionConfiguration());
+            modelBuilder.ApplyConfiguration(new PrescriptionDetailConfiguration());
+            modelBuilder.ApplyConfiguration(new InventoryPeriodDetailConfiguration());
+            modelBuilder.ApplyConfiguration(new InventoryPeriodConfiguration());
 
             #endregion
 

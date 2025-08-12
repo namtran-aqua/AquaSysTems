@@ -1,7 +1,7 @@
 ﻿@page "/warehouseImport-management"
 @using AquaSolution.Client.Components.ManageMedicalRooms.WarehouseImports
 @using AquaSolution.Shared.ManageMedicalRooms.WarehouseImports
-@using AquaSolution.Client.Components.Users
+@using AquaSolution.Client.Components.Administration.Users
 @using AntDesign
 @inject ModalService modal
 @inject NavigationManager Navigation
@@ -18,7 +18,7 @@
         }
 
         .fix-table-header table {
-            width: max-content;
+            
             border-collapse: collapse;
         }
 
@@ -29,6 +29,9 @@
                 background-color: #fff;
             }
 
+        .ant-table-content {
+            min-height: 65vh !important;
+        }
         .ant-table-pagination {
             position: fixed;
             bottom: 0;
@@ -55,7 +58,7 @@
 
 
 </div>
-<div style="width:100%;overflow-x:scroll ;max-height:75vh; ">
+<div style="width:100%;overflow-x:scroll ;max-height:70vh; ">
     <Table TItem="LoadWarehouseImportDto"
            Size="TableSize.Small"
            Class="customTable fix-table-header"
@@ -71,8 +74,8 @@
             </PropertyColumn>
             <PropertyColumn Width="180" Title="Description" Property="c => c.Description"></PropertyColumn>
             <PropertyColumn Width="250" Title="Note" Property="c => c.Note"></PropertyColumn>        
-            <PropertyColumn Width="150" Title="CreatedData" Property="c => c.CreatedDate" Format="yyyy/MM/dd HH:mm"></PropertyColumn>
-            <PropertyColumn Width="170" Title="CreatedBy" Property="c => c.CreatedBy"></PropertyColumn>
+            <PropertyColumn Width="150" Title="CreatedDate" Property="c => c.CreatedDate" Format="yyyy/MM/dd HH:mm"></PropertyColumn>
+            <PropertyColumn Width="170" Title="CreatedBy" Property="c => c.CreatedByName"></PropertyColumn>
         </ColumnDefinitions>
     </Table>
 </div>

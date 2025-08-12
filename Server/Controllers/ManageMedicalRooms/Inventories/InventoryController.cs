@@ -1,4 +1,4 @@
-﻿using AquaSolution.Server.Services.Administration.InventoriesService;
+﻿using AquaSolution.Server.Services.ManageMedicalRooms.InventoriesService;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AquaSolution.Server.Controllers.ManageMedicalRooms.Inventories

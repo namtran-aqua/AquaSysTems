@@ -1,0 +1,101 @@
+﻿@page "/request-employee-clinic-management"
+@using AquaSolution.Client.Components.ManageMedicalRooms.RequestClinics
+@using AquaSolution.Shared.Enum
+@using AquaSolution.Shared.ManageMedicalRooms.RequestClinics;
+@using AquaSolution.Client.Components.Administration.Users
+@using AntDesign
+@using AquaSolution.Client.Common
+@inject ModalService modal
+@inject NavigationManager Navigation
+@inject IMessageService Message
+@using AquaSolution.Shared.ManageMedicalRooms.Products
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthStateProvider
+<PageTitle>My Request Clinic</PageTitle>
+<div class="mb-3">
+    <style>
+        .custom-button-type {
+            height: 30px;
+            font-size: 12px;
+        }
+
+        .fix-table-header table {
+            border-collapse: collapse;
+        }
+
+            .fix-table-header table thead th {
+                position: sticky !important;
+                z-index: 8 !important;
+                top: 0;
+                background-color: #fff;
+            }
+
+        .ant-table-content {
+            min-height: 65vh !important;
+        }
+        .ant-table-pagination {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            z-index: 999;
+            background: white;
+            padding: 8px;
+            text-align: center;
+            box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.1);
+            width: 173vh !important;
+        }
+
+        .ant-table-cell {
+            text-align: center !important;
+        }
+
+        .ant-table-row {
+            text-align: center;
+        }
+    </style>
+</div>
+<div style="width:100%;overflow-x:scroll ;max-height:70vh; ">
+    <Table TItem="MyRequestClinicDto"
+           Size="TableSize.Small"
+           Class="customTable fix-table-header"
+           DataSource="MyRequestClinicData">
+        <ColumnDefinitions Context="row">
+            <PropertyColumn Width="250" Title="RequestTitle" Property="c => c.RequestTitle">
+                <Template>
+                    <a href="javascript:void(0);" @onclick="() => View(row.Id)">
+                        @row.RequestTitle
+                    </a>
+                </Template>
+            </PropertyColumn>
+            <PropertyColumn Width="100" Title="Status" Style="@($"color: {GetTagColor.GetTagColorCss(row.Status.ToString())}")" Property="c => c.Status"></PropertyColumn>
+            <PropertyColumn Width="80" Title="PurposeType" Property="c => c.PurposeType"></PropertyColumn>
+            <PropertyColumn Width="200" Title="CreatedBy" Property="c => c.CreatedName"></PropertyColumn>
+            <PropertyColumn Width="130" Title="CreatedDate" Property="c => c.CreatedDate" Format="dd/MM/yyyy HH:mm"></PropertyColumn>
+            <PropertyColumn Width="180" Title="Note" Property="c => c.Note"></PropertyColumn>
+            <Column Fixed="ColumnFixPlacement.Right" TData="ProductDto" Width="50px" Title="Action" Context="row">
+                <Template>
+                    <Popover Title="Actions" Trigger="new Trigger[] { Trigger.Click }" Placement="Placement.Bottom">
+                        <ChildContent>
+                            <Button Icon="menu" />
+                        </ChildContent>
+                        <ContentTemplate>
+                            <div style="display: flex; flex-direction: column; gap: 4px; padding: 8px;">
+                                <Button Type="ButtonType.Text" OnClick="@(async () => await View(row.Id))" Style="text-align: left;">
+                                    <Icon Type="profile" /> Detail
+                                </Button>
+                                    <Button Type="ButtonType.Primary" OnClick="@(async () => await ApprovalAsync(row.Id))" Style="text-align: left;">
+                                            <Icon Type="check" /> Approval
+                                        </Button>
+                                    <Button Type="ButtonType.Text" OnClick="@(async () => await RejectedAsync(row.Id))" Style="text-align: left;color:red">
+                                            <Icon Type="delete" /> Rejected
+                                        </Button>
+                            </div>
+                        </ContentTemplate>
+                    </Popover>
+                </Template>
+            </Column>
+        </ColumnDefinitions>
+    </Table>
+</div>
+<MyRequestClinicModal OnSaved="LoadData" @ref="myRequestClinicModal"></MyRequestClinicModal>
+<RequestClinicDetailModal IsApprovalEvent="ApprovalAsync" IsRejectEvent="RejectedAsync" @ref="@requestClinicDetailModal"></RequestClinicDetailModal>

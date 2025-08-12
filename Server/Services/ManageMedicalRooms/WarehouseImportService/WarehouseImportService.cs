@@ -1,6 +1,8 @@
 ﻿using AquaSolution.Data.Connection;
 using AquaSolution.Data.Data.Entities;
 using AquaSolution.Data.Repositories;
+using AquaSolution.Server.Services.Common.HandleInventories;
+using AquaSolution.Shared.CommonDto;
 using AquaSolution.Shared.ManageMedicalRooms.WarehouseImports;
 
 namespace AquaSolution.Server.Services.ManageMedicalRooms.WarehouseImportService
@@ -11,6 +13,9 @@ namespace AquaSolution.Server.Services.ManageMedicalRooms.WarehouseImportService
         private readonly IRepository<WarehouseImport> _warehouseImportRepo;
         private readonly IRepository<WarehouseImportDetail> _warehouseImportDetailRepo;
         private readonly IRepository<Product> _productRepo;
+        private readonly IRepository<User> _userRepo;
+        private readonly IHandleInventory _handleInventory;
+
         private readonly AquaDbContext _context;
 
         public WarehouseImportService
@@ -19,7 +24,9 @@ namespace AquaSolution.Server.Services.ManageMedicalRooms.WarehouseImportService
              IRepository<WarehouseImport> warehouseImportRepo,
              IRepository<Product> productRepo,
                 AquaDbContext context,
-             IRepository<WarehouseImportDetail> warehouseImportDetailRepo
+                 IHandleInventory handleInventory,
+                IRepository<User> userRepo,
+        IRepository<WarehouseImportDetail> warehouseImportDetailRepo
 
             )
         {
@@ -28,11 +35,15 @@ namespace AquaSolution.Server.Services.ManageMedicalRooms.WarehouseImportService
             _warehouseImportRepo = warehouseImportRepo;
             _warehouseImportDetailRepo = warehouseImportDetailRepo;
             _productRepo = productRepo;
+            _userRepo = userRepo;
+            _handleInventory = handleInventory;
         }
 
         public async Task<List<LoadWarehouseImportDto>> GetWarehouseImport()
         {
             var warehouseImportQuery = from warehouseImport in await _warehouseImportRepo.GetQueryableAsync()
+                                       join user in await _userRepo.GetQueryableAsync()
+                                       on warehouseImport.CreatedBy equals user.Id
                                        select new LoadWarehouseImportDto
                                        {
                                            Id = warehouseImport.Id,
@@ -45,6 +56,8 @@ namespace AquaSolution.Server.Services.ManageMedicalRooms.WarehouseImportService
                                            UpdatedBy = warehouseImport.UpdatedBy,
                                            UpdatedDate = warehouseImport.UpdatedDate,
                                            WarehouseImportType = warehouseImport.WarehouseImportType,
+                                           CreatedByName = user.FullName,
+
                                        };
             var datareturn = warehouseImportQuery.OrderBy(x=>x.CreatedDate).ToList();
             if (datareturn.Any()) { return datareturn; }
@@ -88,7 +101,8 @@ namespace AquaSolution.Server.Services.ManageMedicalRooms.WarehouseImportService
                     Description = createdWarehouseImportDto.WarehouseImportDto.Description,
                     Note = createdWarehouseImportDto.WarehouseImportDto.Note,
                     CreatedDate = DateTime.Now,
-                    CreatedBy = createdWarehouseImportDto.WarehouseImportDto.CreatedBy
+                    CreatedBy = createdWarehouseImportDto.WarehouseImportDto.CreatedBy,
+                    WarehouseImportType = createdWarehouseImportDto.WarehouseImportDto.WarehouseImportType,
                 };
 
                 await _warehouseImportRepo.InsertAsync(warehouseImport);
@@ -107,34 +121,14 @@ namespace AquaSolution.Server.Services.ManageMedicalRooms.WarehouseImportService
                     };
 
                     await _warehouseImportDetailRepo.InsertAsync(detail);
-
-                    var existingInventory = inventoryQuery.FirstOrDefault(i =>
-                        i.ProductId == item.productDto.Id &&
-                        i.ExpirationDate.HasValue &&
-                        i.ExpirationDate.Value.Date == item.ExpiryDate.Value.Date &&
-                        (
-                            !item.DateManufacture.HasValue && !i.ManufacturingDate.HasValue ||
-                            item.DateManufacture.HasValue && i.ManufacturingDate.HasValue &&
-                            i.ManufacturingDate.Value.Date == item.DateManufacture.Value.Date
-                        ));
-
-                    if (existingInventory != null)
+                    var handleInventorydto = new HandleInventoryDto
                     {
-                        existingInventory.Quantity += item.Quantity;
-                        await _inventoryRepo.UpdateAsync(existingInventory);
-                    }
-                    else
-                    {
-                        var newInventory = new Inventories
-                        {
-                            Id = Guid.NewGuid(),
-                            ProductId = item.productDto.Id,
-                            Quantity = item.Quantity,
-                            ExpirationDate = item.ExpiryDate,
-                            ManufacturingDate = item.DateManufacture
-                        };
-                        await _inventoryRepo.InsertAsync(newInventory);
-                    }
+                        ProductId = item.productDto.Id,
+                        ExpirationDate = item.ExpiryDate,
+                        Quantity = item.Quantity,
+                        ManufacturingDate = item.DateManufacture,
+                    };
+                    await _handleInventory.AddInventory(handleInventorydto);
                 }
 
                 // ✅ Gộp save changes lại

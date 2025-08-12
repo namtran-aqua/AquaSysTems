@@ -7,9 +7,12 @@ namespace AquaSolution.Server.Services.ManageMedicalRooms.Products
     public class ProductService : IProductService
     {
         private readonly IRepository<Product> _productRepo;
-        public ProductService(IRepository<Product> productRepo)
+        private readonly IRepository<Inventories> _inventoryRepo;
+
+        public ProductService(IRepository<Product> productRepo, IRepository<Inventories> inventoryRepo)
         {
             _productRepo = productRepo;
+            _inventoryRepo = inventoryRepo;
         }
         public async Task<bool> CreatedProduct(ProductDto productDto)
         {
@@ -44,7 +47,7 @@ namespace AquaSolution.Server.Services.ManageMedicalRooms.Products
             return await _productRepo.DeleteAsync(product);
         }
 
-        public async Task<List<ProductDto>> GetListProduct()
+        public async Task<List<ProductDto>> GetListProductByImport()
         {
             var query = from product in await _productRepo.GetQueryableAsync()
                         orderby product.Name
@@ -67,6 +70,37 @@ namespace AquaSolution.Server.Services.ManageMedicalRooms.Products
                 return query.ToList();
             }
             return new List<ProductDto>();
+        }
+        public async Task<List<ProductExportDto>> GetListProductByExport()
+        {
+            var query = from product in await _productRepo.GetQueryableAsync()
+                        join inventory in await _inventoryRepo.GetQueryableAsync()
+                        on product.Id equals inventory.ProductId
+                        where inventory.Quantity > 0
+                        orderby product.Name
+                        select new ProductExportDto
+                        {
+                            Id = product.Id,
+                            Code = product.Code,
+                            Name = product.Name,
+                            Note = product.Note,
+                            ProductType = product.ProductType,
+                            CreatedBy = product.CreatedBy,
+                            CreatedDate = product.CreatedDate,
+                            UpdatedDate = product.UpdatedDate,
+                            UpdateBy = product.UpdateBy,
+                            Unit = product.Unit,
+                            IsHide = product.IsHide,
+                            ExpirationDate = inventory.ExpirationDate,
+                            ManufacturingDate =inventory.ManufacturingDate,
+                            Quantity = inventory.Quantity,
+                            
+                        };
+            if (query.Any())
+            {
+                return query.ToList();
+            }
+            return new List<ProductExportDto>();
         }
 
         public async Task<bool> UpdateProduct(ProductDto productDto)

@@ -1,6 +1,8 @@
-﻿using AquaSolution.Client.Components.ManageMedicalRooms.WarehouseImports;
+﻿using AquaSolution.Client.Components.ManageMedicalRooms.WarehouseExports;
+using AquaSolution.Client.Components.ManageMedicalRooms.WarehouseImports;
 using AquaSolution.Shared.Departments;
 using AquaSolution.Shared.ManageMedicalRooms.Inventories;
+using AquaSolution.Shared.ManageMedicalRooms.WarehouseExports;
 using AquaSolution.Shared.ManageMedicalRooms.WarehouseImports;
 using Microsoft.AspNetCore.Components;
 using System.Net.Http.Json;
@@ -13,6 +15,8 @@ namespace AquaSolution.Client.Pages.ManageMedicalRooms.Inventories
         [Inject] private HttpClient Http { get; set; }
         private List<InventoryDto> _listInventory = new List<InventoryDto>();
         private WarehouseImportModal _warehouseImportModal { get; set; } = new();
+        private WarehouseExportModal _warehouseExportModal { get; set; } = new();
+
         #endregion
         #region Innit
         protected override async Task OnInitializedAsync()
@@ -24,9 +28,7 @@ namespace AquaSolution.Client.Pages.ManageMedicalRooms.Inventories
         {
             _listInventory = await Http.GetFromJsonAsync<List<InventoryDto>>("api/Inventory/get-all");
             await InvokeAsync(StateHasChanged);
-
             #endregion
-           
         }
         #region Action
         private async Task ImportWarehouse()
@@ -35,7 +37,7 @@ namespace AquaSolution.Client.Pages.ManageMedicalRooms.Inventories
         }
         private async Task ExportWarehouse()
         {
-
+            await _warehouseExportModal.ShowModalAsync(new LoadWarehouseExportDto(), false);
         }
         #endregion
     }

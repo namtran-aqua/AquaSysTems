@@ -1,6 +1,6 @@
 ﻿@page "/position-management"
-@using AquaSolution.Client.Components.Position
-@using AquaSolution.Client.Components.Users
+@using AquaSolution.Client.Components.Administration.Position
+@using AquaSolution.Client.Components.Administration.Users
 @using AntDesign
 @inject ModalService modal
 @inject NavigationManager Navigation
@@ -21,7 +21,7 @@
             <Icon Type="plus" />Created
         </button>
     </div>
-    <div style="width:100%;overflow-x:scroll ;max-height:75vh; ">
+    <div style="width:100%;overflow-x:scroll ;max-height:70vh; ">
         <Table TItem="PositionDto"
                Size="TableSize.Small"
                Class="customTable fix-table-header"

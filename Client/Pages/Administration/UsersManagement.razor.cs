@@ -1,7 +1,7 @@
 ﻿
 using AntDesign;
 using AquaSolution.Client.Common;
-using AquaSolution.Client.Components.Users;
+using AquaSolution.Client.Components.Administration.Users;
 using AquaSolution.Shared.CommonDto;
 using AquaSolution.Shared.Enum;
 using AquaSolution.Shared.UserManagements;
@@ -180,8 +180,6 @@ namespace AquaSolution.Client.Pages.Administration
                         (string.IsNullOrWhiteSpace(email) || (x.Email != null && x.Email.ToLower().Contains(email)))
                     )
                     .ToList();
-
-                // Nếu không nhập gì cả, show toàn bộ
                 if (string.IsNullOrWhiteSpace(workDayId) &&
                     string.IsNullOrWhiteSpace(fullName) &&
                     string.IsNullOrWhiteSpace(email))

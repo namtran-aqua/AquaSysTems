@@ -1,4 +1,4 @@
-﻿using AquaSolution.Client.Components.Roles;
+﻿using AquaSolution.Client.Components.Administration.Roles;
 using AquaSolution.Shared.Roles;
 using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Components;

@@ -1,0 +1,103 @@
+﻿@using AntDesign
+@using AquaSolution.Shared.Enum;
+@using AquaSolution.Shared.CommonDto;
+@using AquaSolution.Shared.ManageMedicalRooms.WarehouseExports
+@using AquaSolution.Shared.UserManagements
+@using AquaSolution.Shared.ManageMedicalRooms.Products
+@using Microsoft.AspNetCore.Components.Authorization
+@using AquaSolution.Shared.ManageMedicalRooms.RequestClinics
+@using  AquaSolution.Shared.Administration.UserManagements;
+@inject HttpClient httpClient;
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IMessageService Message
+
+
+@{
+    RenderFragment footer = @<Template>
+    @if (!IsView)
+    {
+            <Button OnClick="@SaveAsync" @key="@( "submit" )"
+                    Type="ButtonType.Primary">
+                Save
+            </Button>
+    }
+    <Button Style="color:#808080" OnClick="@Close" @key="@("back")">Close</Button>
+    </Template>;
+}
+<Modal @bind-Visible="IsVisible" Style="z-index: 9999;width:1050px;margin-top:-90px" Footer="@footer" Header="@null">
+    <Form @ref="formRef"
+          Model="@HandleMyRequestClinic"
+          Layout="FormLayout.Vertical"
+          OnFinish="SaveAsync"
+          ValidateMode="FormValidateMode.Complex"
+          ValidateOnChange="true">
+        <Card>
+            <Row Gutter="16">
+                <Col Span="24">
+                <FormItem Required = "true" Label="Reason">
+                    <Input  @bind-Value="HandleMyRequestClinic.RequestTitle" />
+                </FormItem>
+                </Col>
+            </Row>
+            <Row Gutter="16">
+                <Col Span="4">
+                <FormItem  Label="Department">
+                    <Input Disabled = "true" value="DepartmentName" />
+                </FormItem>
+                </Col>
+                <Col Span="8">
+                <FormItem Required="true" Label="User Name">
+                    <Select TItem="UserSelectedDto" TItemValue="UserSelectedDto"
+                            DataSource="@ListSelectedcUsers"
+                            @bind-Value="@UserValue"
+                            ItemValue="c => c"
+                            ItemLabel="c => c.DisplayLabel">
+                    </Select>
+                </FormItem>
+                </Col>
+                <Col Span="7">
+                <FormItem Label="PurposeType" Required="true">
+                    <Select TItem="PurposeType"
+                            TItemValue="PurposeType"
+                            DataSource="@ListPurposeType"
+                            @bind-Value="@PurposeType"
+                            ItemValue="c => c"
+                            ItemLabel="c => c.ToString()">
+                    </Select>
+                </FormItem>
+                </Col>
+                <Col Span="5">
+                <FormItem Label="Created Time" Required="true">
+                    <DatePicker AllowClear="false" ShowTime="@true" @bind-Value="HandleMyRequestClinic.CreatedDate" Format="dd/MM/yyyy HH:mm"></DatePicker>
+                </FormItem>
+                </Col>
+            </Row>
+            <Row Gutter="16">
+                <Col Span="8">
+                <FormItem  Label="Email">
+                    <Input Disabled="true" value="@HandleMyRequestClinic.EmailRequestter" />
+                </FormItem>
+
+                 </Col>
+                <Col Span="8">
+                <FormItem  Label="Manager Name">
+                    <Input Disabled="true" value="@HandleMyRequestClinic.ManagerName" />
+                </FormItem>
+                </Col>
+                <Col Span="8">
+                <FormItem  Label="WorkDayManager ">
+                    <Input Disabled="true" value="@HandleMyRequestClinic.WorkDayManager" />
+                </FormItem>
+                </Col> 
+
+            </Row>
+            <Row Gutter="16">
+                <Col Span="24">
+                <FormItem  Label="Note">
+                    <TextArea  @bind-Value="HandleMyRequestClinic.Note" Rows="3" />
+                </FormItem>
+                </Col>
+            </Row>
+        </Card>
+    </Form>
+</Modal>
