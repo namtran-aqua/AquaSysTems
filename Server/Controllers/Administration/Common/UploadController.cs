@@ -27,7 +27,9 @@ namespace AquaSolution.Server.Controllers.Administration.Common
             {
                 await file.CopyToAsync(stream);
             }
-            var url = $"/uploads/avatars/{fileName}";
+
+            var baseUrl = $"{Request.Scheme}://{Request.Host}";
+            var url = $"{baseUrl}/uploads/avatars/{fileName}";
             return Ok(url);
         }
         [HttpDelete("delete-avatar")]

@@ -48,12 +48,20 @@ namespace AquaSolution.Client.Components.Administration.Users
                 }
                 if(User.Avatar != null)
                 {
-                    //var encodedUrl = Uri.EscapeDataString(User.Avatar);
-                    var response = await Http.DeleteAsync($"api/upload/delete-avatar?avatarUrl={User.Avatar}");
+                    var avatarUri = new Uri(User.Avatar);
+                    var avatarPath = avatarUri.AbsolutePath; 
+
+                    // Encode phần path
+                    var encoded = Uri.EscapeDataString(avatarPath);
+                    var response = await Http.DeleteAsync($"api/upload/delete-avatar?avatarUrl={encoded}");
                 }
-                var avata = new AvataDto();
-                avata.UserId = User.Id;
-                avata.URLAvatarNew = UserAvatarUrl;
+                var avata = new AvataDto
+                {
+                    UserId = User.Id,
+                    URLAvatarNew = UserAvatarUrl
+                    .Replace("https://localhost:7195", "") 
+                };
+
                 var response2 = await Http.PutAsJsonAsync("api/user/update-avatar", avata);
                 if (response2.IsSuccessStatusCode)
                 {
