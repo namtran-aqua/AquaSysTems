@@ -62,7 +62,7 @@ namespace AquaSolution.Server.Controllers.Administration.UserManagements
         {
             var result = await _userService.DeleteAsync(id);
             if (result)
-                return Ok(new { success = true, message = "Xóa thành công" });
+                return Ok(new { success = true, message = "Deleted successfully" });
 
             return NotFound(new { success = false, message = "User không tồn tại" });
         }

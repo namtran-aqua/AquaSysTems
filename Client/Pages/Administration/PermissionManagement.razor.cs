@@ -31,7 +31,7 @@ namespace AquaSolution.Client.Pages.Administration
         }
         private async Task DeleteAsync(HandlePermissionDto HandlePermissionDto)
         {
-            var message = $"Bạn có muốn xóa permission \" {HandlePermissionDto.Action} \" không?";
+            var message = $"Are you sure you want to delete the permission \" {HandlePermissionDto.Action} \" ?";
             var confirm = await MessageBox.Confirm(modal, message.ToString());
             if(confirm)
             {
@@ -41,11 +41,11 @@ namespace AquaSolution.Client.Pages.Administration
                 if (response.IsSuccessStatusCode)
                 {
                     await LoadData();
-                    await Message.Success(content?.message);
+                    await Message.Success(content?.message ?? "Deleted successfully");
                 }
                 else
                 {
-                    await Message.Success(content?.message);
+                    await Message.Error(content?.message ?? "An unexpected error occurred");
                 }
                 await InvokeAsync(StateHasChanged);
             }    

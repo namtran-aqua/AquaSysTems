@@ -35,8 +35,6 @@
            Class="customTable fix-table-header"
            DataSource="userFilter">
         <ColumnDefinitions Context="row">
-
-
             <Column TData="UserDto" Fixed="ColumnFixPlacement.Left" Width="50px" Context="row">
                 <Template>
                     <div style="display: flex; align-items: center; gap: 8px;">
@@ -60,15 +58,24 @@
                                 <Button Type="ButtonType.Text" OnClick="@(async () => await DetailUser(row))" Style="text-align: left;">
                                     <Icon Type="plus" /> Detail
                                 </Button>
-                                <Button Type="ButtonType.Text" OnClick="@(async () => await EditUser(row))" Style="text-align: left;">
-                                    <Icon Type="edit" /> Edit
-                                </Button>
-                                <Button Type="ButtonType.Text" OnClick="@(async () => await ShowRoleDialog(row))" Style="text-align: left;">
-                                    <Icon Type="android" /> RolesManagement
-                                </Button>
-                                <Button Type="ButtonType.Text" OnClick="@(async () => await DeleteAsync(row))" Style="text-align: left;">
-                                    <Icon Type="delete" /> Delete
-                                </Button>
+                                @if (Edit)
+                                {
+                                    <Button Type="ButtonType.Text" OnClick="@(async () => await EditUser(row))" Style="text-align: left;">
+                                        <Icon Type="edit" /> Edit
+                                    </Button>
+                                }
+                                @if (EditRole)
+                                {
+                                    <Button Type="ButtonType.Text" OnClick="@(async () => await ShowRoleDialog(row))" Style="text-align: left;">
+                                        <Icon Type="android" /> RolesManagement
+                                    </Button>
+                                }
+                                @if (Delete)
+                                {
+                                    <Button Type="ButtonType.Text" OnClick="@(async () => await DeleteAsync(row))" Style="text-align: left;">
+                                        <Icon Type="delete" /> Delete
+                                    </Button>
+                                }
                             </div>
                         </ContentTemplate>
                     </Popover>

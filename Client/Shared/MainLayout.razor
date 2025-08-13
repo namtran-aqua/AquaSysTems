@@ -30,10 +30,10 @@
         <div class="sidebar-container bg-dark text-white" style="width:260px; min-height: 100vh;">
             @if (user?.Identity?.IsAuthenticated == true)
             {
+                    <Icon Style="font-size:25px;margin-left:215px;margin-top:5px;" OnClick="Home" Type="home" />
                 <Menu Mode="MenuMode.Inline"
                       Theme="MenuTheme.Dark"
-                      Style="height: 100vh; overflow: auto;">
-                    <Icon Style="font-size:25px;margin-left:215px;margin-top:5px;" OnClick="Home" Type="home" />
+                      Style="height: 94vh; overflow: auto;">
                     @foreach (var item in menu)
                     {
                         <SubMenu @key="item.Id">

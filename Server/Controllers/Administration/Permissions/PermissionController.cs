@@ -51,7 +51,7 @@ namespace AquaSolution.Server.Controllers.Administration.Permissions
         {
             var result = await _permissionService.DeletePermission(id);
             if (result)
-                return Ok(new { success = true, message = "Xóa thành công" });
+                return Ok(new { success = true, message = "Deleted successfully" });
 
             return NotFound(new { success = false, message = "permission không tồn tại" });
         }

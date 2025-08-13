@@ -22,4 +22,8 @@
     <ProjectReference Include="..\Shared\AquaSolution.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Pages\ManageMedicalRooms\Medicine&amp;SupplyRequest\" />
+  </ItemGroup>
+
 </Project>

@@ -94,7 +94,7 @@ namespace AquaSolution.Client.Pages.ManageMedicalRooms.RequestEmployee
             }
             else
             {
-                await Message.Error(result?.message ?? "Rejected unsuccessful.");
+                await Message.Error(result?.message ?? "Approved unsuccessful.");
             }
             await LoadData();
         }
@@ -109,7 +109,7 @@ namespace AquaSolution.Client.Pages.ManageMedicalRooms.RequestEmployee
             var result = await response.Content.ReadFromJsonAsync<ApiResponse>();
             if (response.IsSuccessStatusCode)
             {
-                await Message.Success(result?.message ?? "Approved successfully.");
+                await Message.Success(result?.message ?? "Rejected successfully.");
             }
             else
             {

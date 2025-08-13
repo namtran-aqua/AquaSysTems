@@ -16,5 +16,7 @@ namespace AquaSolution.Shared.Enum
         Reject,
         Inprogress,
         OnHold,
+        EditRole,
+        Detail
     }
 }

@@ -6,6 +6,7 @@
 @using AquaSolution.Shared.ManageMedicalRooms.Products
 @using Microsoft.AspNetCore.Components.Authorization
 @inject AuthenticationStateProvider AuthStateProvider
+@inject ModalService modal
 @inject IMessageService Message
 @{
     RenderFragment footer = @<Template>
@@ -24,7 +25,7 @@
         padding: 10px !important;
     }
 
-    .ant-modal-body {
+    .customModal .ant-modal-body {
         height: 83vh !important;
     }
 
@@ -39,9 +40,13 @@
             top: 0;
             background-color: #fff;
         }
+
+    .CustomTable{
+        overflow:auto;
+    }
 </style>
 
-<Modal @bind-Visible="IsVisible" Style="z-index: 9999;width:1050px;margin-top:-90px" Footer="@footer" Header="@null">
+<Modal class="customModal" @bind-Visible="IsVisible" Style="z-index: 9999;width:1050px;margin-top:-90px" Footer="@footer" Header="@null">
     <Form @ref="formRef"
           Model="@createdWarehouseExportDto"
           Layout="FormLayout.Vertical"
@@ -90,7 +95,7 @@
             </Row>
         </Card>
         <Card>
-            <div style="width:100%;overflow-x:hidden ;max-height:41vh; ">
+            <div style="width:100%;overflow-x:hidden ;max-height:55vh; ">
                 @if (!IsView)
                 {
                     <Button Style=" position: sticky !important; z-index: 8 !important;top: 0;" OnClick="@AddDetailRow">

@@ -7,6 +7,7 @@ using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Components;
 using System.Linq;
 using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
 
 namespace AquaSolution.Client.Components.ManageMedicalRooms.WarehouseExports
@@ -114,7 +115,9 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.WarehouseExports
             {
                 return;
             }
-
+            var stringBuilder = new StringBuilder();
+            stringBuilder.Append("Product :");
+            var check = 0;
             if (!createdWarehouseExportDto.WarehouseExportDetailDtos.Any())
             {
                 await Message.Error("Details cannot be left blank !");
@@ -140,6 +143,22 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.WarehouseExports
                     await Message.Error("Product cannot be left blank");
                     return;
                 }
+                var checkQuantity = _products.FirstOrDefault(x=>x.Id == itemDetail.productDto.Id);
+                if (checkQuantity != null) 
+                {
+                    if(checkQuantity.Quantity < itemDetail.Quantity) 
+                    {
+                        stringBuilder.AppendLine(itemDetail.productDto.Name.ToString());
+                        stringBuilder.Append($" Input quantity {itemDetail.Quantity} and actual quantity {checkQuantity.Quantity.ToString("0")} Insufficient stock  ;");
+                        check += 1;
+                    }
+                }
+            }
+            if(check > 0)
+            {
+
+               await MessageBox.Error(modal, stringBuilder.ToString());
+                return;
             }
 
             createdWarehouseExportDto.WarehouseExportDto.CreatedBy = CurrenUser.Id;

@@ -327,7 +327,13 @@ namespace AquaSolution.Server.Services.ManageMedicalRooms.RequestClinicservice
             var requestClinic = await _requestClinicRepo.FirstOrDefaultAsync(x => x.Id == requestId);
             if (requestClinic != null)
             {
-               return await _requestClinicRepo.DeleteAsync(requestClinic);
+               
+             var isDelete =  await _requestClinicRepo.DeleteAsync(requestClinic);
+                if (isDelete)
+                {
+                    await _hubContext.Clients.All.SendAsync("ChangeStatusRequestClinic");
+                    return isDelete;
+                }
             }
             return false;
         }

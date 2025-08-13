@@ -2,17 +2,19 @@
 using AquaSolution.Client.Common;
 using AquaSolution.Shared.CommonDto;
 using AquaSolution.Shared.Enum;
-using AquaSolution.Shared.ManageMedicalRooms.RequestClinics;
 using AquaSolution.Shared.ManageMedicalRooms.Prescriptions;
 using AquaSolution.Shared.ManageMedicalRooms.Products;
+using AquaSolution.Shared.ManageMedicalRooms.RequestClinics;
+using AquaSolution.Shared.ManageMedicalRooms.RequestClinics;
 using AquaSolution.Shared.ManageMedicalRooms.Treatments;
 using AquaSolution.Shared.ManageMedicalRooms.WarehouseExports;
 using AquaSolution.Shared.ManageMedicalRooms.WarehouseImports;
 using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Components;
 using System.Net.Http.Json;
+using System.Reflection;
 using System.Reflection.Metadata;
-using AquaSolution.Shared.ManageMedicalRooms.RequestClinics;
+using System.Text;
 
 namespace AquaSolution.Client.Components.ManageMedicalRooms.Treatments
 {
@@ -93,6 +95,47 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.Treatments
                 CreatedTreatment.Prescription.Name = $"Give medicine to {CreatedTreatment.PatientName} {DateTime.Now:yyyyMMdd}".ToUpper();
             if(CreatedTreatment.TreatmentType == TreatmentType.GiveMedicine)
             {
+
+                var stringBuilder = new StringBuilder();
+                stringBuilder.Append("Product :");
+                var check = 0;
+
+                foreach (var itemDetail in CreatedTreatment.Prescription.CreatedPrescriptionDetail)
+                {
+                    if (itemDetail.productDto.ExpirationDate == null)
+                    {
+                        await Message.Error("ExpiryDate cannot be left blank !");
+                        return;
+                    }
+
+                    if (itemDetail.Quantity <= 0)
+                    {
+                        await Message.Error("Quantity must be greater than 0");
+                        return;
+                    }
+
+                    if (itemDetail.productDto.Id == Guid.Empty)
+                    {
+                        await Message.Error("Product cannot be left blank");
+                        return;
+                    }
+                    var checkQuantity = _products.FirstOrDefault(x => x.Id == itemDetail.productDto.Id);
+                    if (checkQuantity != null)
+                    {
+                        if (checkQuantity.Quantity < itemDetail.Quantity)
+                        {
+                            stringBuilder.AppendLine(itemDetail.productDto.Name.ToString());
+                            stringBuilder.Append($" Input quantity {itemDetail.Quantity} and actual quantity {checkQuantity.Quantity.ToString("0")} Insufficient stock  ;");
+                            check += 1;
+                        }
+                    }
+                }
+                if (check > 0)
+                {
+
+                    await MessageBox.Error(modal, stringBuilder.ToString());
+                    return;
+                }
                 CreatedTreatment.Prescription.Id = Guid.NewGuid();
             }
             var responsetreatment = await Http.PostAsJsonAsync("api/MyRequestClinic/created-treatment", CreatedTreatment);

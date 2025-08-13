@@ -48,8 +48,8 @@ namespace AquaSolution.Client.Components.Administration.Users
                 }
                 if(User.Avatar != null)
                 {
-                    var encodedUrl = Uri.EscapeDataString(User.Avatar);
-                    var response = await Http.DeleteAsync($"api/upload/delete-avatar?avatarUrl={encodedUrl}");
+                    //var encodedUrl = Uri.EscapeDataString(User.Avatar);
+                    var response = await Http.DeleteAsync($"api/upload/delete-avatar?avatarUrl={User.Avatar}");
                 }
                 var avata = new AvataDto();
                 avata.UserId = User.Id;

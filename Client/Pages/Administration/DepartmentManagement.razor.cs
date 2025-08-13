@@ -39,7 +39,8 @@ namespace AquaSolution.Client.Pages.Administration
         }
         private async Task DeleteAsync(DepartmentDto deparmentDto)
         {
-            var message = $"Bạn có muốn xóa department \" {deparmentDto.Name} \" không?";
+            var message = $"Are you sure you want to delete the department \"{deparmentDto.Name}\"?";
+
             var confirm = await MessageBox.Confirm(modal, message.ToString());
             if (confirm)
             {
@@ -48,11 +49,11 @@ namespace AquaSolution.Client.Pages.Administration
                 var content = await response.Content.ReadFromJsonAsync<ApiResponse>();
                 if (response.IsSuccessStatusCode)
                 {
-                    await Message.Success(content?.message ?? "Xóa thành công");
+                    await Message.Success(content?.message ?? "Deleted successfully");
                 }
                 else
                 {
-                    await Message.Error(content?.message ?? "Có lỗi xảy ra");
+                    await Message.Error(content?.message ?? "An unexpected error occurred");
                 }
             }
             await InvokeAsync(StateHasChanged);

@@ -29,7 +29,6 @@ public class UserService : IUserService
     private readonly IRepository<Position> _positionRepo;
     private readonly IConfiguration _config;
     private readonly IHttpContextAccessor _httpContextAccessor;
-    private ClaimsPrincipal user;
     public UserService(
         IRepository<User> userRepo,
         IRepository<UserRole> userRoleRepo,
@@ -125,8 +124,11 @@ public class UserService : IUserService
     public async Task<UserDto?> GetCurrentUserAsync(Guid userId)
     {
 
+
         try
         {
+            var request = _httpContextAccessor.HttpContext.Request;
+            var baseUrl = $"{request.Scheme}://{request.Host}{request.PathBase}";
             var user = await _userRepo.FirstOrDefaultAsync(u => u.Id == userId);
             if (user == null)
                 return null;
@@ -150,7 +152,9 @@ public class UserService : IUserService
                 ManagerId = user.ManagerId==null?Guid.Empty: user.ManagerId.Value,
                 CreatedTime = user.CreatedTime,
                 IsDeleted = user.IsDeleted,
-                Avatar = user.Avatar,
+                Avatar = string.IsNullOrEmpty(user.Avatar)
+                            ? $"{baseUrl}/uploads/avatars/default.jpg"
+                            : $"{baseUrl}/{user.Avatar.TrimStart('/')}",
                 DepartmentName = department?.Name,
                 DepartmentId = user.DepartmentId,
                 PositionId = user.PositionId,
@@ -240,6 +244,8 @@ public class UserService : IUserService
 
     public async Task<List<UserDto>> GetAllUser()
     {
+        var request = _httpContextAccessor.HttpContext.Request;
+        var baseUrl = $"{request.Scheme}://{request.Host}{request.PathBase}";
         var ListUser = new List<UserDto>();
         //-------------------------
         var user = from queryableUser in await _userRepo.GetQueryableAsync()
@@ -274,7 +280,9 @@ public class UserService : IUserService
                        UpdatedTime = queryableUser.UpdatedTime,
                        CreatedBy = queryableUser.CreatedBy,
                        UpdateBy = queryableUser.UpdateBy,
-                       Avatar = queryableUser.Avatar ==null ? "/uploads/avatars/default.jpg": queryableUser.Avatar,
+                       Avatar = string.IsNullOrEmpty(queryableUser.Avatar)
+                            ? $"{baseUrl}/uploads/avatars/default.jpg"
+                            : $"{baseUrl}/{queryableUser.Avatar.TrimStart('/')}",
                        DepartmentId = queryableUser.DepartmentId,
                        DepartmentName = department.Name,
                        FactoryId = queryableUser.FactoryId,

@@ -1,4 +1,8 @@
-﻿using AquaSolution.Client.Components.Administration.Roles;
+﻿using AntDesign;
+using AquaSolution.Client.Common;
+using AquaSolution.Client.Components.Administration.Roles;
+using AquaSolution.Shared.CommonDto;
+using AquaSolution.Shared.Departments;
 using AquaSolution.Shared.Roles;
 using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Components;
@@ -35,18 +39,26 @@ namespace AquaSolution.Client.Pages.Administration
         }
         private async Task  DeleteRoleAsync(RoleDto role)
         {
-            var response = await Http.DeleteAsync($"api/roles/delete-role/{role.Id}");
-            if (response.IsSuccessStatusCode)
+
+            var message = $"Are you sure you want to delete the department \"{role.Name}\"?";
+            var confirm = await MessageBox.Confirm(modal, message.ToString());
+            if (confirm)
             {
-                await Message.Success("Role deleted successfully.");
-                await LoadRoles();
-                StateHasChanged();
+                var response = await Http.DeleteAsync($"api/roles/delete-role/{role.Id}");
+                if (response.IsSuccessStatusCode)
+                {
+                    await Message.Success("Role deleted successfully.");
+                    await LoadRoles();
+                    StateHasChanged();
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    await Message.Error($"Failed to delete: {error}");
+                }
             }
-            else
-            {
-                var error = await response.Content.ReadAsStringAsync();
-                await Message.Error($"Failed to delete: {error}");
-            }
+
+            
         }
 
        private async Task  ShowPermissionModal(RoleDto role)

@@ -48,13 +48,13 @@
                         <DescriptionsItem Title="@("- CreatedWorkDay")" Span="2">@(_medicalHistoryDto.CreatedWorkDay)</DescriptionsItem>
                     }
                     <DescriptionsItem Span="4" Title="@("- CreatedDate")">
-                        @(_medicalHistoryDto.CreatedDate.ToString("dd/MM/yyyy") ?? "No Time")
+                        @(_medicalHistoryDto.CreatedDate.ToString("dd/MM/yyyy HH:mm") ?? "No Time")
                     </DescriptionsItem>
                     @if (_medicalHistoryDto.ApprovalById != null)
                     {
                         <DescriptionsItem Title="@("- ApprovalBy")" Span="2">@(_medicalHistoryDto.ApprovalByName)</DescriptionsItem>
                         <DescriptionsItem Span="2" Title="@("- ApprovalDate")">
-                            @(_medicalHistoryDto.ApprovalDate?.ToString("dd/MM/yyyy") ?? "No Time")
+                            @(_medicalHistoryDto.ApprovalDate?.ToString("dd/MM/yyyy HH:mm") ?? "No Time")
                         </DescriptionsItem>
 
                     }
@@ -62,7 +62,7 @@
                     {
                         <DescriptionsItem Title="@("- RejectByName")" Span="2">@(_medicalHistoryDto.RejectByName)</DescriptionsItem>
                         <DescriptionsItem Span="2" Title="@("- RejectDate")">
-                            @(_medicalHistoryDto.RejectDate?.ToString("dd/MM/yyyy") ?? "No Time")
+                            @(_medicalHistoryDto.RejectDate?.ToString("dd/MM/yyyy HH:mm") ?? "No Time")
                         </DescriptionsItem>
 
                     }
@@ -70,7 +70,7 @@
                     {
                         <DescriptionsItem Title="@("- Nurse")" Span="2">@(_medicalHistoryDto.PharmacyManagerName)</DescriptionsItem>
                         <DescriptionsItem Span="2" Title="@("- SuccesDate")">
-                            @(_medicalHistoryDto.SuccesDate?.ToString("dd/MM/yyyy") ?? "No Time")
+                            @(_medicalHistoryDto.SuccesDate?.ToString("dd/MM/yyyy HH:mm") ?? "No Time")
                         </DescriptionsItem>
 
                     }

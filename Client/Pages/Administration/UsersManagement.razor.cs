@@ -28,6 +28,10 @@ namespace AquaSolution.Client.Pages.Administration
         private UserDto CurrenUser {  get; set; }
         private UserDetailModal detailModal;
         private bool Created {  get; set; }
+        private bool Edit {  get; set; }
+        private bool Delete {  get; set; }
+        private bool EditRole {  get; set; }
+
         private Guid PageId { get; set; }
         #endregion
         #region Innit
@@ -74,6 +78,13 @@ namespace AquaSolution.Client.Pages.Administration
            var CurrenUserClass = new CurrenUser(Http, AuthStateProvider);
            CurrenUser = await CurrenUserClass.LoadCurrenUser();
            Created = await hasPermission.CheckPermissions(PageId, PermissionActionType.Add.ToString(), CurrenUser);
+       
+           Edit = await hasPermission.CheckPermissions(PageId, PermissionActionType.Edit.ToString(), CurrenUser);
+       
+           Delete = await hasPermission.CheckPermissions(PageId, PermissionActionType.Delete.ToString(), CurrenUser);
+       
+           EditRole = await hasPermission.CheckPermissions(PageId, PermissionActionType.EditRole.ToString(), CurrenUser);
+       
         }
         #endregion
         #region Action
@@ -112,7 +123,7 @@ namespace AquaSolution.Client.Pages.Administration
         private async Task DeleteAsync(UserDto user)
         {                                                                                                                                                
             selectedUser = user;
-           var message = $"Bạn có muốn xóa user \" {user.FullName} \" không?";
+           var message = $"Are you sure you want to delete the user \" {user.FullName} \" ?";
            var confirm =  await MessageBox.Confirm(modal,message.ToString());
             if(confirm)
             {
@@ -121,11 +132,11 @@ namespace AquaSolution.Client.Pages.Administration
                 var content = await response.Content.ReadFromJsonAsync<ApiResponse>();
                 if (response.IsSuccessStatusCode)
                 {
-                  await  Message.Success(content?.message ?? "Xóa thành công");
+                  await  Message.Success(content?.message ?? "Deleted successfully");
                 }
                 else
                 {
-                    await Message.Error(content?.message ?? "Có lỗi xảy ra");
+                    await Message.Error(content?.message ?? "An unexpected error occurred");
                 }
             }
             await InvokeAsync(StateHasChanged);
