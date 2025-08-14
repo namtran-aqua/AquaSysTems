@@ -8,13 +8,14 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using System.Net.Http.Json;
 
-namespace AquaSolution.Client.Pages.ManageMedicalRooms.RequestEmployee
+namespace AquaSolution.Client.Pages.ToDoList.MedicalRoomRequest
 {
-    public partial class RequestEmployee
+    public partial class MedicalRoomRequest
     {
 
         #region Declaration
         [Inject] private HttpClient Http { get; set; }
+        private string Title { get; set; } = string.Empty;
         private List<MyRequestClinicDto> MyRequestClinicData { get; set; } = new List<MyRequestClinicDto>();
         private HasPermission hasPermission = new();
         private Guid PageId { get; set; }
@@ -50,7 +51,9 @@ namespace AquaSolution.Client.Pages.ManageMedicalRooms.RequestEmployee
             MyRequestClinicData = await Http.GetFromJsonAsync<List<MyRequestClinicDto>>("api/MyRequestClinic/get-reuqest-by-user");
             if (MyRequestClinicData != null)
             {
-                MyRequestClinicData = MyRequestClinicData.Where(x => x.ManagerId == CurrenUser.Id && x.Status == StatusClinicType.New).ToList();
+                MyRequestClinicData = MyRequestClinicData.Where(x => x.ManagerId == CurrenUser.Id).ToList();
+                //MyRequestClinicData = MyRequestClinicData.Where(x => x.ManagerId == CurrenUser.Id && x.Status == StatusClinicType.New).ToList();
+
             }
         }
         private async Task GetPage()

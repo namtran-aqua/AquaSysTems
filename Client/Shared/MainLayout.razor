@@ -24,13 +24,54 @@
         .ant-menu-item{
             padding-left: 30px !important;
         }
+
+        .sidebar-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar-container::-webkit-scrollbar-track {
+            background: #0f172a; 
+        }
+
+        .sidebar-container::-webkit-scrollbar-thumb {
+            background-color: #475569;
+            border-radius: 4px;
+        }
+
+            .sidebar-container::-webkit-scrollbar-thumb:hover {
+                background-color: #64748b;
+            }
+
+        .ant-menu::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .ant-menu::-webkit-scrollbar-thumb {
+            background-color: #475569;
+            border-radius: 4px;
+        }
+
+        .home-icon {
+            font-size: 24px;
+            cursor: pointer;
+            color: #1890ff;
+            padding: 6px; 
+            border-radius: 50%;
+            transition: all 0.2s ease-in-out; 
+        }
+
+            .home-icon:hover {
+                background-color: rgba(24, 144, 255, 0.1);
+                transform: scale(1.1);
+            }
+
     </style>
     <div class="d-flex">
         <!-- Sidebar -->
         <div class="sidebar-container bg-dark text-white" style="width:260px; min-height: 100vh;">
             @if (user?.Identity?.IsAuthenticated == true)
             {
-                    <Icon Style="font-size:25px;margin-left:215px;margin-top:5px;" OnClick="Home" Type="home" />
+                <Icon Class="home-icon" OnClick="Home" Type="home" />
                 <Menu Mode="MenuMode.Inline"
                       Theme="MenuTheme.Dark"
                       Style="height: 94vh; overflow: auto;">
