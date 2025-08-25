@@ -1,4 +1,5 @@
 ﻿using AquaService.Shared.AuthModels;
+using AquaSolution.Shared.Administration.UserManagements;
 using AquaSolution.Shared.AuthModels;
 using AquaSolution.Shared.CommonDto;
 using AquaSolution.Shared.UserManagements;
@@ -17,5 +18,6 @@ namespace AquaSolution.Server.Services.Administration.UserService
         Task<bool> ChangePasswordAsync(ChangePassRequest changePassRequest);
         Task<bool> ChangeAvataAsync(AvataDto avataDto);
         Task<List<UserContributerDto>> GetContributer();
+        Task<List<UserSelectedDto>> LoadUserSelected();
     }
 }

@@ -147,6 +147,7 @@ namespace AquaSolution.Client.Pages.ManageMedicalRooms.MyRequestClinics
 
             await requestClinicDetailModal.ShowModalAsync(myRequestClinicDto.Id,true,false,false);
         }
+
         #endregion
     }
 }

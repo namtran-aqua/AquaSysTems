@@ -48,7 +48,7 @@ namespace AquaSolution.Client.Components.Administration.Users
                 if (_valueFactory != value)
                 {
                     _valueFactory = value;
-                    ResetListManager?.Invoke();
+                   ResetListManager?.Invoke();
                 }
             }
         }

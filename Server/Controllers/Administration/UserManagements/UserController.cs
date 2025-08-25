@@ -1,5 +1,6 @@
 ﻿using AquaSolution.Server.Services.Administration.UserService;
 using AquaSolution.Server.SignalR;
+using AquaSolution.Shared.Administration.UserManagements;
 using AquaSolution.Shared.CommonDto;
 using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Authentication;
@@ -99,7 +100,12 @@ namespace AquaSolution.Server.Controllers.Administration.UserManagements
         public async Task<List<UserContributerDto?>> GetContributer()
         {
             var data = await _userService.GetContributer();
-
+            return data;
+        }
+        [HttpGet("get-list-selected")]
+        public async Task<List<UserSelectedDto>> LoadUserSelected()
+        {
+            var data = await _userService.LoadUserSelected();
             return data;
         }
     }

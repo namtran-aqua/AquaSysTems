@@ -46,6 +46,11 @@
         overflow: auto;
         height:55vh;
     }
+    .CustomTable2 {
+        overflow: auto;
+        height:40vh;
+    }
+
 </style>
 
 <Modal class="customModal" @bind-Visible="IsVisible" Style="z-index: 9999;width:1050px;margin-top:-90px" Footer="@footer" Header="@null">
@@ -106,7 +111,7 @@
                 <Table @ref="@Table"
                        TItem="CreatedPrescriptionDetailDto"
                        Size="TableSize.Small"
-                       Class="CustomTable  fix-table-header"
+                       Class="CustomTable2  fix-table-header"
                        PaginationPosition="false"
                        DataSource="CreatedTreatment.Prescription?.CreatedPrescriptionDetail">
                     <ColumnDefinitions Context="row2">

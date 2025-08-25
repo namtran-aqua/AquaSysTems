@@ -26,7 +26,7 @@ namespace AquaSolution.Shared.ManageMedicalRooms.Products
         public string CreatedBy { get; set; }
         public DateTime? UpdatedDate { get; set; }
         public string? UpdateBy { get; set; }
-        public string Unit { get; set; }
+        public string? Unit { get; set; }
         public DateTime? ExpirationDate { get; set; }
         public DateTime? ManufacturingDate { get; set; }
         public bool IsHide { get; set; }

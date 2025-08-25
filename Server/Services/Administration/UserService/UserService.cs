@@ -2,6 +2,7 @@
 using AquaSolution.Data.Data.Entities;
 using AquaSolution.Data.Repositories;
 using AquaSolution.Server.Services.Administration.UserService;
+using AquaSolution.Shared.Administration.UserManagements;
 using AquaSolution.Shared.AuthModels;
 using AquaSolution.Shared.CommonDto;
 using AquaSolution.Shared.PasswordHelpers;
@@ -467,5 +468,30 @@ public class UserService : IUserService
             return listUser;
         }
         return new List<UserContributerDto>();
+    }
+
+    public async Task<List<UserSelectedDto>> LoadUserSelected()
+    {
+        var user = from userSelected in await _userRepo.GetQueryableAsync()
+                   join department in await _departmentRepo.GetQueryableAsync()
+                   on userSelected.DepartmentId equals department.Id
+                   into d from department in d.DefaultIfEmpty()
+                   join factory in await _factoryRepo.GetQueryableAsync()
+                   on userSelected.FactoryId equals factory.Id
+                   into f from factory in f.DefaultIfEmpty()
+
+                   select new UserSelectedDto
+                   {
+                       Id = userSelected.Id,
+                       Name = userSelected.FullName,
+                       DepartmentId = userSelected.DepartmentId,
+                       DepartmentName = department.Name,
+                       WorkDayId = userSelected.WorkDayId,
+                       FactoryId = userSelected.FactoryId,
+                       FactoryName = factory.Name,
+                       Email = userSelected.Email,
+
+                   };
+        return user.ToList();
     }
 }

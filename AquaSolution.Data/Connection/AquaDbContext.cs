@@ -1,11 +1,6 @@
 ﻿using AquaSolution.Data.Data.Entities;
 using AquaSolution.Data.Data.MappingConfigurations;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AquaSolution.Data.Connection
 {
@@ -45,6 +40,8 @@ namespace AquaSolution.Data.Connection
         public DbSet<PrescriptionDetail> tbl_PrescriptionDetail { get; set; }
         public DbSet<InventoryPeriod> tbl_InventoryPeriod { get; set; }
         public DbSet<InventoryPeriodDetail> tbl_InventoryPeriodDetail { get; set; }
+        public DbSet<MedicineSupplyRequest> tbl_MedicineSupplyRequest { get; set; }
+        public DbSet<MedicineSupplyRequestDetail> tbl_MedicineSupplyRequestDetail { get; set; }
 
 
         #endregion
@@ -80,6 +77,8 @@ namespace AquaSolution.Data.Connection
             modelBuilder.ApplyConfiguration(new PrescriptionDetailConfiguration());
             modelBuilder.ApplyConfiguration(new InventoryPeriodDetailConfiguration());
             modelBuilder.ApplyConfiguration(new InventoryPeriodConfiguration());
+            modelBuilder.ApplyConfiguration(new MedicineSupplyRequestConfiguration());
+            modelBuilder.ApplyConfiguration(new MedicineSupplyRequestDetailConfiguration());
 
             #endregion
 

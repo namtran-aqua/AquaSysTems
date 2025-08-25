@@ -2,6 +2,7 @@
 @using AquaSolution.Shared.Enum;
 @using AquaSolution.Shared.CommonDto;
 @using AquaSolution.Shared.ManageMedicalRooms.WarehouseExports
+@using AquaSolution.Shared.ManageMedicalRooms.Prescriptions
 @using AquaSolution.Shared.UserManagements
 @using AquaSolution.Shared.ManageMedicalRooms.Products
 @using Microsoft.AspNetCore.Components.Authorization
@@ -33,19 +34,25 @@
           ValidateOnChange="true">
         <Card>
             <Row Gutter="16">
-                <Col Span="24">
+                <Col Span="15">
                 <FormItem Required = "true" Label="Reason">
                     <Input  @bind-Value="HandleMyRequestClinic.RequestTitle" />
                 </FormItem>
                 </Col>
-            </Row>
-            <Row Gutter="16">
                 <Col Span="4">
-                <FormItem  Label="Department">
-                    <Input Disabled = "true" value="DepartmentName" />
+                <FormItem Label="Department">
+                    <Input Disabled="true" value="DepartmentName" />
                 </FormItem>
                 </Col>
-                <Col Span="8">
+                <Col Span="5">
+                <FormItem Label="Created Time" Required="true">
+                    <DatePicker AllowClear="false" ShowTime="@true" @bind-Value="HandleMyRequestClinic.CreatedDate" Format="dd/MM/yyyy HH:mm"></DatePicker>
+                </FormItem>
+                </Col>
+            </Row>
+            <Row Gutter="16">
+               
+                <Col Span="9">
                 <FormItem Required="true" Label="User Name">
                     <Select TItem="UserSelectedDto" TItemValue="UserSelectedDto"
                             DataSource="@ListSelectedcUsers"
@@ -55,7 +62,13 @@
                     </Select>
                 </FormItem>
                 </Col>
-                <Col Span="7">
+
+                <Col Span="9">
+                <FormItem Label="Email">
+                    <Input Disabled="true" value="@HandleMyRequestClinic.EmailRequestter" />
+                </FormItem>
+                </Col>
+                <Col Span="6">
                 <FormItem Label="PurposeType" Required="true">
                     <Select TItem="PurposeType"
                             TItemValue="PurposeType"
@@ -66,38 +79,16 @@
                     </Select>
                 </FormItem>
                 </Col>
-                <Col Span="5">
-                <FormItem Label="Created Time" Required="true">
-                    <DatePicker AllowClear="false" ShowTime="@true" @bind-Value="HandleMyRequestClinic.CreatedDate" Format="dd/MM/yyyy HH:mm"></DatePicker>
-                </FormItem>
-                </Col>
-            </Row>
-            <Row Gutter="16">
-                <Col Span="8">
-                <FormItem  Label="Email">
-                    <Input Disabled="true" value="@HandleMyRequestClinic.EmailRequestter" />
-                </FormItem>
-
-                 </Col>
-                <Col Span="8">
-                <FormItem  Label="Manager Name">
-                    <Input Disabled="true" value="@HandleMyRequestClinic.ManagerName" />
-                </FormItem>
-                </Col>
-                <Col Span="8">
-                <FormItem  Label="WorkDayManager ">
-                    <Input Disabled="true" value="@HandleMyRequestClinic.WorkDayManager" />
-                </FormItem>
-                </Col> 
-
+       
             </Row>
             <Row Gutter="16">
                 <Col Span="24">
                 <FormItem  Label="Note">
-                    <TextArea  @bind-Value="HandleMyRequestClinic.Note" Rows="3" />
+                    <TextArea  @bind-Value="HandleMyRequestClinic.Note" Rows="2" />
                 </FormItem>
                 </Col>
             </Row>
         </Card>
+       
     </Form>
 </Modal>

@@ -1,4 +1,5 @@
 ﻿using AquaSolution.Shared.Enum;
+using AquaSolution.Shared.ManageMedicalRooms.Prescriptions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,7 +36,5 @@ namespace AquaSolution.Shared.ManageMedicalRooms.RequestClinics
         public Guid CreatedBy { get; set; }
         public string CreatedName { get; set; }
         public string CreatedWorkDay { get; set; }
-
-
     }
 }

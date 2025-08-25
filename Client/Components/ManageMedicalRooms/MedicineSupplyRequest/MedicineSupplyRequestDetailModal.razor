@@ -1,0 +1,86 @@
+﻿@using AntDesign
+@using AquaSolution.Client.Common
+@using AquaSolution.Shared.Administration.UserManagements
+@using AquaSolution.Shared.Enum;
+@using AquaSolution.Shared.CommonDto;
+@using AquaSolution.Shared.ManageMedicalRooms.Products
+@using AquaSolution.Shared.ManageMedicalRooms.Prescriptions
+@using AquaSolution.Shared.UserManagements
+@using AquaSolution.Shared.ManageMedicalRooms.MedicineSupplyRequest
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthStateProvider
+@inject ModalService modal
+@inject IMessageService Message
+@{
+    RenderFragment footer = @<Template>
+        <Button Style="color:#808080" OnClick="@Close" @key="@("back")">Close</Button>
+    </Template>;
+}
+<style>
+    .ant-modal-body {
+        height: 75vh !important;
+    }
+
+    .ant-descriptions-item-label {
+        font-weight: bold;
+    }
+</style>
+
+<Modal class="customModal" @bind-Visible="IsVisibleModal"
+       Style="z-index: 9999;width:1050px;margin-top:-90px"
+       Footer="@footer" Header="@null">
+    <div class="modal-body" style="width:100%;overflow-x:scroll ;max-height:70vh; ">
+        <Collapse DefaultActiveKey="@(new[] { "1" })">
+            <Panel Class="customInfo" Header="Request Info" Key="1">
+                <Descriptions Style="margin-bottom: 24px;" Column="4">
+                    <DescriptionsItem Title="@("- Title")" Span="3">@(MedicineSupplyRequestDto.Title)</DescriptionsItem>
+                    <DescriptionsItem Title="@("Status")" Span="1">
+                        <span style="color:@GetTagColor.GetTagColorCss(MedicineSupplyRequestDto.RequestType.ToString())">
+                            @MedicineSupplyRequestDto.RequestType
+                        </span>
+                    </DescriptionsItem>
+                    <DescriptionsItem Title="@("- Requester")" Span="2">@MedicineSupplyRequestDto.UserRequestName</DescriptionsItem>
+                    <DescriptionsItem Title="@("- CreatedByName")" Span="2">@(MedicineSupplyRequestDto.CreatedByName)</DescriptionsItem>
+                    <DescriptionsItem Title="@("- CreatedDate")" Span="2">@(MedicineSupplyRequestDto.CreatedDate?.ToString("dd/MM/yyyy HH:mm"))</DescriptionsItem>
+                    <DescriptionsItem Title="@("- DepartmentName")" Span="2">@(MedicineSupplyRequestDto.DepartmentName)</DescriptionsItem>
+                    <DescriptionsItem Title="@("- FactoryName")" Span="2">@(MedicineSupplyRequestDto.FactoryName)</DescriptionsItem>
+                    @if (MedicineSupplyRequestDto.ApprovalId != null)
+                    {
+                        <DescriptionsItem Title="@("- ApprovalName")" Span="2">@(MedicineSupplyRequestDto.ApprovalName)</DescriptionsItem>
+                        <DescriptionsItem Title="@("- ApprovedDate")" Span="2">@(MedicineSupplyRequestDto.ApprovedDate?.ToString("dd/MM/yyyy HH:mm"))</DescriptionsItem>
+                    }
+                    @if (MedicineSupplyRequestDto.RejectId != null)
+                    {
+                        <DescriptionsItem Title="@("- RejectName")" Span="2">@(MedicineSupplyRequestDto.RejectName)</DescriptionsItem>
+                        <DescriptionsItem Title="@("- RejectDate")" Span="2">@(MedicineSupplyRequestDto.RejectDate?.ToString("dd/MM/yyyy HH:mm"))</DescriptionsItem>
+                    }
+                    @if (MedicineSupplyRequestDto.PharmacyManagerId != null)
+                    {
+                        <DescriptionsItem Title="@("- PharmacyManagerName")" Span="2">@(MedicineSupplyRequestDto.PharmacyManagerName)</DescriptionsItem>
+                        <DescriptionsItem Title="@("- MedicineDispensingDate")" Span="2">@(MedicineSupplyRequestDto.MedicineDispensingDate?.ToString("dd/MM/yyyy HH:mm"))</DescriptionsItem>
+                    }
+                    <DescriptionsItem Title="@("- Note")" Span="4">
+                        @(MedicineSupplyRequestDto.Note)
+                    </DescriptionsItem>
+                </Descriptions>
+            </Panel>
+            <Panel Class="customDocument" Header="Detail Prescription" Key="2">
+                <Table DataSource="@medicineSupplyRequestDetailDtos" HidePagination Size="TableSize.Small">
+                    <ChildContent Context="item">
+                        <Column Title="ProductName" TData="string">@item.Product.Name</Column>
+                        <Column Title="Unit" TData="string">@item.Product.Unit</Column>
+
+                        <Column Title="RequestedQuantity" TData="string">@item.RequestedQuantity</Column>
+
+                        <Column Title="QuantityIssued" TData="string">@item.QuantityIssued</Column>
+
+                        <Column Title="ExpiryDate" TData="string">@item.ExpiryDate?.ToString("yyyy/MM/dd")</Column>
+                        <Column Title="DateManufactured" TData="string">@item.DateManufactured?.ToString("yyyy/MM/dd")</Column>
+                        <Column Title="Note" TData="string">@item.Note</Column>
+
+                    </ChildContent>
+                </Table>
+            </Panel>
+        </Collapse>
+    </div>
+</Modal>

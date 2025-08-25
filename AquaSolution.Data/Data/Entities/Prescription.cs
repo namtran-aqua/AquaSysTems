@@ -10,6 +10,6 @@ namespace AquaSolution.Data.Data.Entities
         public string Name { get; set; }
         public string? Note { get; set; }
         public DateTime CreatedDate { get; set; }
-        public Guid PharmacyManagerId { get; set; }
+        public Guid? PharmacyManagerId { get; set; }
     }
 }

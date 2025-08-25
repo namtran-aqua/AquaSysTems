@@ -52,7 +52,7 @@ public class InventoryService : IInventoryService
                         ProductType = first.product.ProductType,
                         ExpirationDate = g.Key.ExpirationDate,
                         ManufacturingDate = g.Key.ManufacturingDate,
-                        expired = g.Key.ExpirationDate > DateTime.Now.Date
+                        expired = g.Key.ExpirationDate < DateTime.Now.Date
                     };
                 })
                 .ToList();

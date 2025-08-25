@@ -68,9 +68,15 @@
     </style>
     <div class="d-flex">
         <!-- Sidebar -->
-        <div class="sidebar-container bg-dark text-white" style="width:260px; min-height: 100vh;">
+        <div class="sidebar-container bg-dark text-white" style="width:230px; min-height: 100vh;">
             @if (user?.Identity?.IsAuthenticated == true)
             {
+
+          @*       <span style="display:flex; align-items:center; gap:6px;">
+                    <Icon Class="home-icon" OnClick="Home" Type="home" />
+                    <img src="https://hrmsaquavietnam.com:6969/images/Aqua-Smart%20Home%20-%20blue.png"
+                         alt="AQUA Logo" style="width:120px;height:auto;" />
+                </span> *@
                 <Icon Class="home-icon" OnClick="Home" Type="home" />
                 <Menu Mode="MenuMode.Inline"
                       Theme="MenuTheme.Dark"

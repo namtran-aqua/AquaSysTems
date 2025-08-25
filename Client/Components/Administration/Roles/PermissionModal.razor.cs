@@ -1,4 +1,5 @@
 ﻿
+using AntDesign.core.Services;
 using AquaSolution.Shared.Permissions;
 using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Components;
@@ -60,7 +61,7 @@ namespace AquaSolution.Client.Components.Administration.Roles
             }
             if (isChecked)
             {
-                if (!SelectedPermissions.Contains(permissionId))
+                if (!SelectedPermissions.Contains(permissionId)) 
                     SelectedPermissions.Add(permissionId);
             }
             else

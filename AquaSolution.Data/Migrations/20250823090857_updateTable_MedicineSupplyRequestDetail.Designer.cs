@@ -4,6 +4,7 @@ using AquaSolution.Data.Connection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AquaSolution.Data.Migrations
 {
     [DbContext(typeof(AquaDbContext))]
-    partial class AquaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250823090857_updateTable_MedicineSupplyRequestDetail")]
+    partial class updateTable_MedicineSupplyRequestDetail
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -348,12 +351,6 @@ namespace AquaSolution.Data.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid?>("PharmacyManagerId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("RejectDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid?>("RejectId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("RequestType")

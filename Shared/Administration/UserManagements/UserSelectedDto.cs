@@ -11,6 +11,9 @@ namespace AquaSolution.Shared.Administration.UserManagements
         public Guid Id { get; set; }
         public string Name { get; set; }
         public Guid? DepartmentId { get; set; }
+        public string? DepartmentName { get; set; }
+        public Guid? FactoryId { get; set; }
+        public string? FactoryName { get; set; }
         public string WorkDayId { get; set; }
         public string DisplayLabel => $"{Name} - {WorkDayId}";
         public string? ManagerName { get; set; }

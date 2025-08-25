@@ -12,6 +12,7 @@ using AquaSolution.Server.Services.Administration.UserService;
 using AquaSolution.Server.Services.Common.HandleInventories;
 using AquaSolution.Server.Services.ManageMedicalRooms.InventoriesService;
 using AquaSolution.Server.Services.ManageMedicalRooms.InventoryPeriodService;
+using AquaSolution.Server.Services.ManageMedicalRooms.MedicineSupplyRequestService;
 using AquaSolution.Server.Services.ManageMedicalRooms.Products;
 using AquaSolution.Server.Services.ManageMedicalRooms.RequestClinicservice;
 using AquaSolution.Server.Services.ManageMedicalRooms.WarehouseExportService;
@@ -45,8 +46,7 @@ namespace AquaSolution.Server
             services.AddScoped<IRequestClinicservice, RequestClinicservice>();
             services.AddScoped<IHandleInventory, HandleInventory>();
             services.AddScoped<IInventoryPeriodService, InventoryPeriodService>();
-
-
+            services.AddScoped<IMedicineSupplyRequestService, MedicineSupplyRequestService>();
 
             return services;
         }

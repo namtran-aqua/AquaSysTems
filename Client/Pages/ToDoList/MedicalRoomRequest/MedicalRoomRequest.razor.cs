@@ -3,9 +3,11 @@ using AquaSolution.Client.Components.ManageMedicalRooms.RequestClinics;
 using AquaSolution.Shared.CommonDto;
 using AquaSolution.Shared.Enum;
 using AquaSolution.Shared.ManageMedicalRooms.RequestClinics;
+using AquaSolution.Shared.Menus;
 using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
+using System.Net.Http;
 using System.Net.Http.Json;
 
 namespace AquaSolution.Client.Pages.ToDoList.MedicalRoomRequest
@@ -52,9 +54,8 @@ namespace AquaSolution.Client.Pages.ToDoList.MedicalRoomRequest
             if (MyRequestClinicData != null)
             {
                 MyRequestClinicData = MyRequestClinicData.Where(x => x.ManagerId == CurrenUser.Id).ToList();
-                //MyRequestClinicData = MyRequestClinicData.Where(x => x.ManagerId == CurrenUser.Id && x.Status == StatusClinicType.New).ToList();
-
             }
+
         }
         private async Task GetPage()
         {
@@ -120,9 +121,9 @@ namespace AquaSolution.Client.Pages.ToDoList.MedicalRoomRequest
             }
             await LoadData();
         }
-        private async Task View(Guid reuqestId)
+        private async Task View(MyRequestClinicDto myRequestClinicDto)
         {
-            await requestClinicDetailModal.ShowModalAsync(reuqestId, false, Approval, Rejected);
+            await requestClinicDetailModal.ShowModalAsync(myRequestClinicDto.Id, myRequestClinicDto.Status != StatusClinicType.New, Approval, Rejected);
         }
         #endregion
     }

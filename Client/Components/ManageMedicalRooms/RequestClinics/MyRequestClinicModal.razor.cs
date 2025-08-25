@@ -1,22 +1,29 @@
 ﻿using AntDesign;
+using AquaSolution.Client.Common;
 using AquaSolution.Shared.Administration.UserManagements;
 using AquaSolution.Shared.Enum;
+using AquaSolution.Shared.ManageMedicalRooms.Prescriptions;
+using AquaSolution.Shared.ManageMedicalRooms.Products;
 using AquaSolution.Shared.ManageMedicalRooms.RequestClinics;
-using AquaSolution.Shared.ManageMedicalRooms.RequestClinics;
+using AquaSolution.Shared.ManageMedicalRooms.WarehouseExports;
 using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Components;
-using System.Net.Http;
 using System.Net.Http.Json;
+using System.Reflection;
+using System.Text;
 using System.Text.Json;
+using static System.Net.WebRequestMethods;
 
 namespace AquaSolution.Client.Components.ManageMedicalRooms.RequestClinics
 {
     public partial class MyRequestClinicModal
     {
         #region Declaration
+        [Inject] private HttpClient Http { get; set; }
         private bool IsVisible { get; set; }
         private bool IsView { get; set; }
         private UserDto CurrenUser { get; set; }
+        private bool IsPrescription { get; set; }
         private string? DepartmentName { get; set; }
         private List<UserDto> Listusers = new();
         private List<UserSelectedDto> ListSelectedcUsers = new();
@@ -96,7 +103,16 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.RequestClinics
                 if (_purposeType != value)
                 {
                     _purposeType = value;
+                    if (value == PurposeType.MedicationRequest)
+                    {
+                        IsPrescription = true;
+                    }
+                    else
+                    {
+                        IsPrescription = false;
+                    }
                     HandleMyRequestClinic.PurposeType = value;
+                    StateHasChanged();
                 }
 
             }
@@ -152,6 +168,7 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.RequestClinics
             HandleMyRequestClinic.CreatedBy = CurrenUser.Id;
             HandleMyRequestClinic.CreatedName = CurrenUser.FullName;
             HandleMyRequestClinic.CreatedWorkDay = CurrenUser.WorkDayId;
+
             var response = await httpClient.PostAsJsonAsync("api/myrequestclinic/create-request", HandleMyRequestClinic);
             if (response.IsSuccessStatusCode)
             {

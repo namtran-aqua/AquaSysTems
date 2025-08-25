@@ -60,6 +60,9 @@
                     <DescriptionsItem Title="@("- ManagerName")" Span="2">@(MyRequestClinicDto.ManagerName)</DescriptionsItem>
                     <DescriptionsItem Title="@("- PurposeType")" Span="2">@(MyRequestClinicDto.PurposeType)</DescriptionsItem>
 
+                    <DescriptionsItem Title="@("- Note")" Span="4">
+                        @(MyRequestClinicDto.Note)
+                    </DescriptionsItem>
                     @if (MyRequestClinicDto.TreatmentId != null)
                     {
                         <DescriptionsItem Title="@("- Diagnose")" Span="2">@(MyRequestClinicDto.Diagnose)</DescriptionsItem>
@@ -103,9 +106,6 @@
 
                     }
 
-                    <DescriptionsItem Title="@("- Note")" Span="4">
-                        @(MyRequestClinicDto.Note)
-                    </DescriptionsItem>
 
                 </Descriptions>
             </Panel>

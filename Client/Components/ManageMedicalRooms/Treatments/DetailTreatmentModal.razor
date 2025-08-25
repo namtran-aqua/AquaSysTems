@@ -10,9 +10,10 @@
     </Template>;
 }
 <style>
-    .ant-modal-body{
+    .ant-modal-body {
         height: 75vh !important;
     }
+
     .ant-descriptions-item-label {
         font-weight: bold;
     }
@@ -34,14 +35,14 @@
                     <DescriptionsItem Title="@("- RequesterWokrDay")" Span="2">@(_medicalHistoryDto.WorkDayUserRequestId)</DescriptionsItem>
                     <DescriptionsItem Title="@("- EmailRequester")" Span="2">@(_medicalHistoryDto.EmailRequestter)</DescriptionsItem>
                     <DescriptionsItem Title="@("- ManagerName")" Span="2">@(_medicalHistoryDto.ManagerName)</DescriptionsItem>
-                    @if (_medicalHistoryDto.TreatmentId !=null)
+                    @if (_medicalHistoryDto.TreatmentId != null)
                     {
                         <DescriptionsItem Title="@("- Diagnose")" Span="2">@(_medicalHistoryDto.Diagnose)</DescriptionsItem>
                         <DescriptionsItem Title="@("- Treatments")" Span="2">@(_medicalHistoryDto.Treatments)</DescriptionsItem>
                         <DescriptionsItem Title="@("- TreatmentType")" Span="2">@(_medicalHistoryDto.TreatmentType)</DescriptionsItem>
                         <DescriptionsItem Title="@("- TreatmentNote")" Span="4">@(_medicalHistoryDto.TreatmentNote)</DescriptionsItem>
                     }
-     
+
                     @if (_medicalHistoryDto.UserRequestId != _medicalHistoryDto.CreatedBy)
                     {
                         <DescriptionsItem Title="@("- CreatedByname")" Span="2">@(_medicalHistoryDto.CreatedName)</DescriptionsItem>
@@ -80,23 +81,23 @@
 
                 </Descriptions>
             </Panel>
-       
-                <Panel Class="customDocument" Header="Detail Prescription" Key="2">
-                    <Table DataSource="@_medicalHistoryDto.PrescriptionDetail" HidePagination Size="TableSize.Small">
-                        <ChildContent Context="item">
-                            <Column Title="ProductName" TData="string">@item.ProductName</Column>
-                            <Column Title="Unit" TData="string">@item.Unit</Column>
 
-                            <Column Title="Quantity" TData="string">@item.Quantity</Column>
+            <Panel Class="customDocument" Header="Detail Prescription" Key="2">
+                <Table  DataSource="@_medicalHistoryDto.PrescriptionDetail" HidePagination Size="TableSize.Small">
+                    <ChildContent Context="item">
+                        <Column Title="ProductName" TData="string">@item.ProductName</Column>
+                        <Column Title="Unit" TData="string">@item.Unit</Column>
 
-                            <Column Title="ProductType" TData="string">@item.ProductType</Column>
+                        <Column Title="Quantity" TData="string">@item.Quantity</Column>
 
-                            <Column Title="ExpirationDate" TData="string">@item.ExpirationDate?.ToString("yyyy/MM/dd")</Column>
-                            <Column Title="ManufacturingDate" TData="string">@item.ManufacturingDate?.ToString("yyyy/MM/dd")</Column>
+                        <Column Title="ProductType" TData="string">@item.ProductType</Column>
 
-                        </ChildContent>
-                    </Table>
-                </Panel>
+                        <Column Title="ExpirationDate" TData="string">@item.ExpirationDate?.ToString("yyyy/MM/dd")</Column>
+                        <Column Title="ManufacturingDate" TData="string">@item.ManufacturingDate?.ToString("yyyy/MM/dd")</Column>
+
+                    </ChildContent>
+                </Table>
+            </Panel>
         </Collapse>
     </div>
 </Modal>
