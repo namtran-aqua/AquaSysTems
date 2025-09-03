@@ -75,7 +75,8 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.Treatments
         }
         private async Task LoadProduct()
         {
-            _products = await Http.GetFromJsonAsync<List<ProductExportDto>>("api/product/get-all-by-export");
+            var data = await Http.GetFromJsonAsync<List<ProductExportDto>>("api/product/get-all-by-export");
+            _products = data.Where(x => x.Quantity > 0).ToList();
         }
         #endregion
         #region Action
@@ -102,29 +103,24 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.Treatments
 
                 foreach (var itemDetail in CreatedTreatment.Prescription.CreatedPrescriptionDetail)
                 {
-                    if (itemDetail.productDto.ExpirationDate == null)
-                    {
-                        await Message.Error("ExpiryDate cannot be left blank !");
-                        return;
-                    }
-
+                 
                     if (itemDetail.Quantity <= 0)
                     {
                         await Message.Error("Quantity must be greater than 0");
                         return;
                     }
 
-                    if (itemDetail.productDto.Id == Guid.Empty)
+                    if (itemDetail.ProductId == Guid.Empty)
                     {
                         await Message.Error("Product cannot be left blank");
                         return;
                     }
-                    var checkQuantity = _products.FirstOrDefault(x => x.Id == itemDetail.productDto.Id);
+                    var checkQuantity = _products.FirstOrDefault(x => x.Id == itemDetail.ProductId);
                     if (checkQuantity != null)
                     {
                         if (checkQuantity.Quantity < itemDetail.Quantity)
                         {
-                            stringBuilder.AppendLine(itemDetail.productDto.Name.ToString());
+                            stringBuilder.AppendLine(itemDetail.ProductName.ToString());
                             stringBuilder.Append($" Input quantity {itemDetail.Quantity} and actual quantity {checkQuantity.Quantity.ToString("0")} Insufficient stock  ;");
                             check += 1;
                         }
@@ -156,6 +152,18 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.Treatments
         {
             IsVisible = false;
             StateHasChanged();
+        }
+        private void OnProductChanged(CreatedPrescriptionDetailDto detail, ProductExportDto? product)
+        {
+            if (product != null)
+            {
+                detail.ProductId = product.Id;
+                detail.ProductType = product.ProductType;
+                detail.Unit = product.Unit;
+                detail.ProductName = product.Name;
+                detail.DateManufacture = product.ManufacturingDate;
+                detail.ExpiryDate = product.ExpirationDate;
+            }
         }
         private void AddDetailRow()
         {

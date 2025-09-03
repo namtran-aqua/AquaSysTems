@@ -76,7 +76,6 @@ namespace AquaSolution.Server.Services.ManageMedicalRooms.Products
             var query = from product in await _productRepo.GetQueryableAsync()
                         join inventory in await _inventoryRepo.GetQueryableAsync()
                         on product.Id equals inventory.ProductId
-                        where inventory.Quantity > 0
                         orderby product.Name
                         select new ProductExportDto
                         {

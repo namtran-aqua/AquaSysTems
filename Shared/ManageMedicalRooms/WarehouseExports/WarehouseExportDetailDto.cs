@@ -1,4 +1,5 @@
-﻿using AquaSolution.Shared.ManageMedicalRooms.Products;
+﻿using AquaSolution.Shared.Enum;
+using AquaSolution.Shared.ManageMedicalRooms.Products;
 
 namespace AquaSolution.Shared.ManageMedicalRooms.WarehouseExports
 {
@@ -6,6 +7,11 @@ namespace AquaSolution.Shared.ManageMedicalRooms.WarehouseExports
     {
         public Guid Id { get; set; }
         public decimal Quantity { get; set; }
-        public ProductExportDto productDto { get; set; } = new();
+        public string Unit { get; set; }
+        public DateTime? DateManufacture { get; set; }
+        public Guid ProductId { get; set; }
+        public string ProductName { get; set; }
+        public DateTime? ExpiryDate { get; set; }
+        public ProductType ProductType { get; set; }
     }
 }

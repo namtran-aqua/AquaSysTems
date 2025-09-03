@@ -128,26 +128,26 @@ namespace AquaSolution.Server.Services.ManageMedicalRooms.WarehouseExportService
                     var detail = new WarehouseExportDetail
                     {
                         Id = item.Id,
-                        ProductId = item.productDto.Id,
+                        ProductId = item.ProductId,
                         WarehouseExportId = warehouseExport.Id,
-                        DateManufacture = item.productDto.ManufacturingDate,
-                        ExpiryDate = item.productDto.ExpirationDate,
+                        DateManufacture = item.DateManufacture,
+                        ExpiryDate = item.ExpiryDate,
                         Quantity = item.Quantity,
-                        ProductType = item.productDto.ProductType
+                        ProductType = item.ProductType
                     };
 
                     await _warehouseExportDetailRepo.InsertAsync(detail);
                     var handleInventorydto = new HandleInventoryDto
                     {
-                        ProductId = item.productDto.Id,
-                        ExpirationDate = item.productDto.ExpirationDate,
+                        ProductId = item.ProductId,
+                        ExpirationDate = item.DateManufacture,
                         Quantity = item.Quantity,
-                        ManufacturingDate = item.productDto.ManufacturingDate,
+                        ManufacturingDate = item.ExpiryDate,
                     };
                     var oldInventory =await _handleInventory.GetActualInventory(handleInventorydto);
                     await _handleInventory.MinusInventory(handleInventorydto);
                     var oldInventoryFormatted = oldInventory?.ToString("0") ?? "0";
-                    history.AppendLine($" - đã cập nhật tồn kho productName {item.productDto.Name} từ {oldInventoryFormatted} trừ đi {item.Quantity} - vào lúc {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+                    history.AppendLine($" - đã cập nhật tồn kho productName {item.ProductName} từ {oldInventoryFormatted} trừ đi {item.Quantity} - vào lúc {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
                 }
 
                 if (createdWarehouseExportDto.WarehouseExportDto.WarehouseExportType ==

@@ -117,7 +117,6 @@ namespace AquaSolution.Server.Services.ManageMedicalRooms.RequestClinicservice
                                   };
 
                 var listRequest = dataRequest.OrderBy(x => x.CreatedDate).ToList();
-
                 return listRequest.Count > 0 ? listRequest : new List<MyRequestClinicDto>();
             }
             catch (Exception ex)
@@ -194,9 +193,9 @@ namespace AquaSolution.Server.Services.ManageMedicalRooms.RequestClinicservice
                         Id = item.Id,
                         PrescriptionId = prescription.Id,
                         Quantity = item.Quantity,
-                        ProductId = item.productDto.Id,
-                        ExpirationDate = item.productDto.ExpirationDate,
-                        ManufacturingDate = item.productDto.ManufacturingDate
+                        ProductId = item.ProductId,
+                        ExpirationDate = item.ExpiryDate,
+                        ManufacturingDate = item.DateManufacture
                     };
                     var handleInventorydto = new HandleInventoryDto
                     {
@@ -321,7 +320,6 @@ namespace AquaSolution.Server.Services.ManageMedicalRooms.RequestClinicservice
             }
             
         }
-
         public async Task<bool> DeleteMyRequestClinic(Guid requestId)
         {
             var requestClinic = await _requestClinicRepo.FirstOrDefaultAsync(x => x.Id == requestId);
