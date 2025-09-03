@@ -60,7 +60,7 @@
 
         .ant-collapse-header {
             position: sticky !important;
-            top: 0;
+            top: -17px;
             z-index: 10;
             background: white;
         }
@@ -121,14 +121,13 @@
                                                 </Button>
                                                 @if (row.Status == StatusClinicType.New)
                                                 {
-                                                    <Button Type="ButtonType.Primary" OnClick="@(async () => await ApprovalAsync(row.Id))" Style="text-align: left;">
+                                                    <Button Type="ButtonType.Link" OnClick="@(async () => await ApprovalAsync(row.Id))" Style="text-align: left;">
                                                         <Icon Type="check" /> Approval
                                                     </Button>
                                                     <Button Type="ButtonType.Text" OnClick="@(async () => await RejectedAsync(row.Id))" Style="text-align: left;color:red">
                                                         <Icon Type="delete" /> Rejected
                                                     </Button>
                                                 }
-
                                             </div>
                                         </ContentTemplate>
                                     </Popover>
@@ -138,9 +137,7 @@
                     </Table>
                 </Panel>
             }
-
         </Collapse>
-
 </div>
 <MyRequestClinicModal OnSaved="LoadData" @ref="myRequestClinicModal"></MyRequestClinicModal>
 <RequestClinicDetailModal IsApprovalEvent="ApprovalAsync" IsRejectEvent="RejectedAsync" @ref="@requestClinicDetailModal"></RequestClinicDetailModal>

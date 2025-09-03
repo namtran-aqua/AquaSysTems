@@ -18,10 +18,10 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.WarehouseImports
         [Inject] private HttpClient Http { get; set; }
         private List<ProductDto> _products = new List<ProductDto>();
         private CreatedWarehouseImportDto createdWarehouseImportDto { get; set; } = new();
-        private LoadWarehouseImportDto LoadWarehouseImportDto { get;set; } = new();
+        private LoadWarehouseImportDto LoadWarehouseImportDto { get; set; } = new();
         private bool IsView { get; set; }
         private UserDto CurrenUser { get; set; }
-       [Parameter] public EventCallback OnSaved { get; set; }
+        [Parameter] public EventCallback OnSaved { get; set; }
         #endregion
         #region Innit
         public async Task ShowModalAsync(LoadWarehouseImportDto loadWarehouseImport, bool isView)
@@ -41,6 +41,20 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.WarehouseImports
         {
             _products = await Http.GetFromJsonAsync<List<ProductDto>>("api/product/get-all-by-import");
         }
+        private WarehouseImportDetailDto? _currentDetail;
+        private ProductDto? _product;
+        private ProductDto? ProductDto 
+        { 
+            get => _product;
+            set
+            {
+                if (value != _product)
+                {
+                    _product = value;
+                }
+       
+            }
+        }
         private async Task SetDataView()
         {
             if (IsView)
@@ -52,7 +66,7 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.WarehouseImports
                 createdWarehouseImportDto.WarehouseImportDto.CreatedDate = LoadWarehouseImportDto.CreatedDate;
                 createdWarehouseImportDto.WarehouseImportDto.CreatedBy = LoadWarehouseImportDto.CreatedBy;
                 createdWarehouseImportDto.WarehouseImportDto.Description = LoadWarehouseImportDto.Description;
-                createdWarehouseImportDto.WarehouseImportDto.WarehouseImportType =LoadWarehouseImportDto.WarehouseImportType;
+                createdWarehouseImportDto.WarehouseImportDto.WarehouseImportType = LoadWarehouseImportDto.WarehouseImportType;
                 var dataDetail = await Http.GetFromJsonAsync<List<LoadWarehouseImportDetailDto>>($"api/WarehouseImport/get-detail/{LoadWarehouseImportDto.Id}");
                 if (dataDetail.Any())
                 {
@@ -65,7 +79,9 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.WarehouseImports
                             DateManufacture = detail.DateManufacture,
                             ExpiryDate = detail.ExpiryDate,
                             Quantity = detail.Quantity,
-                            productDto = matchedProduct
+                            ProductId = detail.ProductId,
+                            ProductType = detail.ProductType,
+                            Unit =detail.Unit,
                         });
                     }
                 }
@@ -131,7 +147,7 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.WarehouseImports
                     await Message.Error("Quantity Must be greater than 0");
                     return;
                 }
-                if (itemDetail.productDto.Id == Guid.Empty)
+                if (itemDetail.ProductId== Guid.Empty)
                 {
                     await Message.Error("product cannot be left blank");
                     return;
@@ -158,21 +174,25 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.WarehouseImports
         }
         private void AddDetailRow()
         {
-            createdWarehouseImportDto.WarehouseImportDetailDtos?.Add(
-                new WarehouseImportDetailDto
-                {
-                    Id = Guid.NewGuid()
-                });
+            var detail = new WarehouseImportDetailDto();
+            createdWarehouseImportDto.WarehouseImportDetailDtos.Add(detail);
+        }
+        private void OnProductChanged(WarehouseImportDetailDto detail, ProductDto? product)
+        {
+            if (product != null)
+            {
+                detail.ProductId = product.Id;
+                detail.ProductType = product.ProductType;
+                detail.Unit = product.Unit;
+            }
         }
 
-        private async Task RemoveDetailRow(WarehouseImportDetailDto index)
+        private async Task RemoveDetailRow(WarehouseImportDetailDto item)
         {
             if (createdWarehouseImportDto.WarehouseImportDetailDtos.Count > 0)
             {
-                var remove = createdWarehouseImportDto.WarehouseImportDetailDtos.FirstOrDefault(x => x.Id == index.Id);
-                createdWarehouseImportDto.WarehouseImportDetailDtos.Remove(remove);
+                createdWarehouseImportDto.WarehouseImportDetailDtos.Remove(item);
             }
-
         }
         #endregion
 

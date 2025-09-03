@@ -18,7 +18,7 @@
                 Save
             </Button>
     }
-        
+
 
         <Button Style="color:#808080" OnClick="@Close" @key="@("back")">Close</Button>
 
@@ -34,7 +34,6 @@
     }
 
     .fix-table-header table {
-        
         border-collapse: collapse;
     }
 
@@ -66,7 +65,7 @@
                     <Input Disabled="IsView" @bind-Value="createdWarehouseImportDto.WarehouseImportDto.Name" />
                 </FormItem>
                 </Col>
-               
+
                 <Col Span="8">
                 <FormItem Label="WarehouseImportTypeValue" Required="true">
                     <Select TItem="WarehouseImportType"
@@ -79,7 +78,7 @@
                     </Select>
                 </FormItem>
                 </Col>
-               
+
             </Row>
             <Row Gutter="16" Style="height:90px">
                 <Col Span="12">
@@ -93,77 +92,81 @@
                 </FormItem>
                 </Col>
             </Row>
-        </Card>
-       <Card>
-        <div style="width:100%;overflow-x:hidden ;max-height:41vh; ">
             @if (!IsView)
             {
-                    <Button Style=" position: sticky !important; z-index: 8 !important;top: 0;" OnClick="@AddDetailRow">
-                        <Icon Type="plus" />AddDtail
-                    </Button>
+                <Button Style=" position: sticky !important; z-index: 8 !important;top: 0;" OnClick="@AddDetailRow">
+                    <Icon Type="plus" />AddDtail
+                </Button>
+
             }
-            <Table @ref="tableRef"
-                   TItem="WarehouseImportDetailDto"
-                   Size="TableSize.Small"
-                   Class="CustomTable  fix-table-header"
-                   PaginationPosition="false" 
-                   DataSource="createdWarehouseImportDto.WarehouseImportDetailDtos">
-                <ColumnDefinitions Context="row2">
-                    <Column Width="270" TData="WarehouseImportDetailDto" Title="Product">
-                        <Template>
-                            <Select TItem="ProductDto" TItemValue="ProductDto"
-                                    DataSource="@_products"
-                                    @bind-Value="@row2.productDto"
-                                    ItemValue="c => c"
-                                    Disabled ="IsView"
-                                    ItemLabel="c => c.Name">
-                            </Select>
-                        </Template>
-                    </Column>
+        </Card>
+        <Card>
+            <div style="width:100%;overflow-x:auto ;max-height:41vh; ">
 
-                    <Column Width="110" TData="WarehouseImportDetailDto" Title="Unit">
-                        <Template>
-                            <Input Disabled="IsView" @bind-Value="row2.productDto.Unit" />
-                        </Template>
-                    </Column>
-                    <Column Width="100" TData="WarehouseImportDetailDto" Title="Quantity">
-                        <Template>
-                                <AntDesign.InputNumber Step="1" TValue="decimal"
-                                                       Precision="1" Disabled="IsView" @bind-Value="row2.Quantity" />
-                        </Template>
-                    </Column>
-                    <Column Width="130" TData="WarehouseImportDetailDto" Title="ProductType">
-                        <Template>
-                            <Input Disabled="true" @bind-Value="row2.productDto.ProductType" />
-                        </Template>
-                    </Column>
-
-                    <Column Width="150" TData="WarehouseImportDetailDto" Title="DateManufacture">
-                        <Template>
-                            <DatePicker Disabled="IsView" @bind-Value="row2.DateManufacture" />
-                        </Template>
-                    </Column>
-                    <Column Width="150" TData="WarehouseImportDetailDto" Title="ExpiryDate">
-                        <Template>
-                            <DatePicker Disabled="IsView" @bind-Value="row2.ExpiryDate" />
-                        </Template>
-                    </Column>
-                    @if (!IsView)
-                    {
-                        <Column Fixed="ColumnFixPlacement.Right" TData="ProductDto" Width="30px"  Context="row">
+                <Table @ref="tableRef"
+                       TItem="WarehouseImportDetailDto"
+                       Size="TableSize.Small"
+                       Class="CustomTable  fix-table-header"
+                       PaginationPosition="false"
+                       RowKey="@(row2 => row2.Id)"
+                       DataSource="createdWarehouseImportDto.WarehouseImportDetailDtos">
+                    <ColumnDefinitions Context="row2">
+                        <Column Width="270" TData="WarehouseImportDetailDto" Title="Product">
                             <Template>
-                                <div style="display: flex; flex-direction: column; gap: 4px; padding: 8px;">
-                                    <Button Type="ButtonType.Text" OnClick="@(async () => await RemoveDetailRow(row2))" Style="text-align: left;">
-                                        <Icon Type="delete" />
-                                    </Button>
-                                </div>
+                                <Select TItem="ProductDto" TItemValue="ProductDto"
+                                        DataSource="@_products"
+                                        ItemValue="c => c"
+                                        Value="@( _products.FirstOrDefault(p => p.Id == row2.ProductId) )"
+                                        ValueChanged="(val => OnProductChanged(row2, val))"
+                                        Disabled="IsView"
+                                        ItemLabel="c => c.Name">
+                                </Select>
                             </Template>
                         </Column>
-                    }
-                 
-                </ColumnDefinitions>
-            </Table>
-        </div>
+
+                        <Column Width="110" TData="WarehouseImportDetailDto" Title="Unit">
+                            <Template>
+                                <Input Disabled="IsView" @bind-Value="row2.Unit" />
+                            </Template>
+                        </Column>
+                        <Column Width="100" TData="WarehouseImportDetailDto" Title="Quantity">
+                            <Template>
+                                <AntDesign.InputNumber Step="1" TValue="decimal"
+                                                       Precision="1" Disabled="IsView" @bind-Value="row2.Quantity" />
+                            </Template>
+                        </Column>
+                        <Column Width="130" TData="WarehouseImportDetailDto" Title="ProductType">
+                            <Template>
+                                <Input Disabled="true" @bind-Value="row2.ProductType" />
+                            </Template>
+                        </Column>
+
+                        <Column Width="150" TData="WarehouseImportDetailDto" Title="DateManufacture">
+                            <Template>
+                                <DatePicker Disabled="IsView" @bind-Value="row2.DateManufacture" />
+                            </Template>
+                        </Column>
+                        <Column Width="150" TData="WarehouseImportDetailDto" Title="ExpiryDate">
+                            <Template>
+                                <DatePicker Disabled="IsView" @bind-Value="row2.ExpiryDate" />
+                            </Template>
+                        </Column>
+                        @if (!IsView)
+                        {
+                            <Column Fixed="ColumnFixPlacement.Right" TData="WarehouseImportDetailDto" Width="30px">
+                                <Template>
+                                    <div style="display: flex; flex-direction: column; gap: 4px; padding: 8px;">
+                                        <Button Type="ButtonType.Text" OnClick="@(async () => await RemoveDetailRow(row2))" Style="text-align: left;">
+                                            <Icon Type="delete" />
+                                        </Button>
+                                    </div>
+                                </Template>
+                            </Column>
+                        }
+
+                    </ColumnDefinitions>
+                </Table>
+            </div>
         </Card>
     </Form>
 

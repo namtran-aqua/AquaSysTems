@@ -112,18 +112,18 @@ namespace AquaSolution.Server.Services.ManageMedicalRooms.WarehouseImportService
                     var detail = new WarehouseImportDetail
                     {
                         Id = item.Id,
-                        ProductId = item.productDto.Id,
+                        ProductId = item.ProductId,
                         WarehouseImportId = warehouseImport.Id,
                         DateManufacture = item.DateManufacture,
                         ExpiryDate = item.ExpiryDate,
                         Quantity = item.Quantity,
-                        ProductType = item.productDto.ProductType
+                        ProductType = item.ProductType
                     };
 
                     await _warehouseImportDetailRepo.InsertAsync(detail);
                     var handleInventorydto = new HandleInventoryDto
                     {
-                        ProductId = item.productDto.Id,
+                        ProductId = item.ProductId,
                         ExpirationDate = item.ExpiryDate,
                         Quantity = item.Quantity,
                         ManufacturingDate = item.DateManufacture,

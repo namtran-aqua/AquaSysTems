@@ -3,6 +3,7 @@ using AquaSolution.Client.Common;
 using AquaSolution.Shared.Enum;
 using AquaSolution.Shared.ManageMedicalRooms.Products;
 using AquaSolution.Shared.ManageMedicalRooms.WarehouseExports;
+using AquaSolution.Shared.ManageMedicalRooms.WarehouseImports;
 using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Components;
 using System.Linq;
@@ -20,6 +21,9 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.WarehouseExports
         private Table<WarehouseExportDetailDto> tableRef;
         [Inject] private HttpClient Http { get; set; }
         private List<ProductExportDto> _products = new List<ProductExportDto>();
+        private List<ProductExportDto> _product2 = new List<ProductExportDto>();
+        private List<ProductExportDto> _soucreproduct = new List<ProductExportDto>();
+
         private CreatedWarehouseExportDto createdWarehouseExportDto { get; set; } = new();
         private LoadWarehouseExportDto LoadWarehouseExportDto { get;set; } = new();
         private bool IsView { get; set; }
@@ -33,7 +37,16 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.WarehouseExports
             IsVisible = true;
             LoadWarehouseExportDto = loadWarehouseExport;
             IsView = isView;
+         
             await LoadProduct();
+            if (IsView)
+            {
+                _soucreproduct = _product2;
+            }
+            else
+            {
+                _soucreproduct = _products;
+            }
             await SetDataView();
             GetWarehouseExportType();
             var CurrenUserClass = new CurrenUser(Http, AuthStateProvider);
@@ -42,7 +55,9 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.WarehouseExports
         }
         private async Task LoadProduct()
         {
-            _products = await Http.GetFromJsonAsync<List<ProductExportDto>>("api/product/get-all-by-export");
+            var data = await Http.GetFromJsonAsync<List<ProductExportDto>>("api/product/get-all-by-export");
+            _products = data.Where(x => x.Quantity > 0).ToList();
+            _product2 = data.ToList();
         }
         private async Task SetDataView()
         {
@@ -61,12 +76,16 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.WarehouseExports
                 {
                     foreach (var detail in dataDetail)
                     {
-                        var matchedProduct = _products.FirstOrDefault(p => p.Id == detail.ProductId);
                         createdWarehouseExportDto.WarehouseExportDetailDtos.Add(new WarehouseExportDetailDto
                         {
                             Id = detail.Id,
                             Quantity = detail.Quantity,
-                            productDto = matchedProduct
+                            ProductId = detail.ProductId,
+                            ProductType = detail.ProductType,
+                            Unit = detail.Unit,
+                            DateManufacture = detail.DateManufacture,
+                            ExpiryDate = detail.ExpiryDate,
+                            ProductName = detail.ProductName
                         });
                     }
                 }
@@ -126,7 +145,7 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.WarehouseExports
 
             foreach (var itemDetail in createdWarehouseExportDto.WarehouseExportDetailDtos)
             {
-                if (itemDetail.productDto.ExpirationDate == null)
+                if (itemDetail.ExpiryDate == null)
                 {
                     await Message.Error("ExpiryDate cannot be left blank !");
                     return;
@@ -138,17 +157,17 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.WarehouseExports
                     return;
                 }
 
-                if (itemDetail.productDto.Id == Guid.Empty)
+                if (itemDetail.ProductId == Guid.Empty)
                 {
                     await Message.Error("Product cannot be left blank");
                     return;
                 }
-                var checkQuantity = _products.FirstOrDefault(x=>x.Id == itemDetail.productDto.Id);
+                var checkQuantity = _products.FirstOrDefault(x=>x.Id == itemDetail.ProductId);
                 if (checkQuantity != null) 
                 {
                     if(checkQuantity.Quantity < itemDetail.Quantity) 
                     {
-                        stringBuilder.AppendLine(itemDetail.productDto.Name.ToString());
+                        stringBuilder.AppendLine(itemDetail.ProductName.ToString());
                         stringBuilder.Append($" Input quantity {itemDetail.Quantity} and actual quantity {checkQuantity.Quantity.ToString("0")} Insufficient stock  ;");
                         check += 1;
                     }
@@ -201,6 +220,18 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.WarehouseExports
         {
             IsVisible = false;
             StateHasChanged();
+        }
+        private void OnProductChanged(WarehouseExportDetailDto detail, ProductExportDto? product)
+        {
+            if (product != null)
+            {
+                detail.ProductId = product.Id;
+                detail.ProductType = product.ProductType;
+                detail.Unit = product.Unit;
+                detail.ProductName = product.Name;
+                detail.DateManufacture = product.ManufacturingDate;
+                detail.ExpiryDate = product.ExpirationDate;
+            }
         }
         private void AddDetailRow()
         {

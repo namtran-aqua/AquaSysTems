@@ -74,17 +74,17 @@
             <PropertyColumn Width="250" Title="CreatedBy" Property="c => c.CreatedName"></PropertyColumn>
             <PropertyColumn Width="130" Title="CreatedDate" Property="c => c.CreatedDate" Format="dd/MM/yyyy HH:mm"></PropertyColumn>
             <PropertyColumn Width="150" Title="Status" Style="@($"color: {GetTagColor.GetTagColorCss(row.Status.ToString())}")" Property="c => c.Status"></PropertyColumn>
-            @if(row.Status == StatusClinicType.Approval)
-            {
-                <Column Fixed="ColumnFixPlacement.Right" TData="ProductDto" Width="50px" Title="Action" Context="row">
+            <Column Fixed="ColumnFixPlacement.Right" TData="ProductDto" Width="50px" Title="" Context="row">
+                @if (row.Status == StatusClinicType.Approval)
+                {
                     <Template>
-                        <Button Type="ButtonType.Primary" OnClick="@(async () => await Treatment(row))" Style="text-align: left;">
+                        <Button Type="ButtonType.Primary" OnClick="@(async () => await Treatment(row))">
                             <Icon Type="Edit" /> Treatment
                         </Button>
                     </Template>
-                </Column>
-            }
-            
+                }
+            </Column>
+
         </ColumnDefinitions>
     </Table>
 </div>

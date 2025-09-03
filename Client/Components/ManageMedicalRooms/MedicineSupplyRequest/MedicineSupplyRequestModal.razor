@@ -43,18 +43,17 @@
     }
 
         .fix-table-header2 table thead th {
-            position: sticky;
+            position: sticky !important;
+            z-index: 8 !important;
             top: 0;
-            z-index: 10;
-            background: #ffffff; /* nền trắng để không bị mờ khi scroll */
-            border-bottom: 1px solid #f0f0f0;
+            background-color: #fff;
         }
 
 
-    .CustomTable {
+/*     .CustomTable {
         overflow: auto;
         height: 55vh;
-    }
+    } */
 
     .CustomTable2 {
         overflow: auto;
@@ -121,22 +120,20 @@
                 </FormItem>
                 </Col>
             </Row>
+            @if (!IsView)
+            {
+                <Button Style=" position: sticky !important; z-index: 8 !important;top: 0;" OnClick="@AddDetailRow">
+                    <Icon Type="plus" />AddDetail
+                </Button>
+            }
         </Card>
 
         <Card>
-             <div style="width:100%;overflow-x:hidden ;max-height:55vh; ">
-                    @if (!IsView)
-                    {
-                        <Button Style=" position: sticky !important; z-index: 8 !important;top: 0;" OnClick="@AddDetailRow">
-                            <Icon Type="plus" />AddDetail
-                        </Button>
-                    }
-
-                </div>
+             <div style="width:100%;overflow-x:hidden ;max-height:41vh; ">
             <Table @ref="@Table"
                    TItem="CreatedMedicineSupplyRequestDetailDto"
                    Size="TableSize.Small"
-                   Class="CustomTable2  fix-table-header2"
+                   Class="CustomTable2 fix-table-header2"
                    PaginationPosition="false"
                    DataSource="createdMedicineSupplyRequestDto.CreatedMedicineSupplyRequestDetail">
                 <ColumnDefinitions Context="row2">
@@ -216,6 +213,8 @@
                     }
                 </ColumnDefinitions>
             </Table>
+            </div>
+
         </Card>
 
     </Form>

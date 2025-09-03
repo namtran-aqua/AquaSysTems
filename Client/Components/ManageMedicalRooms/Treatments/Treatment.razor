@@ -41,16 +41,6 @@
             top: 0;
             background-color: #fff;
         }
-
-    .CustomTable {
-        overflow: auto;
-        height:55vh;
-    }
-    .CustomTable2 {
-        overflow: auto;
-        height:40vh;
-    }
-
 </style>
 
 <Modal class="customModal" @bind-Visible="IsVisible" Style="z-index: 9999;width:1050px;margin-top:-90px" Footer="@footer" Header="@null">
@@ -76,7 +66,7 @@
             </Row>
             <Row Gutter="16" Style="height:80px">
                 <Col Span="4">
-                <FormItem  Label="TreatmentType">
+                <FormItem Label="TreatmentType">
                     <Select Style="color:red"
                             TItem="TreatmentType"
                             TItemValue="TreatmentType"
@@ -95,31 +85,35 @@
                 </FormItem>
                 </Col>
             </Row>
+            @if (IsPrescription)
+            {
+                @if (!IsView)
+                {
+                    <Button Style=" position: sticky !important; z-index: 8 !important;top: 0;" OnClick="@AddDetailRow">
+                        <Icon Type="plus" />AddDetail
+                    </Button>
+                }
+
+            }
+
         </Card>
         @if (IsPrescription)
         {
             <Card>
-                <div style="width:100%;overflow-x:hidden ;max-height:55vh; ">
-                    @if (!IsView)
-                    {
-                        <Button Style=" position: sticky !important; z-index: 8 !important;top: 0;" OnClick="@AddDetailRow">
-                            <Icon Type="plus" />AddDetail
-                        </Button>
-                    }
-
-                </div>
-                <Table @ref="@Table"
-                       TItem="CreatedPrescriptionDetailDto"
-                       Size="TableSize.Small"
-                       Class="CustomTable2  fix-table-header"
-                       PaginationPosition="false"
-                       DataSource="CreatedTreatment.Prescription?.CreatedPrescriptionDetail">
-                    <ColumnDefinitions Context="row2">
-                        <Column Width="270" TData="CreatedPrescriptionDetailDto" Title="Product">
+                <div style="width:100%;overflow-x:auto ;max-height:41vh; ">
+                    <Table @ref="@Table"
+                           TItem="CreatedPrescriptionDetailDto"
+                           Size="TableSize.Small"
+                           Class="CustomTable fix-table-header"
+                           PaginationPosition="false"
+                           DataSource="CreatedTreatment.Prescription?.CreatedPrescriptionDetail">
+                        <ColumnDefinitions Context="row2">
+                            <Column Width="270" TData="CreatedPrescriptionDetailDto" Title="Product">
                                 <Template>
                                     <Select TItem="ProductExportDto" TItemValue="ProductExportDto"
                                             DataSource="@_products"
-                                            @bind-Value="@row2.productDto"
+                                            Value="@( _products.FirstOrDefault(p => p.Id == row2.ProductId) )"
+                                            ValueChanged="(val => OnProductChanged(row2, val))"
                                             ItemValue="c => c"
                                             Disabled="IsView"
                                             ItemLabel="c => c.Name">
@@ -137,37 +131,37 @@
                                 </Template>
                             </Column>
 
-                        <Column Width="110" TData="CreatedPrescriptionDetailDto" Title="Unit">
+                            <Column Width="110" TData="CreatedPrescriptionDetailDto" Title="Unit">
                                 <Template>
-                                    <Input Disabled="true" @bind-Value="row2.productDto.Unit" />
+                                    <Input Disabled="true" @bind-Value="row2.Unit" />
                                 </Template>
                             </Column>
-                        <Column Width="100" TData="CreatedPrescriptionDetailDto" Title="Quantity">
+                            <Column Width="100" TData="CreatedPrescriptionDetailDto" Title="Quantity">
                                 <Template>
                                     <AntDesign.InputNumber Step="1" TValue="decimal"
                                                            Precision="1" Disabled="IsView" @bind-Value="row2.Quantity" />
 
                                 </Template>
                             </Column>
-                        <Column Width="130" TData="CreatedPrescriptionDetailDto" Title="ProductType">
+                            <Column Width="130" TData="CreatedPrescriptionDetailDto" Title="ProductType">
                                 <Template>
-                                    <Input Disabled="true" @bind-Value="row2.productDto.ProductType" />
+                                    <Input Disabled="true" @bind-Value="row2.ProductType" />
                                 </Template>
                             </Column>
 
-                        <Column Width="150" TData="CreatedPrescriptionDetailDto" Title="DateManufacture">
+                            <Column Width="150" TData="CreatedPrescriptionDetailDto" Title="DateManufacture">
                                 <Template>
-                                    <DatePicker Disabled="true" @bind-Value="row2.productDto.ManufacturingDate" />
+                                    <DatePicker Disabled="true" @bind-Value="row2.DateManufacture" />
                                 </Template>
                             </Column>
-                        <Column Width="150" TData="CreatedPrescriptionDetailDto" Title="ExpiryDate">
+                            <Column Width="150" TData="CreatedPrescriptionDetailDto" Title="ExpiryDate">
                                 <Template>
-                                    <DatePicker Disabled="true" @bind-Value="row2.productDto.ExpirationDate" />
+                                    <DatePicker Disabled="true" @bind-Value="row2.ExpiryDate" />
                                 </Template>
                             </Column>
-                          @if (!IsView)
+                            @if (!IsView)
                             {
-                                <Column Fixed="ColumnFixPlacement.Right" TData="ProductDto" Width="30px" Context="row">
+                                <Column Fixed="ColumnFixPlacement.Right" TData="CreatedPrescriptionDetailDto" Width="30px" Context="row">
                                     <Template>
                                         <div style="display: flex; flex-direction: column; gap: 4px; padding: 8px;">
                                             <Button Type="ButtonType.Text" OnClick="@(async () => await RemoveDetailRow(row2))" Style="text-align: left;">
@@ -176,10 +170,11 @@
                                         </div>
                                     </Template>
                                 </Column>
-                            } 
+                            }
 
-                    </ColumnDefinitions>
-                </Table>
+                        </ColumnDefinitions>
+                    </Table>
+                </div>
             </Card>
         }
 
