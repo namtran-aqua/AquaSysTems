@@ -77,7 +77,7 @@ namespace AquaSolution.Server.Services.ManageMedicalRooms.RequestClinicservice
                 var dataRequest = from request in requestClinicQueryAble
                                   join createdby in userQuery on request.CreatedBy equals createdby.Id
 
-                                  join manage_ in userQuery on request.ManagerId equals manage_.Id into manage
+                                  join manage_ in userQuery on createdby.ManagerId equals manage_.Id into manage
                                   from manager in manage.DefaultIfEmpty()
 
                                   join approvalBy_ in userQuery on request.ApprovalBy equals approvalBy_.Id into apprval

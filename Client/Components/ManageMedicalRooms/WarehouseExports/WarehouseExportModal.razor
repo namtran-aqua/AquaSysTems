@@ -112,7 +112,11 @@
                                         DataSource="@_soucreproduct"
                                         ItemValue="c => c"
                                         Disabled="IsView"
-                                        Value="@( _product2.FirstOrDefault(p => p.Id == row2.ProductId) )"
+                                        EnableSearch
+                                        AutoClearSearchValue="false"
+                                        Value="@(_product2.FirstOrDefault(p => p.Id == row2.ProductId 
+                                                && p.ExpirationDate == row2.ExpiryDate
+                                                  && p.ManufacturingDate == row2.DateManufacture))"
                                         ValueChanged="(val => OnProductChanged(row2, val))"
                                         ItemLabel="c => c.Name">
                                     <ItemTemplate Context="item">
@@ -133,7 +137,18 @@
                             <Template>
                                 <Input Disabled="true" @bind-Value="row2.Unit" />
                             </Template>
+                        </Column> 
+
+                        <Column Width="110" TData="WarehouseExportDetailDto" Title="ActualQuantity">
+                            <Template>
+                                <Input Disabled="true"
+                                       Value="@((_product2.FirstOrDefault(p => p.Id == row2.ProductId
+                                        && p.ExpirationDate == row2.ExpiryDate
+                                        && p.ManufacturingDate == row2.DateManufacture)?.Quantity ?? 0).ToString())" />
+
+                            </Template>
                         </Column>
+
                         <Column Width="100" TData="WarehouseExportDetailDto" Title="Quantity">
                             <Template>
                                 <AntDesign.InputNumber Step="1" TValue="decimal"

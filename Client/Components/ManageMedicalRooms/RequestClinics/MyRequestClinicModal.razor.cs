@@ -1,13 +1,11 @@
 ﻿using AntDesign;
-using AquaSolution.Client.Common;
+using AntDesign.Select.Internal;
 using AquaSolution.Shared.Administration.UserManagements;
 using AquaSolution.Shared.Enum;
-using AquaSolution.Shared.ManageMedicalRooms.Prescriptions;
-using AquaSolution.Shared.ManageMedicalRooms.Products;
 using AquaSolution.Shared.ManageMedicalRooms.RequestClinics;
-using AquaSolution.Shared.ManageMedicalRooms.WarehouseExports;
 using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 using System.Net.Http.Json;
 using System.Reflection;
 using System.Text;
@@ -48,6 +46,13 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.RequestClinics
             await InvokeAsync(StateHasChanged);
 
         }
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            if (firstRender)
+            {
+                await JS.InvokeVoidAsync("select2Interop.init", "userSelect");
+            }
+        }
         private Task LoadUserByDepartment()
         {
             ListSelectedcUsers = new();
@@ -69,7 +74,7 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.RequestClinics
                     });
                 }
 
-                UserValue = ListSelectedcUsers.First(x => x.Id == CurrenUser.Id);
+                //UserValue = ListSelectedcUsers.First(x => x.Id == CurrenUser.Id);
             }
 
             return Task.CompletedTask;

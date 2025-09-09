@@ -96,9 +96,12 @@
                 </Col>
 
             </Row>
-              <Button Class="sticky-start-btn" OnClick="@StartAsync">
+            @if (IsView)
+            {
+                <Button Class="sticky-start-btn" OnClick="@StartAsync">
                     <Icon Type="plus" />Start Inventory
-               </Button>
+                </Button>
+            }
         </Card>
 
         <Card>
@@ -147,7 +150,7 @@
                                 </Template>
                             </Column>
 
-                            <Column Width="60" TData="InventoryPeriodDetailDto" Title="RemainingValidity">
+                            <Column Width="60" TData="InventoryPeriodDetailDto" Title="Distinctive">
                                 <Template>
                                     <Input Disabled="true" @bind-Value="row2.RemainingValidity"></Input>
                                 </Template>
