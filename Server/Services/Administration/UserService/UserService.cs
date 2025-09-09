@@ -361,6 +361,7 @@ public class UserService : IUserService
                 DepartmentId = createdUserDto.DepartmentId,
                 PositionId = createdUserDto.PositionId,
                 FactoryId = createdUserDto.FactoryId,
+                Avatar = "/uploads/avatars/default.jpg"
 
             };
             await _userRepo.InsertAsync(user);

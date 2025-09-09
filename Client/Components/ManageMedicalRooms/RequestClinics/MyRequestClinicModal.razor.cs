@@ -5,10 +5,7 @@ using AquaSolution.Shared.Enum;
 using AquaSolution.Shared.ManageMedicalRooms.RequestClinics;
 using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
 using System.Net.Http.Json;
-using System.Reflection;
-using System.Text;
 using System.Text.Json;
 using static System.Net.WebRequestMethods;
 
@@ -45,13 +42,6 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.RequestClinics
             IsVisible = true;
             await InvokeAsync(StateHasChanged);
 
-        }
-        protected override async Task OnAfterRenderAsync(bool firstRender)
-        {
-            if (firstRender)
-            {
-                await JS.InvokeVoidAsync("select2Interop.init", "userSelect");
-            }
         }
         private Task LoadUserByDepartment()
         {

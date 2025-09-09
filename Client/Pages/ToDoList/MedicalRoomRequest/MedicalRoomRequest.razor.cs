@@ -59,19 +59,8 @@ namespace AquaSolution.Client.Pages.ToDoList.MedicalRoomRequest
         }
         private async Task GetPage()
         {
-            var baseUri = new Uri(Navigation.BaseUri);
-            var uri = new Uri(Navigation.Uri);
-            var basePath = baseUri.AbsolutePath.TrimEnd('/');
-            var fullPath = uri.AbsolutePath;
-            string currentPath;
-            if (!string.IsNullOrEmpty(basePath))
-                currentPath = fullPath.Replace(basePath, "");
-            else
-                currentPath = fullPath;
-
-            currentPath = currentPath.TrimStart('/');
-
-            PageId = await Http.GetFromJsonAsync<Guid>($"api/Page/GetPageIdByUrl/{currentPath}");
+            var url = "medical-room-request";
+            PageId = await Http.GetFromJsonAsync<Guid>($"api/Page/GetPageIdByUrl/{url}");
 
         }
         private async Task CheckPermission()

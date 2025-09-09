@@ -19,8 +19,6 @@ namespace AquaSolution.Client.Pages.ManageMedicalRooms.ClinicCheckIns
 
         private HasPermission hasPermission = new();
         private Guid PageId { get; set; }
-        private bool Approval { get; set; }
-        private bool Rejected { get; set; }
         private UserDto CurrenUser { get; set; }
         private Treatment treatment { get; set; }
         private DetailTreatmentModal DetailTreatmentModal { get; set; }
@@ -56,23 +54,12 @@ namespace AquaSolution.Client.Pages.ManageMedicalRooms.ClinicCheckIns
         }
         private async Task GetPage()
         {
-            var baseUri = new Uri(Navigation.BaseUri);
-            var uri = new Uri(Navigation.Uri);
-            var basePath = baseUri.AbsolutePath.TrimEnd('/');
-            var fullPath = uri.AbsolutePath;
-            string currentPath;
-            if (!string.IsNullOrEmpty(basePath))
-                currentPath = fullPath.Replace(basePath, "");
-            else
-                currentPath = fullPath;
-            currentPath = currentPath.TrimStart('/');
-            PageId = await Http.GetFromJsonAsync<Guid>($"api/Page/GetPageIdByUrl/{currentPath}");
+            var url = "clinic-check-in-management";
+            PageId = await Http.GetFromJsonAsync<Guid>($"api/Page/GetPageIdByUrl/{url}");
         }
         private async Task CheckPermission()
         {
             await GetPage();
-            Approval = await hasPermission.CheckPermissions(PageId, PermissionActionType.Approve.ToString(), CurrenUser);
-            Rejected = await hasPermission.CheckPermissions(PageId, PermissionActionType.Reject.ToString(), CurrenUser);
         }
         #endregion
         #region Action

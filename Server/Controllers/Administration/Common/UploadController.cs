@@ -1,4 +1,5 @@
 ﻿using AquaSolution.Server.SignalR;
+using Azure.Core;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 
@@ -28,7 +29,7 @@ namespace AquaSolution.Server.Controllers.Administration.Common
                 await file.CopyToAsync(stream);
             }
 
-            var baseUrl = $"{Request.Scheme}://{Request.Host}";
+            var baseUrl = $"{Request.Scheme}://{Request.Host}{Request.PathBase}";
             var url = $"{baseUrl}/uploads/avatars/{fileName}";
             return Ok(url);
         }
@@ -50,8 +51,13 @@ namespace AquaSolution.Server.Controllers.Administration.Common
             if (avatarUrl.StartsWith("/"))
                 avatarUrl = avatarUrl.Substring(1);
 
-            var physicalPath = Path.Combine(_env.WebRootPath, avatarUrl);
 
+            var physicalPath = Path.Combine(_env.WebRootPath, avatarUrl);
+            var fileName = Path.GetFileName(physicalPath);
+            if (string.Equals(fileName, "default.jpg", StringComparison.OrdinalIgnoreCase))
+            {
+                return NoContent();
+            }
             if (System.IO.File.Exists(physicalPath))
             {
                 System.IO.File.Delete(physicalPath);
