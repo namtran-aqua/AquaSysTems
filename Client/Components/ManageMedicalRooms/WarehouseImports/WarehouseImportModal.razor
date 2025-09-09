@@ -119,6 +119,8 @@
                                         Value="@( _products.FirstOrDefault(p => p.Id == row2.ProductId) )"
                                         ValueChanged="(val => OnProductChanged(row2, val))"
                                         Disabled="IsView"
+                                        EnableSearch
+                                        AutoClearSearchValue="false"
                                         ItemLabel="c => c.Name">
                                 </Select>
                             </Template>

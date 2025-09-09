@@ -14,8 +14,6 @@ namespace AquaSolution.Shared.ManageMedicalRooms.Products
         public string Name { get; set; }
         public string Title =>
        $"<strong>Name:</strong> {Name}<br />" +
-       $"<strong>Code:</strong> {Code}<br />" +
-       $"<strong>ManufacturingDate:</strong> {ManufacturingDate:dd/MM/yyyy}<br />" +
        $"<strong>ExpirationDate:</strong> {ExpirationDate:dd/MM/yyyy}<br />" +
        $"<strong>Quantity:</strong> {Quantity:F1}";
 

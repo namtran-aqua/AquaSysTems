@@ -52,8 +52,8 @@ app.UsePathBase("/AquaSolution");
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AquaDbContext>();
-    db.Database.Migrate();
-    DbSeeder.SeedData(db);
+    //db.Database.Migrate();
+    //DbSeeder.SeedData(db);
 }
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
