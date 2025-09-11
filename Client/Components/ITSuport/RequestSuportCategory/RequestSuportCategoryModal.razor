@@ -1,0 +1,54 @@
+﻿@using AntDesign
+@using AquaSolution.Shared.CommonDto
+@using AquaSolution.Shared.Enum
+@inject HttpClient httpClient
+@using AquaSolution.Shared.UserManagements
+@inject IMessageService Message
+@{
+    RenderFragment footer = @<Template>
+
+        <Button OnClick="@SaveAsync" @key="@( "submit" )"
+                Type="ButtonType.Primary">
+            Save
+        </Button>
+
+        <Button Style="color:#808080" OnClick="@Close" @key="@("back")">Close</Button>
+
+    </Template>;
+}
+<Modal @bind-Visible="IsModalVisible" Style="z-index: 9999;width:700px" Footer="@footer">
+    <Form @ref="@formRef"
+          Model="@RequestSuportCategoryDto"
+          Layout="FormLayout.Vertical"
+          OnFinish="SaveAsync"
+          ValidateMode="FormValidateMode.Complex"
+          ValidateOnChange="true">
+        <Row Gutter="24">
+            <Col Span="6">
+            <FormItem Label="Name" Required="true">
+                <TextArea ShowCount MinRows="1" MaxRows="1"
+                          @bind-Value="@RequestSuportCategoryDto.Name"
+                          AllowClear="true" />
+            </FormItem>
+            </Col>
+            <Col Span="15">
+            <FormItem Label="Name" Required="true">
+                <Select TItem="UserContributerDto" TItemValue="Guid?"
+                        DataSource="@ListTechnician"
+                        @bind-Value="@RequestSuportCategoryDto.TechnicianId"
+                        ItemValue="c => c.Id"
+                        ItemLabel="c => c.Name">
+                </Select>
+            </FormItem>
+            </Col>
+            <Col Span="3">
+            <FormItem Label="IsActive">
+                <Switch @bind-Value="@RequestSuportCategoryDto.IsActive" />
+            </FormItem>
+            </Col>
+
+        </Row>
+
+    </Form>
+</Modal>
+

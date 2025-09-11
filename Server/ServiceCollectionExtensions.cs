@@ -10,6 +10,7 @@ using AquaSolution.Server.Services.Administration.RolePermissionService;
 using AquaSolution.Server.Services.Administration.RoleService;
 using AquaSolution.Server.Services.Administration.UserService;
 using AquaSolution.Server.Services.Common.HandleInventories;
+using AquaSolution.Server.Services.ITSuport.RequestSuportCategories;
 using AquaSolution.Server.Services.ManageMedicalRooms.InventoriesService;
 using AquaSolution.Server.Services.ManageMedicalRooms.InventoryPeriodService;
 using AquaSolution.Server.Services.ManageMedicalRooms.MedicineSupplyRequestService;
@@ -29,6 +30,7 @@ namespace AquaSolution.Server
 
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             // Đăng ký UserService
+            #region Admin
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IMenuService, MenuService>();
             services.AddScoped<IRoleService, RoleService>();
@@ -39,6 +41,8 @@ namespace AquaSolution.Server
             services.AddScoped<IFactoryService, FactoryService>();
             services.AddScoped<IPositionService, PositionService>();
             services.AddScoped<IApprovalFlowService, ApprovalFlowService>();
+            #endregion
+            #region Medical
             services.AddScoped<IProductService, ProductService>();
             services.AddScoped<IInventoryService, InventoryService>();
             services.AddScoped<IWarehouseImportService, WarehouseImportService>();
@@ -47,7 +51,11 @@ namespace AquaSolution.Server
             services.AddScoped<IHandleInventory, HandleInventory>();
             services.AddScoped<IInventoryPeriodService, InventoryPeriodService>();
             services.AddScoped<IMedicineSupplyRequestService, MedicineSupplyRequestService>();
-
+            #endregion
+            #region IT Suport
+            services.AddScoped<IRequestSuportCategoryService, RequestSuportCategoryService>();
+            services.AddScoped<IRequestITSuportService, RequestITSuportService>();
+            #endregion
             return services;
         }
     }

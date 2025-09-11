@@ -6,17 +6,12 @@ using System.Threading.Tasks;
 
 namespace AquaSolution.Shared.Enum
 {
-    public enum PermissionActionType
+    public enum RequestSuportStatusType
     {
-        View,
-        Add,
-        Edit,
-        Delete,
-        Approve,
-        Reject,
-        Inprogress,
+        Open,
+        InProgress,
+        Cancel,
         OnHold,
-        EditRole,
-        Detail,
+        Resolved,
     }
 }

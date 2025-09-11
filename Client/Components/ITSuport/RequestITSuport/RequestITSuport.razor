@@ -1,0 +1,180 @@
+﻿@using AntDesign
+@using AquaSolution.Shared.CommonDto
+@using AquaSolution.Shared.Enum
+@using AquaSolution.Shared.ITSuport.RequestSuport
+@inject HttpClient httpClient
+@using AquaSolution.Shared.ITSuport.RequestSuportCategory
+@using AquaSolution.Shared.UserManagements
+@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IMessageService Message
+@{
+    var title1 = string.IsNullOrWhiteSpace(RequestSuport.RequestSolution)
+        ? "Vui lòng nhập RequestSolution !" : "";
+    var title2 = RequestSuport.DueDate == null
+        ? "Vui lòng nhập DueDate !" : "";
+    RenderFragment footer = @<Template>
+    @if (RequestSuport.Status == RequestSuportStatusType.InProgress && IsEdit)
+    {
+            <Tooltip Title="@title1">
+                <Button disabled="string.IsNullOrWhiteSpace(RequestSuport.RequestSolution)" OnClick="@(async () => await ChangeStatus(RequestSuportStatusType.Resolved))" Style="color:#52c41a">
+                    Resolved
+                </Button>
+            </Tooltip>
+
+            <Button OnClick="@(async () => await ChangeStatus(RequestSuportStatusType.OnHold))" Style="color:#fa8c16">
+                OnHold
+            </Button>
+
+            <Button OnClick="@(async () => await ChangeStatus(RequestSuportStatusType.Cancel))" Style="color:#ff4d4f">
+                Cancel
+            </Button>
+    }
+    else if (RequestSuport.Status == RequestSuportStatusType.Open && IsEdit)
+    {
+            <Tooltip Title="@title2">
+                <Button disabled="RequestSuport.DueDate == null" OnClick="@(async () => await ChangeStatus(RequestSuportStatusType.InProgress))" Style="color:#1890ff">
+                    InProgress
+                </Button>
+            </Tooltip>
+
+            <Button OnClick="@(async () => await ChangeStatus(RequestSuportStatusType.Cancel))" Style="color:#ff4d4f">
+                Cancel
+            </Button>
+    }
+    else if (RequestSuport.Status == RequestSuportStatusType.OnHold && IsEdit)
+    {
+            <Tooltip Title="@title2">
+                <Button disabled="RequestSuport.DueDate == null" OnClick="@(async () => await ChangeStatus(RequestSuportStatusType.InProgress))" Style="color:#1890ff">
+                    InProgress
+                </Button>
+            </Tooltip>
+            <Button OnClick="@(async () => await ChangeStatus(RequestSuportStatusType.Cancel))" Style="color:#ff4d4f">
+                Cancel
+            </Button>
+    }
+
+        <Button OnClick="@SaveAsync"
+                @key="@( "submit")"
+                Type="ButtonType.Primary">
+            Save
+        </Button>
+
+        <Button Style="color:#808080" OnClick="@Close" @key="@("back")">Close</Button>
+
+    </Template>;
+}
+<Modal @bind-Visible="IsModalVisible" Style="z-index: 9999;width:1100px ;top:5px" Footer="@footer">
+    <Form @ref="@formRef"
+          Model="@RequestSuport"
+          Layout="FormLayout.Vertical"
+          OnFinish="SaveAsync"
+          ValidateMode="FormValidateMode.Complex"
+          ValidateOnChange="true">
+        <div style="height:70vh;overflow-y:scroll" class="custom">
+
+            <FormItem Label="Name" Required="true">
+                <Input ShowCount @bind-Value="@RequestSuport.RequestTitle" AllowClear="true" />
+            </FormItem>
+
+            <div style="display: flex; gap: 3px; align-items: flex-start;">
+                @if (IsEdit)
+                {
+                    <div style="flex: 0 0 calc(2 / 12 * 100%);">
+                        <FormItem Label="DueDate">
+                            <DatePicker TValue="DateTime?"
+                                        Picker="@DatePickerType.Date"
+                                        Format="yyyy/MM/dd HH:mm"
+                                        Disabled="!IsEdit"
+                                        ShowTime="true"
+                                        DisabledDate="date => date <= DateTime.Today.AddDays(-1)"
+                                        @bind-Value="RequestSuport.DueDate" />
+                        </FormItem>
+                    </div>
+                    <div style="flex: 0 0 calc(2 / 12 * 100%);">
+                        <FormItem Label="RequestCategory">
+                            <Select TItem="RequestSuportCategoryDto"
+                                    TItemValue="Guid"
+                                    DataSource="@RequestSuportCategories"
+                                    @bind-Value="@RequestSuport.RequestSuportCategoryId"
+                                    ItemValue="c => c.Id"
+                                    EnableSearch
+                                    AutoClearSearchValue="false"
+                                    ItemLabel="c => c.Name">
+                            </Select>
+                        </FormItem>
+                    </div>
+                }
+                else
+                {
+                    <div style="flex: 0 0 calc(4/ 12 * 100%);">
+                        <FormItem Label="RequestCategory">
+                            <Select TItem="RequestSuportCategoryDto"
+                                    TItemValue="Guid"
+                                    DataSource="@RequestSuportCategories"
+                                    @bind-Value="@RequestSuport.RequestSuportCategoryId"
+                                    ItemValue="c => c.Id"
+                                    EnableSearch
+                                    AutoClearSearchValue="false"
+                                    ItemLabel="c => c.Name">
+                            </Select>
+                        </FormItem>
+                    </div>
+                }
+
+
+
+                <div style="flex: 0 0 calc(7.85 / 12 * 100%);">
+                    <FormItem label="RequestBy">
+                        <Select TItem="UserContributerDto" TItemValue="Guid"
+                                DataSource="@ListUser"
+                                EnableSearch
+                                AutoClearSearchValue="false"
+                                @bind-Value="@RequestSuport.RequestById"
+                                ItemValue="c => c.Id??Guid.Empty"
+                                ItemLabel="c => c.Name?? string.Empty">
+                        </Select>
+                    </FormItem>
+                </div>
+              
+            </div>
+            <FormItem Required="true" Label="RequestDescription">
+                <TextArea ShowCount MinRows="2" @bind-Value="@RequestSuport.RequestDescription" MaxLength="2000" AllowClear="true" />
+            </FormItem>
+            @if (IsEdit)
+            {
+                <FormItem Required="true" Label="RequestSolution">
+                    <TextArea ShowCount MinRows="2" @bind-Value="@RequestSuport.RequestSolution" MaxLength="2000" AllowClear="true" />
+                </FormItem>
+            }
+
+            <div>
+                <div style="text-align:right;padding-bottom:5px;">
+                    <Upload Action="@($"{Navigation.BaseUri}api/Common/upload-file-suport")"
+                            Name="file"
+                            Accept=".jpg, .jpeg, .png, .xlsx, .docx, .pdf, .slx"
+                            BeforeUpload="BeforeUpload1"
+                            ShowUploadList="false"
+                            OnSingleCompleted="OnSingleCompleted">
+                        <Button Icon="upload">
+                            <span>Click to Upload</span>
+                        </Button>
+                    </Upload>
+                </div>
+
+                    <Table Class="style-attach" DataSource="Attachment" HidePagination Size="TableSize.Small">
+                        <ChildContent Context="file">
+                            <Column Fixed="ColumnFixPlacement.Left" Title="FileName" TData="string">@file.FileName</Column>
+                            <Column Title="FileSize" Width="100" TData="string">@FormatSize(file.FileSize)</Column>
+                            <Column Title="CreatedTime" Width="200" TData="string">@file.CreatedTime.ToString("dd/MM/yyyy HH:mm:ss")</Column>
+                            <ActionColumn>
+                                <Button Icon="delete" Type="ButtonType.Link" Danger="true" OnClick="() => Deleted(file)"></Button>
+                            </ActionColumn>
+                        </ChildContent>
+                    </Table>
+ 
+            </div>
+        </div>
+    </Form>
+</Modal>

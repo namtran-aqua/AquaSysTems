@@ -6,7 +6,7 @@
         {
             return status switch
             {
-                "Open" => "#595959",         // Xám đậm
+                "Open" => "#d3d0d0",         // Xám đậm
                 "OnHold" => "#d48806",       // Cam vàng
                 "Resolved" => "#389e0d",     // Xanh lá đậm
                 "InProgress" => "#096dd9",   // Xanh dương đậm

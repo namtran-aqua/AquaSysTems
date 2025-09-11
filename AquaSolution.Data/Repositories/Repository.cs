@@ -38,10 +38,11 @@ namespace AquaSolution.Data.Repositories
         {
             return await _context.Set<T>().MaxAsync(selector);
         }
-        public async Task<List<T>> GetAllAsync()
+        public async Task<List<T>> GetListAsync(Expression<Func<T, bool>> predicate)
         {
-            return await _dbSet.ToListAsync();
+            return await _context.Set<T>().Where(predicate).ToListAsync();
         }
+
 
         public async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
             => await _dbSet.Where(predicate).ToListAsync();
@@ -70,6 +71,11 @@ namespace AquaSolution.Data.Repositories
             await _context.SaveChangesAsync();
             return true;
         }
+        public async Task<List<T>> GetAllAsync()
+        {
+            return await _context.Set<T>().ToListAsync();
+        }
+
         public async Task<bool> UpdateAsync(T entity)
         {
             try

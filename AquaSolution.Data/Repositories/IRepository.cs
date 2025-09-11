@@ -15,6 +15,7 @@ namespace AquaSolution.Data.Repositories
         Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate);
         Task<T?> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate);
         Task<List<T>> WhereAsync(Expression<Func<T, bool>> predicate);
+        Task<List<T>> GetListAsync(Expression<Func<T, bool>> predicate);
         Task<List<T>> GetAllAsync();
         Task InsertAsync(T entity);
         Task AddRangeAsync(IEnumerable<T> entities);

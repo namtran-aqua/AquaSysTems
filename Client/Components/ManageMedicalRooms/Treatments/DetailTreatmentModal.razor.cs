@@ -1,7 +1,7 @@
 ﻿using AquaSolution.Shared.ManageMedicalRooms.RequestClinics;
 using Microsoft.AspNetCore.Components;
 using System.Net.Http.Json;
-using static System.Net.WebRequestMethods;
+
 
 namespace AquaSolution.Client.Components.ManageMedicalRooms.Treatments
 {

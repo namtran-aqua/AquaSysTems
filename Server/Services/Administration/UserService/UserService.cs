@@ -456,12 +456,15 @@ public class UserService : IUserService
     public async Task<List<UserContributerDto>> GetContributer()
     {
         var data = from user in await _userRepo.GetQueryableAsync()
+                   join department in await _departmentRepo.GetQueryableAsync()
+                   on user.DepartmentId equals department.Id
                    select new UserContributerDto
                    {
                        Id = user.Id,
                        Name = user.FullName,
                        FactoryId =user.FactoryId,
                        DepartmentId =user.DepartmentId,
+                       DepartmentType = department.DepartmentType
                    };
         var listUser = data.ToList();
         if (listUser != null)

@@ -5,7 +5,9 @@ using AquaSolution.Shared.Enum;
 using AquaSolution.Shared.ManageMedicalRooms.RequestClinics;
 using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Components;
+using System.ComponentModel.DataAnnotations;
 using System.Net.Http.Json;
+using System.Reflection;
 using System.Text.Json;
 using static System.Net.WebRequestMethods;
 
@@ -111,6 +113,15 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.RequestClinics
                 }
 
             }
+        }
+        private string GetPurposeTypeLabel(PurposeType type)
+        {
+            return type switch
+            {
+                PurposeType.SickLeave => "SickLeave/Nghỉ Bệnh",
+                PurposeType.MedicationRequest => "MedicationRequest/Đề nghị cấp thuốc",
+                _ => type.ToString()
+            };
         }
         private async Task LoadPurposeType()
         {

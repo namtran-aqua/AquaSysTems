@@ -52,7 +52,7 @@
             </Row>
             <Row Gutter="16">
                
-                <Col Span="9">
+                <Col Span="8">
                 <FormItem Required="true" Label="User Name">
                     <Select TItem="UserSelectedDto" TItemValue="UserSelectedDto"
                             DataSource="@ListSelectedcUsers"
@@ -66,19 +66,19 @@
                 </FormItem>
                 </Col>
 
-                <Col Span="9">
+                <Col Span="8">
                 <FormItem Label="Email">
                     <Input Disabled="true" value="@HandleMyRequestClinic.EmailRequestter" />
                 </FormItem>
                 </Col>
-                <Col Span="6">
+                <Col Span="8">
                 <FormItem Label="PurposeType" Required="true">
                     <Select TItem="PurposeType"
                             TItemValue="PurposeType"
                             DataSource="@ListPurposeType"
                             @bind-Value="@PurposeType"
                             ItemValue="c => c"
-                            ItemLabel="c => c.ToString()">
+                            ItemLabel="c => GetPurposeTypeLabel(c)">
                     </Select>
                 </FormItem>
                 </Col>

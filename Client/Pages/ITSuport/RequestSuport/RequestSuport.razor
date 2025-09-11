@@ -1,0 +1,120 @@
+﻿@page "/request-it-suport"
+@using AquaSolution.Client.Common
+@using AquaSolution.Client.Components.ITSuport.RequestITSuport
+@using AquaSolution.Shared.Enum
+@using AquaSolution.Shared.ITSuport.RequestSuport;
+@using AntDesign
+@inject ModalService modal
+@inject NavigationManager Navigation
+@inject IMessageService Message
+@inject IJSRuntime JS
+@using AquaSolution.Shared.UserManagements
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthStateProvider
+<PageTitle>Users</PageTitle>
+<div class="mb-3">
+    <style>
+        .custom-button-type {
+            height: 30px;
+            font-size: 12px;
+        }
+
+        .fix-table-header table {
+            border-collapse: collapse;
+        }
+
+            .fix-table-header table thead th {
+                position: sticky !important;
+                z-index: 8 !important;
+                top: 0;
+                background-color: #fff;
+            }
+
+        .ant-table-content {
+            min-height: 65vh !important;
+        }
+
+        .ant-table-pagination {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            z-index: 999;
+            background: white;
+            padding: 8px;
+            text-align: center;
+            box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.1);
+            width: 173vh !important;
+        }
+
+        .ant-table-cell {
+            text-align: center !important;
+        }
+
+        .ant-table-row {
+            text-align: center;
+        }
+    </style>
+    <div style="display: flex;  align-items: center; margin-bottom: 10px;">
+        <button @onclick="CreatedAsync" class="btn btn-primary custom-button-type">
+            <Icon Type="plus" />Created
+        </button>
+        <!-- #region Search -->
+        @* <Input Placeholder="WorkDayId" Value="@WorkDayId" style="margin-left:2px;width:190px;font-size:12px" @onkeydown="HandleKeyDown" @oninput="WorkDayIdInputChanged" />
+        <Input Placeholder="Full Name" Value="@FullName" style="margin-left:2px;width:190px;font-size:12px" @onkeydown="HandleKeyDown" @oninput="FullNameInputChanged" />
+        <Input Placeholder="Email" Value="@Email" style="margin-left:2px;width:170px;font-size:12px" @onkeydown="HandleKeyDown" @oninput="EmailInputChanged" />
+        <button @onclick="Search" style="margin-left:5px;border-color:#fff"><Icon Type="search" />Search</button>
+        <button @onclick="Reset" style="margin-left:5px;border-color:#fff"><Icon Type="undo" />Reset</button> *@
+    </div>
+    <!-- #endregion -->
+
+</div>
+<div style="width:100%;overflow-x:scroll ;max-height:70vh; ">
+    <Table TItem="RequestSuportDto"
+           Size="TableSize.Small"
+           Class="customTable fix-table-header"
+           DataSource="_requestSuportFillter">
+        <ColumnDefinitions Context="row">
+            <PropertyColumn Fixed="ColumnFixPlacement.Left" Title="RequestTitle" Property="c => c.RequestTitle"></PropertyColumn>
+            <PropertyColumn Title="RequestBy" Property="c => c.NameRequestBy"></PropertyColumn>
+            <PropertyColumn Title="Category" Property="c => c.RequestSuportCategoryName"></PropertyColumn>
+            <PropertyColumn Title="CreatedDate" Property="c => c.CreatedDate"></PropertyColumn>
+            <PropertyColumn Title="Status"Property="c => c.Status" >
+                <Tag Color="@GetTagColor.GetTagColorCss(row.Status.ToString())">@row.Status</Tag>
+                </PropertyColumn>
+            <Column Fixed="ColumnFixPlacement.Right" TData="RequestSuportDto" Width="50px" Title="Action" Context="row">
+                <Template>
+                    <Popover Title="Actions" Trigger="new Trigger[] { Trigger.Click }" Placement="Placement.Bottom">
+                        <ChildContent>
+                            <Button Icon="menu" />
+                        </ChildContent>
+                        <ContentTemplate>
+                            <div style="display: flex; flex-direction: column; gap: 4px; padding: 8px;">
+                                <Button Type="ButtonType.Text" OnClick="@(async () => await ViewAsync(row))" Style="text-align: left;">
+                                    <Icon Type="plus" /> Detail
+                                </Button>
+                                @{
+                                    var disable3 = row.Status == RequestSuportStatusType.Resolved || row.Status == RequestSuportStatusType.Cancel;
+                                }
+                                @if (Edit)
+                                {
+                                    <Button Disabled="disable3" Type="ButtonType.Text" OnClick="@(async () => await UpdateAsync(row))" Style="text-align: left;">
+                                        <Icon Type="edit" /> Edit
+                                    </Button>
+                                }
+                           
+                                @if (Delete)
+                                {
+                                    <Button Disabled="disable3" Type="ButtonType.Text" OnClick="@(async () => await DeleteAsync(row.Id))" Style="text-align: left;">
+                                        <Icon Type="delete" /> Delete
+                                    </Button>
+                                }
+                            </div>
+                        </ContentTemplate>
+                    </Popover>
+                </Template>
+            </Column>
+        </ColumnDefinitions>
+    </Table>
+</div>
+<RequestITSuport OnSave="LoadData" @ref="@requestITSuport"></RequestITSuport>
+<RequestITSuportDetailModal @ref="@requestITSuportDetailModal" />

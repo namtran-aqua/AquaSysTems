@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <Folder Include="wwwroot\uploads\avatars\" />
+    <Folder Include="wwwroot\uploads\support-data\" />
   </ItemGroup>
 
 

@@ -1,0 +1,76 @@
+﻿@using AntDesign
+@using AquaSolution.Client.Common
+@inject ModalService Modal
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+@{
+    RenderFragment footer = @<Template>
+
+        <Button Style="color:#808080" OnClick="@Close" @key="@("back")">Close</Button>
+
+    </Template>;
+}
+<Modal @bind-Visible="IsModalVisible" Style="z-index: 9999;width:1000px ;height:78vh !important ;top:3px"  Footer="@footer">
+	<script>
+		window.open_blank = function (url) {
+			 window.open(url, '_blank');
+		 }
+
+	</script>
+	<div style="max-height:70vh;overflow-y:auto"> 
+		<Collapse DefaultActiveKey="@(new[] { "1" })">
+			<Panel Class="customInfo" Header="Request Info" Key="1">
+				<Descriptions Size="DescriptionsSize.Small" Style="margin-bottom: 15px;" Column="4">
+					<DescriptionsItem  Title="@("- RequestTitle")" Span="3">@(RequestSuport.RequestTitle)</DescriptionsItem>
+					<DescriptionsItem Span="1" Title="@("Status")"> 
+				       <Tag Color="@GetTagColor.GetTagColorCss(RequestSuport.Status.ToString())">@RequestSuport.Status</Tag>
+		
+					</DescriptionsItem>
+
+					<DescriptionsItem Title="@("- RequestCategory")" Span="2">@(RequestSuport.RequestSuportCategoryName)</DescriptionsItem>
+
+					<DescriptionsItem Title="@("- Technical Support Name")" Span="2">@(RequestSuport.TechnicianName)</DescriptionsItem>
+
+					<DescriptionsItem Title="@("- Requester Name")" Span="2">@(RequestSuport.NameRequestBy)</DescriptionsItem>
+					<DescriptionsItem Title="@("- Technical Support Email")" Span="2">@(RequestSuport.TechnicianEmail)</DescriptionsItem>
+					<DescriptionsItem Title="@("- Requester Email")" Span="2">@(RequestSuport.EmailRequestBy)</DescriptionsItem>
+					<DescriptionsItem Title="@("- Requester Factory")" Span="2">@(RequestSuport.Factory)</DescriptionsItem>
+					<DescriptionsItem Title="@("- Requester Department")" Span="2">@(RequestSuport.Department)</DescriptionsItem>
+
+					<DescriptionsItem Title="@("- RequestDescription")" Span="4">@(new MarkupString(RequestSuport.RequestDescription?.Replace("\n", "<br/>")))</DescriptionsItem>
+					<DescriptionsItem Title="@("- RequestSolution")" Span="4">@(new MarkupString(RequestSuport.RequestSolution?.Replace("\n", "<br/>")))</DescriptionsItem>
+
+					<DescriptionsItem Title="@("✮ DueDate")">
+						@(RequestSuport.DueDate?.ToString("dd/MM/yyyy") ?? "No Time")
+					</DescriptionsItem>
+
+					<DescriptionsItem Title="@("✮ ResolveDate")">
+						@(RequestSuport.ResolveDate?.ToString("dd/MM/yyyy HH:mm") ?? "No Time")
+					</DescriptionsItem>
+
+					<DescriptionsItem Title="@("✮ StartDate")">
+						@(RequestSuport.InProgessDate?.ToString("dd/MM/yyyy HH:mm") ?? "No Time")
+					</DescriptionsItem>
+
+					<DescriptionsItem Title="@("✮ CancelDate")">
+						@(RequestSuport.CancelDate?.ToString("dd/MM/yyyy HH:mm") ?? "No Time")
+					</DescriptionsItem>
+
+				</Descriptions>
+			</Panel>
+			<Panel Class="customDocument" Header="Documents" Key="2">
+				<Table DataSource="@Attachment" HidePagination Size="TableSize.Small">
+					<ChildContent Context="item">
+						<Column  Fixed="ColumnFixPlacement.Left" Title="FileName" TData="string">@item.FileName</Column>
+						<Column Title="FileSize" Width="100" TData="string">@item.FileSize kb</Column>
+						<Column Title="CreatedTime" Width="200" TData="string">@item.CreatedTime.ToString("dd/MM/yyyy HH:mm:ss")</Column>
+						<ActionColumn>
+							<Button Icon="cloud-download" Type="ButtonType.Link" OnClick="() => Download(item.FilePath)"></Button>
+						</ActionColumn>
+					</ChildContent>
+				</Table> 
+			</Panel>
+		</Collapse>
+	</div>
+</Modal>

@@ -43,7 +43,11 @@ namespace AquaSolution.Data.Connection
         public DbSet<MedicineSupplyRequest> tbl_MedicineSupplyRequest { get; set; }
         public DbSet<MedicineSupplyRequestDetail> tbl_MedicineSupplyRequestDetail { get; set; }
 
-
+        #endregion
+        #region IT Suport
+        public DbSet<RequestSuportCategory> tbl_RequestSuportCategory { get; set; }
+        public DbSet<RequestSuport> tbl_RequestSuport { get; set; }
+        public DbSet<Attachment> tbl_Attachment { get; set; }
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -79,6 +83,13 @@ namespace AquaSolution.Data.Connection
             modelBuilder.ApplyConfiguration(new InventoryPeriodConfiguration());
             modelBuilder.ApplyConfiguration(new MedicineSupplyRequestConfiguration());
             modelBuilder.ApplyConfiguration(new MedicineSupplyRequestDetailConfiguration());
+
+            #endregion
+            #region IT Suport
+
+            modelBuilder.ApplyConfiguration(new AttachmentConfiguration());
+            modelBuilder.ApplyConfiguration(new RequestSuportConfiguration());
+            modelBuilder.ApplyConfiguration(new RequestSuportCategoryConfiguration());
 
             #endregion
 
