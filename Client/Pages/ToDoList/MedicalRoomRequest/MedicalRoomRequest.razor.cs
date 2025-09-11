@@ -7,6 +7,7 @@ using AquaSolution.Shared.Menus;
 using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 
@@ -50,11 +51,16 @@ namespace AquaSolution.Client.Pages.ToDoList.MedicalRoomRequest
         private async Task LoadData()
         {
             users = await Http.GetFromJsonAsync<List<UserDto>>("api/user/get-all");
-            MyRequestClinicData = await Http.GetFromJsonAsync<List<MyRequestClinicDto>>("api/MyRequestClinic/get-reuqest-by-user");
-            if (MyRequestClinicData != null)
+            var data = await Http.GetFromJsonAsync<List<MyRequestClinicDto>>("api/MyRequestClinic/get-reuqest-by-user");
+            if (CurrenUser.Roles.Any(x=>x.Name== "Admin"))
             {
-                MyRequestClinicData = MyRequestClinicData.Where(x => x.ManagerId == CurrenUser.Id).ToList();
+                MyRequestClinicData = data.ToList();
             }
+            else
+            {
+                MyRequestClinicData = data.Where(x => x.ManagerId == CurrenUser.Id).ToList();
+            }
+
 
         }
         private async Task GetPage()

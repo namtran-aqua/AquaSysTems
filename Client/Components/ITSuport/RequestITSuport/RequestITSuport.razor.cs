@@ -55,6 +55,12 @@ namespace AquaSolution.Client.Components.ITSuport.RequestITSuport
             ListTechnician = new List<UserContributerDto>();
             var data = await Http.GetFromJsonAsync<List<UserContributerDto>>("api/user/get-contributer");
             ListUser = data.ToList();
+
+            if (ListUser != null)
+            {
+                RequestSuport.RequestById = ListUser.FirstOrDefault(x => x.Id == CurrenUser.Id)?.Id ?? Guid.Empty;
+            }
+
             ListTechnician = data.Where(x => x.DepartmentType == DepartmentType.IT).ToList();
         }
         private async Task LoadAttachment(Guid requestSuportId)
@@ -81,7 +87,7 @@ namespace AquaSolution.Client.Components.ITSuport.RequestITSuport
         private async Task SaveAsync()
         {
             var data = await MappingData();
-         
+
 
             if (IsEdit)
             {
@@ -153,14 +159,14 @@ namespace AquaSolution.Client.Components.ITSuport.RequestITSuport
                     data.ResolveDate = DateTime.Now;
                     break;
             }
-            if(data.Status == RequestSuportStatusType.Resolved)
+            if (data.Status == RequestSuportStatusType.Resolved)
             {
                 var valid = formRef.Validate();
                 if (!valid)
                 {
                     return;
                 }
-            }    
+            }
             await UpdateAsync(data);
             IsModalVisible = false;
             await OnSave.InvokeAsync();
@@ -175,13 +181,13 @@ namespace AquaSolution.Client.Components.ITSuport.RequestITSuport
             {
 
                 await Message.Success("Update successfully !");
-     
+
             }
             else
             {
                 var error = await response.Content.ReadAsStringAsync();
                 await Message.Error($"Update failed: {error}");
-           
+
             }
         }
         private async Task CreatedAsync(HandleRequestSuportDto handleRequestSuportDto)
@@ -231,7 +237,7 @@ namespace AquaSolution.Client.Components.ITSuport.RequestITSuport
 
             }
         }
-        private  string FormatSize(long bytes)
+        private string FormatSize(long bytes)
         {
             if (bytes >= 1024 * 1024)
                 return $"{Math.Round(bytes / (1024.0 * 1024.0))} MB";
