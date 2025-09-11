@@ -37,7 +37,7 @@ namespace AquaSolution.Server.Controllers.Common
                 await file.CopyToAsync(stream);
             }
 
-            var baseUrl = $"{Request.Scheme}://{Request.Host}{Request.PathBase}";
+            var baseUrl = $"{Request.Scheme}://{Request.Host}";
             var url = $"{baseUrl}/uploads/support-data/{fileName}";
             return Ok(url);
         }

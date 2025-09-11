@@ -41,7 +41,7 @@ namespace AquaSolution.Server.Services.ManageMedicalRooms.InventoryPeriodService
                                           Note = inventoryPeriod.Note,
                                           CreatedByName = user.FullName,
                                       };
-            return listInventoryPeriod.ToList();
+            return listInventoryPeriod.OrderByDescending(x => x.CreatedDate).ToList();
         }
 
         public async Task<List<InventoryPeriodDetailDto>> GetInventoryPeriodDetail(Guid inventoryPeriodId)

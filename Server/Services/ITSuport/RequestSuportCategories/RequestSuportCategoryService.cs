@@ -55,7 +55,8 @@ namespace AquaSolution.Server.Services.ITSuport.RequestSuportCategories
                             IsActive = requestSuoportCategories.IsActive,
                             CreatedDate = requestSuoportCategories.CreatedDate
                         };
-            var data = query.ToList();
+            var data = query.OrderByDescending(x => x.CreatedDate)
+                    .ToList();
             if (data.Count > 0) 
             {
                 return data;

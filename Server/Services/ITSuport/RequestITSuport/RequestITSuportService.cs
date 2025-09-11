@@ -120,7 +120,9 @@ namespace AquaSolution.Server.Services.ITSuport.RequestSuportCategories
                             Department = department.Name,
                             Factory = factory.Name,
                         };
-            var data = query.ToList();
+            var data = query
+                    .OrderByDescending(x => x.CreatedDate) 
+                    .ToList();
             if (data != null)
             {
                 return data;
@@ -142,8 +144,9 @@ namespace AquaSolution.Server.Services.ITSuport.RequestSuportCategories
                             FileSize = attachment.FileSize,
                             CreatedTime = attachment.CreatedTime
                         };
-            var data = query.ToList();
-            if(data != null)
+            var data = query.OrderByDescending(x => x.CreatedTime)
+                    .ToList();
+            if (data != null)
             {
                 return data;
             }
