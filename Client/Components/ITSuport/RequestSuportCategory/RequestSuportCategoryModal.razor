@@ -32,11 +32,12 @@
             </FormItem>
             </Col>
             <Col Span="15">
-            <FormItem Label="Name" Required="true">
+            <FormItem Label="Technician">
                 <Select TItem="UserContributerDto" TItemValue="Guid?"
                         DataSource="@ListTechnician"
                         @bind-Value="@RequestSuportCategoryDto.TechnicianId"
                         ItemValue="c => c.Id"
+                        AllowClear ="true"
                         ItemLabel="c => c.Name">
                 </Select>
             </FormItem>

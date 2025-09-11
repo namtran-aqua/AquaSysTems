@@ -24,7 +24,7 @@ namespace AquaSolution.Client.Components.Administration.Users
         private List<BaseDto> ListFactory = new List<BaseDto>();
         private List<BaseDto> ListPosition = new List<BaseDto>();
         private List<UserContributerDto> Listmanager = new List<UserContributerDto>();
-
+        private List<UserContributerDto> AllManagers = new();
         #endregion
         #region Innit
         private BaseDto? _valuePosition;
@@ -184,12 +184,11 @@ namespace AquaSolution.Client.Components.Administration.Users
         private async Task LoadManager()
         {
             Listmanager = new List<UserContributerDto>();
-            Listmanager = await Http.GetFromJsonAsync<List<UserContributerDto>>("api/user/get-contributer");
-
-
+            AllManagers = new();
+            AllManagers = await Http.GetFromJsonAsync<List<UserContributerDto>>("api/user/get-contributer");
             if (Listmanager != null)
             {
-                Listmanager = Listmanager
+                Listmanager = AllManagers
                     .Where(d =>
                         (ValueFactory != null && ValueDepartment != null && d.FactoryId == ValueFactory.Id && d.DepartmentId == ValueDepartment.Id) ||
                         (ValueFactory != null && ValueDepartment == null && d.FactoryId == ValueFactory.Id) ||
@@ -206,6 +205,7 @@ namespace AquaSolution.Client.Components.Administration.Users
                     ValueManager = Listmanager.FirstOrDefault();
                 }
             }
+            await InvokeAsync(StateHasChanged);
         }
 
         #endregion
