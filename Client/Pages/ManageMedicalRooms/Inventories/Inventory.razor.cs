@@ -28,8 +28,8 @@ namespace AquaSolution.Client.Pages.ManageMedicalRooms.Inventories
         {
             _listInventory = await Http.GetFromJsonAsync<List<InventoryDto>>("api/Inventory/get-all");
             await InvokeAsync(StateHasChanged);
-            #endregion
         }
+        #endregion
         #region Action
         private async Task ImportWarehouse()
         {

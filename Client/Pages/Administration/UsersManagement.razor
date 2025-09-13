@@ -42,13 +42,6 @@
             width: 173vh !important;
         }
 
-        .ant-table-cell {
-            text-align: center !important;
-        }
-
-        .ant-table-row {
-            text-align: center;
-        }
     </style>
     <div style="display: flex;  align-items: center; margin-bottom: 10px;">
         <button @onclick="AddUserDialog" class="btn btn-primary custom-button-type">
@@ -81,7 +74,7 @@
             <PropertyColumn Title="WorkDayId" Property="c => c.WorkDayId"></PropertyColumn>
             <PropertyColumn Title="Factory" Property="c => c.FactoryName"></PropertyColumn>
             <PropertyColumn Title="Email" Property="c => c.Email"></PropertyColumn>
-            <PropertyColumn Title="IsActive" Property="c => c.IsActive"></PropertyColumn>
+            <PropertyColumn Sortable  Title="IsActive" Property="c => c.IsActive"></PropertyColumn>
             <Column Fixed="ColumnFixPlacement.Right" TData="UserDto" Width="50px" Title="Action" Context="row">
                 <Template>
                     <Popover Title="Actions" Trigger="new Trigger[] { Trigger.Click }" Placement="Placement.Bottom">

@@ -11,8 +11,10 @@ namespace AquaSolution.Shared.UserManagements
     public class UserContributerDto :BaseDto
     {
         public Guid? DepartmentId { get;set; }
+        public string WorkDayId { get; set; }
         public DepartmentType DepartmentType { get; set; }
         public Guid? FactoryId { get;set; }
+        public  bool IsActive { get; set; }
 
     }
 }

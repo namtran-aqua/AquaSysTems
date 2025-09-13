@@ -7,12 +7,12 @@
 @{
     RenderFragment footer = @<Template>
 
-        <Button OnClick="@SaveAsync" @key="@( "submit" )"
+        <Button Disabled="IsView" OnClick="@SaveAsync" @key="@( "submit" )"
                 Type="ButtonType.Primary">
             Save
         </Button>
 
-        <Button Style="color:#808080" OnClick="@Close" @key="@("back")">Close</Button>
+        <Button  Style="color:#808080" OnClick="@Close" @key="@("back")">Close</Button>
 
     </Template>;
 }
@@ -28,6 +28,7 @@
             <FormItem Label="Name" Required="true">
                 <TextArea ShowCount MinRows="1" MaxRows="1"
                           @bind-Value="@RequestSuportCategoryDto.Name"
+                          Disabled="IsView"
                           AllowClear="true" />
             </FormItem>
             </Col>
@@ -37,15 +38,19 @@
                         DataSource="@ListTechnician"
                         @bind-Value="@RequestSuportCategoryDto.TechnicianId"
                         ItemValue="c => c.Id"
-                        AllowClear ="true"
+                        AllowClear="true"
+                        Disabled="IsView"
                         ItemLabel="c => c.Name">
                 </Select>
             </FormItem>
             </Col>
             <Col Span="3">
-            <FormItem Label="IsActive">
-                <Switch @bind-Value="@RequestSuportCategoryDto.IsActive" />
-            </FormItem>
+            @if (IsEdit || IsView)
+            {
+                <FormItem Label="IsActive">
+                    <Switch Disabled="IsView" @bind-Value="@RequestSuportCategoryDto.IsActive" />
+                </FormItem>
+            }
             </Col>
 
         </Row>

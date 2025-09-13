@@ -266,6 +266,7 @@ public class UserService : IUserService
                    on queryableUser.ManagerId equals manager.Id
                    into m1
                    from manager in m1.DefaultIfEmpty()
+                   orderby queryableUser.CreatedTime descending
                    select new UserDto
                    {
                        Id = queryableUser.Id,
@@ -464,7 +465,9 @@ public class UserService : IUserService
                        Name = user.FullName,
                        FactoryId =user.FactoryId,
                        DepartmentId =user.DepartmentId,
-                       DepartmentType = department.DepartmentType
+                       DepartmentType = department.DepartmentType,
+                       WorkDayId = user.WorkDayId,
+                       IsActive = user.IsActive,
                    };
         var listUser = data.ToList();
         if (listUser != null)

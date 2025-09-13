@@ -86,7 +86,7 @@ namespace AquaSolution.Server.Services.ManageMedicalRooms.MedicineSupplyRequestS
 
                         join parmacyManagement in user on medicineSupplyRequest.PharmacyManagerId equals parmacyManagement.Id
                         into p from parmacyManagement in p.DefaultIfEmpty()
-
+                        orderby medicineSupplyRequest.CreatedDate descending
                         select new MedicineSupplyRequestDto
                         {
                             Id = medicineSupplyRequest.Id,

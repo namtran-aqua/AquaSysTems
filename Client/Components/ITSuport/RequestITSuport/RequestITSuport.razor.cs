@@ -61,7 +61,7 @@ namespace AquaSolution.Client.Components.ITSuport.RequestITSuport
                 RequestSuport.RequestById = ListUser.FirstOrDefault(x => x.Id == CurrenUser.Id)?.Id ?? Guid.Empty;
             }
 
-            ListTechnician = data.Where(x => x.DepartmentType == DepartmentType.IT).ToList();
+            ListTechnician = data.Where(x => x.DepartmentType == DepartmentType.IT && x.IsActive == true).ToList();
         }
         private async Task LoadAttachment(Guid requestSuportId)
         {
@@ -107,9 +107,11 @@ namespace AquaSolution.Client.Components.ITSuport.RequestITSuport
         }
         private Task<HandleRequestSuportDto> MappingData()
         {
-
-            RequestSuport.TechnicianId = RequestSuportCategories.FirstOrDefault(
-                x => x.Id == RequestSuport.RequestSuportCategoryId)?.TechnicianId;
+            if (!IsEdit)
+            {
+                RequestSuport.TechnicianId = RequestSuportCategories.FirstOrDefault(
+                 x => x.Id == RequestSuport.RequestSuportCategoryId)?.TechnicianId;
+            }
             var data = new HandleRequestSuportDto
             {
                 Id = RequestSuport.Id,
@@ -121,11 +123,13 @@ namespace AquaSolution.Client.Components.ITSuport.RequestITSuport
                 RequestSolution = RequestSuport.RequestSolution,
                 TechnicianId = RequestSuport.TechnicianId,
                 DueDate = RequestSuport.DueDate,
-                Attachments = Attachment
+                Attachments = Attachment,
+                CreatedById = CurrenUser.Id,
             };
 
             if (!IsEdit)
             {
+               
                 data.Status = RequestSuportStatusType.Open;
                 data.CreatedDate = DateTime.Now;
             }

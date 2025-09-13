@@ -26,6 +26,13 @@ namespace AquaSolution.Client.Components.ITSuport.RequestITSuport
             var data = await Http.GetFromJsonAsync<List<AttachmentDto>>($"api/RequestITSuport/get-attechment/{RequestSuport.Id}");
             Attachment = data.ToList();
         }
+        private string FormatSize(long bytes)
+        {
+            if (bytes >= 1024 * 1024)
+                return $"{Math.Round(bytes / (1024.0 * 1024.0))} MB";
+            return $"{Math.Round(bytes / 1024.0)} KB";
+        }
+
         private async Task Close()
         {
             IsModalVisible = false;

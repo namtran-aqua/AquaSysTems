@@ -10,6 +10,7 @@ namespace AquaSolution.Shared.UserManagements
     public class CreatedAndUpdateUserDto
     {
         public Guid Id { get; set; }
+        [Required(ErrorMessage = "WorkDayId is required")]
         public string WorkDayId { get; set; }
         [Required(ErrorMessage = "FirstName is required")]
         public string FirstName { get; set; }
@@ -17,6 +18,8 @@ namespace AquaSolution.Shared.UserManagements
         public string LastName { get; set; }
         public string FullName { get; set; }
         [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Invalid email format")]
+        [RegularExpression(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", ErrorMessage = "Invalid email format")]
         public string Email { get; set; }
         public string? PhoneNumber { get; set; }
         public Guid? GroupId { get; set; }
