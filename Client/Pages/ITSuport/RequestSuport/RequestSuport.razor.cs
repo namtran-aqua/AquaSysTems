@@ -115,7 +115,6 @@ namespace AquaSolution.Client.Pages.ITSuport.RequestSuport
         #endregion
         #region Search
         private Func<Task> SelectedChange;
-        private string? RequesterEmail { get; set; }
         private string? RequesterName { get; set; }
         private Guid _technicalSuport { get; set; } = Guid.Empty;
         private Guid TechnicalSuport
@@ -150,10 +149,7 @@ namespace AquaSolution.Client.Pages.ITSuport.RequestSuport
                 await Search();
             }
         }
-        private void RequesterEmailInputChanged(ChangeEventArgs e)
-        {
-            RequesterEmail = e.Value?.ToString();
-        }
+ 
         private void RequesterNameInputChanged(ChangeEventArgs e)
         {
             RequesterName = e.Value?.ToString();
@@ -199,21 +195,17 @@ namespace AquaSolution.Client.Pages.ITSuport.RequestSuport
         {
             try
             {
-                var email = RequesterEmail?.Trim().ToLower();
                 var name = RequesterName?.Trim().ToLower();
 
                 var filtered = _requestSuport
                     .Where(x =>
-                        (string.IsNullOrWhiteSpace(email) ||
-                            (!string.IsNullOrWhiteSpace(x.RequestByEmail) && x.RequestByEmail.ToLower().Contains(email))) &&
                         (string.IsNullOrWhiteSpace(name) ||
                             (!string.IsNullOrWhiteSpace(x.RequestByName) && x.RequestByName.ToLower().Contains(name))) &&
                         (TechnicalSuport == Guid.Empty || x.TechnicianId == TechnicalSuport) &&
                      (Status == -99 || x.Status == (RequestSuportStatusType)Status)
                     )
                     .ToList();
-                if (string.IsNullOrWhiteSpace(email) &&
-                    string.IsNullOrWhiteSpace(name) &&
+                if (string.IsNullOrWhiteSpace(name) &&
                     TechnicalSuport == Guid.Empty && Status == -99)
                 {
                     filtered = _requestSuport;
@@ -229,7 +221,6 @@ namespace AquaSolution.Client.Pages.ITSuport.RequestSuport
         }
         private Task Reset()
         {
-            RequesterEmail = null;
             RequesterName = null;
             TechnicalSuport = Guid.Empty;
             Status = -99;

@@ -223,11 +223,25 @@ namespace AquaSolution.Client.Components.Administration.Users
             {
                 return;
             }
-            bool exists = AllManagers
-               .Any(x => x.WorkDayId == CreatedUserDto.WorkDayId);
-            if (exists)
+            if (IsEdit)
             {
-                await Message.Error("WorkDayId exists !");
+                bool exists = AllManagers
+                   .Any(x => x.WorkDayId == CreatedUserDto.WorkDayId && x.Id != CreatedUserDto.Id);
+                if (exists)
+                {
+                    await Message.Error("WorkDayId exists !");
+                    return;
+                }
+            }
+            else
+            {
+                bool exists = AllManagers
+                                 .Any(x => x.WorkDayId == CreatedUserDto.WorkDayId );
+                if (exists)
+                {
+                    await Message.Error("WorkDayId exists !");
+                    return;
+                }
             }
             CreatedUserDto.DepartmentId = ValueDepartment?.Id;
             CreatedUserDto.FactoryId = ValueFactory?.Id;

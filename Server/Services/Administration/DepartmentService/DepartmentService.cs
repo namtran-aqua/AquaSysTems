@@ -40,6 +40,7 @@ namespace AquaSolution.Server.Services.Administration.DepartmentService
             try
             {
                 var departments = from department in await _departmentRepo.GetQueryableAsync()
+                                  orderby department.CreatedDate descending
                                   select new DepartmentDto
                                   {
                                       Id = department.Id,

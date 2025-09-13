@@ -47,19 +47,12 @@
         }
 
     </style>
-    <div style="display: flex;  align-items: center; margin-bottom: 10px;">
+    <div style="display: flex;  align-items: center; margin-bottom: 10px; ">
         <button @onclick="CreatedAsync" class="btn btn-primary custom-button-type">
             <Icon Type="plus" />Created
         </button>
         <!-- #region Search -->
-        <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
-
-            <Input Placeholder="Email người yêu cầu"
-                   Value="@RequesterEmail"
-                   style="width:190px;font-size:12px"
-                   @onkeydown="HandleKeyDown"
-                   @oninput="RequesterEmailInputChanged" />
-
+        <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;margin-left:5px">
             <Input Placeholder="Tên người yêu cầu"
                    Value="@RequesterName"
                    style="width:170px;font-size:12px"

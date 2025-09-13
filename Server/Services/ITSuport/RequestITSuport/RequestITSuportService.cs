@@ -122,7 +122,7 @@ namespace AquaSolution.Server.Services.ITSuport.RequestSuportCategories
                             ResolveDate = requestSuport.ResolveDate,
                             CancelDate = requestSuport.CancelDate,
                             Department = department.Name,
-                            Factory = factory.Name,
+                            Factory = $"{factory.Name} - {factory.Code}",
                             CreatedName =created.FullName,
                             CreatedEmail = created.Email,
                         };
