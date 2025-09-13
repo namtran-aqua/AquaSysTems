@@ -14,12 +14,11 @@ namespace AquaSolution.Shared.ITSuport.RequestSuport
         public Guid Id { get; set; }
         public string RequestTitle { get; set; } = string.Empty;
         public Guid RequestSuportCategoryId { get; set; }
-  
         public string RequestSuportCategoryName { get; set; } = string.Empty;
         public RequestSuportStatusType Status { get; set; }
         public Guid RequestById { get; set; }
-        public string NameRequestBy { get; set; } = string.Empty;
-        public string EmailRequestBy { get; set; } = string.Empty;
+        public string RequestByName { get; set; } = string.Empty;
+        public string RequestByEmail { get; set; } = string.Empty;
         public DateTime CreatedDate { get; set; }
         public string RequestDescription { get; set; } = string.Empty;
         public string? RequestSolution { get; set; }
@@ -32,6 +31,8 @@ namespace AquaSolution.Shared.ITSuport.RequestSuport
         public DateTime? CancelDate { get; set; }
         public string? Department { get; set; }
         public string? Factory { get; set; }
-
+        public Guid CreatedById { get; set; }
+        public string CreatedName { get; set; }
+        public string CreatedEmail { get; set; }
     }
 }

@@ -13,12 +13,17 @@ namespace AquaSolution.Data.Data.MappingConfigurations
             builder.HasOne<User>()
                    .WithMany()
                    .HasForeignKey(e => e.RequestBy)
-                   .OnDelete(DeleteBehavior.Restrict); 
+                   .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasOne<User>()
                    .WithMany()
                    .HasForeignKey(e => e.TechnicianId)
-                   .OnDelete(DeleteBehavior.Restrict); 
+                   .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne<User>()
+                   .WithMany()
+                   .HasForeignKey(e => e.CreatedById)
+                   .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasOne<RequestSuportCategory>()
                    .WithMany()

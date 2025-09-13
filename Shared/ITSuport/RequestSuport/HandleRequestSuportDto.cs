@@ -26,5 +26,6 @@ namespace AquaSolution.Shared.ITSuport.RequestSuport
         public DateTime? CancelDate { get; set; }
         public DateTime? OnHoldDate { get; set; }
         public List<AttachmentDto>? Attachments { get; set; }
+        public Guid CreatedById { get; set; }
     }
 }

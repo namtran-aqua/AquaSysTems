@@ -32,12 +32,13 @@
 
 					<DescriptionsItem Title="@("- Technical Support Name")" Span="2">@(RequestSuport.TechnicianName)</DescriptionsItem>
 
-					<DescriptionsItem Title="@("- Requester Name")" Span="2">@(RequestSuport.NameRequestBy)</DescriptionsItem>
+					<DescriptionsItem Title="@("- Requester Name")" Span="2">@(RequestSuport.RequestByName)</DescriptionsItem>
 					<DescriptionsItem Title="@("- Technical Support Email")" Span="2">@(RequestSuport.TechnicianEmail)</DescriptionsItem>
-					<DescriptionsItem Title="@("- Requester Email")" Span="2">@(RequestSuport.EmailRequestBy)</DescriptionsItem>
+					<DescriptionsItem Title="@("- Requester Email")" Span="2">@(RequestSuport.RequestByEmail)</DescriptionsItem>
 					<DescriptionsItem Title="@("- Requester Factory")" Span="2">@(RequestSuport.Factory)</DescriptionsItem>
 					<DescriptionsItem Title="@("- Requester Department")" Span="2">@(RequestSuport.Department)</DescriptionsItem>
-
+					<DescriptionsItem Title="@("- Created By Name")" Span="2">@(RequestSuport.CreatedName)</DescriptionsItem>
+					<DescriptionsItem Title="@("- Created By Email")" Span="2">@(RequestSuport.CreatedEmail)</DescriptionsItem>
 					<DescriptionsItem Title="@("- RequestDescription")" Span="4">@(new MarkupString(RequestSuport.RequestDescription?.Replace("\n", "<br/>")))</DescriptionsItem>
 					<DescriptionsItem Title="@("- RequestSolution")" Span="4">@(new MarkupString(RequestSuport.RequestSolution?.Replace("\n", "<br/>")))</DescriptionsItem>
 
@@ -63,7 +64,7 @@
 				<Table DataSource="@Attachment" HidePagination Size="TableSize.Small">
 					<ChildContent Context="item">
 						<Column  Fixed="ColumnFixPlacement.Left" Title="FileName" TData="string">@item.FileName</Column>
-						<Column Title="FileSize" Width="100" TData="string">@item.FileSize kb</Column>
+						<Column Title="FileSize" Width="100" TData="string">@FormatSize(item.FileSize)</Column>
 						<Column Title="CreatedTime" Width="200" TData="string">@item.CreatedTime.ToString("dd/MM/yyyy HH:mm:ss")</Column>
 						<ActionColumn>
 							<Button Icon="cloud-download" Type="ButtonType.Link" OnClick="() => Download(item.FilePath)"></Button>

@@ -74,7 +74,7 @@
           ValidateOnChange="true">
         <div style="height:70vh;overflow-y:scroll" class="custom">
 
-            <FormItem Label="Name" Required="true">
+            <FormItem Label="Title" Required="true">
                 <Input ShowCount @bind-Value="@RequestSuport.RequestTitle" AllowClear="true" />
             </FormItem>
 
@@ -150,6 +150,7 @@
                             <Select TItem="UserContributerDto" TItemValue="Guid"
                                     DataSource="@ListUser"
                                     EnableSearch
+                                    Disabled="true"
                                     AutoClearSearchValue="false"
                                     @bind-Value="@RequestSuport.RequestById"
                                     ItemValue="c => c.Id??Guid.Empty"

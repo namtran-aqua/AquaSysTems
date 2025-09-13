@@ -52,18 +52,18 @@
         <!-- === Header: Thông tin nhập kho === -->
         <Card>
             <Row Gutter="16" Style="height:65px">
-                <Col Span="8">
-                <FormItem Required="true" Label="Code">
-                    <Input Disabled="IsView" @bind-Value="createdWarehouseExportDto.WarehouseExportDto.Code" />
-                </FormItem>
-                </Col>
+       
                 <Col Span="8">
                 <FormItem Required="true" Label="Name">
                     <Input Disabled="IsView" @bind-Value="createdWarehouseExportDto.WarehouseExportDto.Name" />
                 </FormItem>
                 </Col>
-
-                <Col Span="8">
+                <Col Span="11">
+                <FormItem Required="true"  Label="Description">
+                    <TextArea Disabled="IsView" @bind-Value="createdWarehouseExportDto.WarehouseExportDto.Description" MaxRows="1" />
+                </FormItem>
+                </Col>
+                <Col Span="5">
                 <FormItem Label="WarehouseExportTypeValue" Required="true">
                     <Select TItem="WarehouseExportType"
                             Disabled="IsView"
@@ -78,16 +78,12 @@
 
             </Row>
             <Row Gutter="16" Style="height:90px">
-                <Col Span="12">
+                <Col Span="24">
                 <FormItem Label="Note">
                     <TextArea Disabled="IsView" @bind-Value="createdWarehouseExportDto.WarehouseExportDto.Note" MaxRows="2" />
                 </FormItem>
                 </Col>
-                <Col Span="12">
-                <FormItem Label="Description">
-                    <TextArea Disabled="IsView" @bind-Value="createdWarehouseExportDto.WarehouseExportDto.Description" MaxRows="2" />
-                </FormItem>
-                </Col>
+            
             </Row>
             @if (!IsView)
             {
@@ -177,7 +173,7 @@
                             <Column Fixed="ColumnFixPlacement.Right" TData="WarehouseExportDetailDto" Width="30px" Context="row">
                                 <Template>
                                     <div style="display: flex; flex-direction: column; gap: 4px; padding: 8px;">
-                                        <Button Type="ButtonType.Text" OnClick="@(async () => await RemoveDetailRow(row2))" Style="text-align: left;">
+                                        <Button Type="ButtonType.Text" OnClick="@(async () => RemoveDetailRow(row2))" Style="text-align: left;">
                                             <Icon Type="delete" />
                                         </Button>
                                     </div>

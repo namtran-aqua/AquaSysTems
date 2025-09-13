@@ -47,6 +47,7 @@ namespace AquaSolution.Server.Services.ITSuport.RequestSuportCategories
                 RequestSolution = handleRequestSuportDto.RequestSolution,
                 TechnicianId = handleRequestSuportDto.TechnicianId,
                 RequestTitle = handleRequestSuportDto.RequestTitle,
+                CreatedById = handleRequestSuportDto.CreatedById,
             };
             if(handleRequestSuportDto.Attachments !=null)
             {
@@ -84,6 +85,9 @@ namespace AquaSolution.Server.Services.ITSuport.RequestSuportCategories
         {
             var user = await _userRepo.GetQueryableAsync();
             var query = from requestSuport in await _requestSuportRepo.GetQueryableAsync()
+                        join created in user on requestSuport.CreatedById equals created.Id
+  
+
                         join requestCategory in await _requestSuportCategoryRepo.GetQueryableAsync()
                         on requestSuport.RequestSuportCategoryId equals requestCategory.Id
 
@@ -105,8 +109,8 @@ namespace AquaSolution.Server.Services.ITSuport.RequestSuportCategories
                             RequestSuportCategoryName = requestCategory.Name,
                             Status = requestSuport.Status,
                             RequestById = requestSuport.RequestBy,
-                            NameRequestBy = requestBy.FullName,
-                            EmailRequestBy = requestBy.Email,
+                            RequestByName = requestBy.FullName,
+                            RequestByEmail = requestBy.Email,
                             CreatedDate = requestSuport.CreatedDate,
                             RequestDescription = requestSuport.RequestDescription,
                             RequestSolution = requestSuport.RequestSolution,
@@ -119,6 +123,8 @@ namespace AquaSolution.Server.Services.ITSuport.RequestSuportCategories
                             CancelDate = requestSuport.CancelDate,
                             Department = department.Name,
                             Factory = factory.Name,
+                            CreatedName =created.FullName,
+                            CreatedEmail = created.Email,
                         };
             var data = query
                     .OrderByDescending(x => x.CreatedDate) 

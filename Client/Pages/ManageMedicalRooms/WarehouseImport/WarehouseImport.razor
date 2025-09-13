@@ -44,13 +44,6 @@
             width: 173vh !important;
         }
 
-        .ant-table-cell {
-            text-align: center !important;
-        }
-
-        .ant-table-row {
-            text-align: center;
-        }
     </style>
    <button @onclick="ImportWarehouse" class="btn btn-primary custom-button-type">
         <Icon Type="plus" />ImportWarehouse
@@ -64,8 +57,7 @@
            Class="customTable fix-table-header"
            DataSource="_listWarehouseImport">
         <ColumnDefinitions Context="row">
-            <PropertyColumn Width="100" Title="Code" Property="c => c.Code"></PropertyColumn>
-            <PropertyColumn Width="150" Title="Name" Property="c => c.Name">
+            <PropertyColumn Width="150" Title="Title" Property="c => c.Name">
                 <Template>
                     <a href="javascript:void(0);" @onclick="() => View(row)">
                         @row.Name

@@ -115,7 +115,6 @@ namespace AquaSolution.Client.Pages.ITSuport.RequestSuport
         #endregion
         #region Search
         private Func<Task> SelectedChange;
-        private Guid? RequestId { get; set; }
         private string? RequesterEmail { get; set; }
         private string? RequesterName { get; set; }
         private Guid _technicalSuport { get; set; } = Guid.Empty;
@@ -159,18 +158,7 @@ namespace AquaSolution.Client.Pages.ITSuport.RequestSuport
         {
             RequesterName = e.Value?.ToString();
         }
-        private void RequestIdInputChanged(ChangeEventArgs e)
-        {
-            var value = e.Value?.ToString();
-            if (Guid.TryParse(value, out var id))
-            {
-                RequestId = id;
-            }
-            else
-            {
-                RequestId = null;
-            }
-        }
+
         private List<UserContributerDto> ListTechnicianFilter = new();
 
         private List<KeyValuePair<RequestSuportStatusType, string>> StatusOptions = new();
@@ -216,17 +204,15 @@ namespace AquaSolution.Client.Pages.ITSuport.RequestSuport
 
                 var filtered = _requestSuport
                     .Where(x =>
-                        (!RequestId.HasValue || x.Id == RequestId) &&
                         (string.IsNullOrWhiteSpace(email) ||
-                            (!string.IsNullOrWhiteSpace(x.EmailRequestBy) && x.EmailRequestBy.ToLower().Contains(email))) &&
+                            (!string.IsNullOrWhiteSpace(x.RequestByEmail) && x.RequestByEmail.ToLower().Contains(email))) &&
                         (string.IsNullOrWhiteSpace(name) ||
-                            (!string.IsNullOrWhiteSpace(x.NameRequestBy) && x.NameRequestBy.ToLower().Contains(name))) &&
+                            (!string.IsNullOrWhiteSpace(x.RequestByName) && x.RequestByName.ToLower().Contains(name))) &&
                         (TechnicalSuport == Guid.Empty || x.TechnicianId == TechnicalSuport) &&
                      (Status == -99 || x.Status == (RequestSuportStatusType)Status)
                     )
                     .ToList();
-                if (!RequestId.HasValue &&
-                    string.IsNullOrWhiteSpace(email) &&
+                if (string.IsNullOrWhiteSpace(email) &&
                     string.IsNullOrWhiteSpace(name) &&
                     TechnicalSuport == Guid.Empty && Status == -99)
                 {
@@ -243,7 +229,6 @@ namespace AquaSolution.Client.Pages.ITSuport.RequestSuport
         }
         private Task Reset()
         {
-            RequestId = null;
             RequesterEmail = null;
             RequesterName = null;
             TechnicalSuport = Guid.Empty;

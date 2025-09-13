@@ -55,7 +55,6 @@ namespace AquaSolution.Server.Services.ManageMedicalRooms.WarehouseExportService
                                            select new LoadWarehouseExportDto
                                            {
                                                Id = warehouseExport.Id,
-                                               Code = warehouseExport.Code,
                                                Name = warehouseExport.Name,
                                                Description = warehouseExport.Description,
                                                Note = warehouseExport.Note,
@@ -111,7 +110,6 @@ namespace AquaSolution.Server.Services.ManageMedicalRooms.WarehouseExportService
                 var warehouseExport = new WarehouseExport
                 {
                     Id = Guid.NewGuid(),
-                    Code = createdWarehouseExportDto.WarehouseExportDto.Code,
                     Name = createdWarehouseExportDto.WarehouseExportDto.Name,
                     Description = createdWarehouseExportDto.WarehouseExportDto.Description,
                     Note = createdWarehouseExportDto.WarehouseExportDto.Note,

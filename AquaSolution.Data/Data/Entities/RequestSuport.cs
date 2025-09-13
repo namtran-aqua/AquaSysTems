@@ -23,7 +23,7 @@ namespace AquaSolution.Data.Data.Entities
         public DateTime? ResolveDate { get; set; }
         public DateTime? CancelDate { get; set; }
         public DateTime? OnHoldDate { get; set; }
-
+        public Guid CreatedById { get; set; }
 
     }
 }

@@ -25,7 +25,7 @@ namespace AquaSolution.Server.Services.ITSuport.RequestSuportCategories
                 TechnicianId = requestSuportCategoryDto.TechnicianId,
                 Name = requestSuportCategoryDto.Name,
                 CreatedDate = DateTime.Now,
-                IsActive = requestSuportCategoryDto.IsActive,
+                IsActive = true,
             };
             await _requestSuportCategoryRepo.InsertAsync(requestSuportCategory);
             return await _requestSuportCategoryRepo.SaveChangesAsync() > 0;

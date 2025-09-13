@@ -54,7 +54,7 @@ public class InventoryService : IInventoryService
                         ManufacturingDate = g.Key.ManufacturingDate,
                         expired = g.Key.ExpirationDate < DateTime.Now.Date
                     };
-                })
+                }).OrderBy(x => x.ExpirationDate)
                 .ToList();
 
             return result;

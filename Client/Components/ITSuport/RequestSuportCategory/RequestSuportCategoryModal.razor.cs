@@ -27,6 +27,7 @@ namespace AquaSolution.Client.Components.ITSuport.RequestSuportCategory
         {
             IsView = isView;
             IsEdit = isEdit;
+            RequestSuportCategoryDto = new();
             await LoadTechnician();
             if (requestSuportCategoryDto != null)
             {

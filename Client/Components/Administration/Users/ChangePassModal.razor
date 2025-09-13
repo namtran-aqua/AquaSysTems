@@ -17,7 +17,7 @@
     </Template>;
 }
 <Modal @bind-Visible="_visible" Title="ChangePassword" Width="600" Footer="@footer">
-    <EditForm Model="_model" OnValidSubmit="SaveAsync">
+    <EditForm  Model="_model" OnValidSubmit="SaveAsync">
         <DataAnnotationsValidator />
         <Form @ref="@formRef"  TModel="ChangePassRequest" Model="_model" Layout="FormLayout.Horizontal"
               LabelColSpan="6" WrapperColSpan="18">

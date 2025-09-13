@@ -24,14 +24,21 @@ namespace AquaSolution.Server.Services.Common.HandleInventories
             var inventoryQuery = await _inventoryRepo.GetQueryableAsync();
             var product = await _productRepo.GetQueryableAsync();
             var existingInventory = inventoryQuery.FirstOrDefault(i =>
-                       i.ProductId == handleInventoryDto.ProductId &&
-                       i.ExpirationDate.HasValue &&
-                       i.ExpirationDate.Value.Date == handleInventoryDto.ExpirationDate.Value.Date &&
-                       (
-                           !handleInventoryDto.ManufacturingDate.HasValue && !i.ManufacturingDate.HasValue ||
-                           handleInventoryDto.ManufacturingDate.HasValue && i.ManufacturingDate.HasValue &&
-                           i.ManufacturingDate.Value.Date == handleInventoryDto.ManufacturingDate.Value.Date
-                       ));
+                i.ProductId == handleInventoryDto.ProductId &&
+                (
+      
+                    (!handleInventoryDto.ExpirationDate.HasValue && !i.ExpirationDate.HasValue)
+                    ||
+                    (handleInventoryDto.ExpirationDate.HasValue && i.ExpirationDate.HasValue &&
+                     i.ExpirationDate.Value.Date == handleInventoryDto.ExpirationDate.Value.Date)
+                )
+                &&
+                (
+                    (!handleInventoryDto.ManufacturingDate.HasValue && !i.ManufacturingDate.HasValue)
+                    ||
+                    (handleInventoryDto.ManufacturingDate.HasValue && i.ManufacturingDate.HasValue &&
+                     i.ManufacturingDate.Value.Date == handleInventoryDto.ManufacturingDate.Value.Date)
+                ));
 
             if (existingInventory != null)
             {
@@ -59,14 +66,21 @@ namespace AquaSolution.Server.Services.Common.HandleInventories
             var inventoryQuery = await _inventoryRepo.GetQueryableAsync();
             var product = await _productRepo.GetQueryableAsync();
             var existingInventory = inventoryQuery.FirstOrDefault(i =>
-                       i.ProductId == handleInventoryDto.ProductId &&
-                       i.ExpirationDate.HasValue &&
-                       i.ExpirationDate.Value.Date == handleInventoryDto.ExpirationDate.Value.Date &&
-                       (
-                           !handleInventoryDto.ManufacturingDate.HasValue && !i.ManufacturingDate.HasValue ||
-                           handleInventoryDto.ManufacturingDate.HasValue && i.ManufacturingDate.HasValue &&
-                           i.ManufacturingDate.Value.Date == handleInventoryDto.ManufacturingDate.Value.Date
-                       ));
+                i.ProductId == handleInventoryDto.ProductId &&
+                (
+                    (!handleInventoryDto.ExpirationDate.HasValue && !i.ExpirationDate.HasValue)
+                    ||
+                    (handleInventoryDto.ExpirationDate.HasValue && i.ExpirationDate.HasValue &&
+                     i.ExpirationDate.Value.Date == handleInventoryDto.ExpirationDate.Value.Date)
+                )
+                &&
+                (
+                    (!handleInventoryDto.ManufacturingDate.HasValue && !i.ManufacturingDate.HasValue)
+                    ||
+                    (handleInventoryDto.ManufacturingDate.HasValue && i.ManufacturingDate.HasValue &&
+                     i.ManufacturingDate.Value.Date == handleInventoryDto.ManufacturingDate.Value.Date)
+                ));
+
 
             if (existingInventory != null)
             {
@@ -119,15 +133,22 @@ namespace AquaSolution.Server.Services.Common.HandleInventories
         {
             var inventoryQuery = await _inventoryRepo.GetQueryableAsync();
             var existingInventory = inventoryQuery.FirstOrDefault(i =>
-           i.ProductId == handleInventoryDto.ProductId &&
-           i.ExpirationDate.HasValue &&
-           i.ExpirationDate.Value.Date == handleInventoryDto.ExpirationDate.Value.Date &&
-           (
-               !handleInventoryDto.ManufacturingDate.HasValue && !i.ManufacturingDate.HasValue ||
-               handleInventoryDto.ManufacturingDate.HasValue && i.ManufacturingDate.HasValue &&
-               i.ManufacturingDate.Value.Date == handleInventoryDto.ManufacturingDate.Value.Date
-           ));
-            if(existingInventory != null)
+                i.ProductId == handleInventoryDto.ProductId &&
+                (
+                    (!handleInventoryDto.ExpirationDate.HasValue && !i.ExpirationDate.HasValue)
+                    ||
+                    (handleInventoryDto.ExpirationDate.HasValue && i.ExpirationDate.HasValue &&
+                     i.ExpirationDate.Value.Date == handleInventoryDto.ExpirationDate.Value.Date)
+                )
+                &&
+                (
+                    (!handleInventoryDto.ManufacturingDate.HasValue && !i.ManufacturingDate.HasValue)
+                    ||
+                    (handleInventoryDto.ManufacturingDate.HasValue && i.ManufacturingDate.HasValue &&
+                     i.ManufacturingDate.Value.Date == handleInventoryDto.ManufacturingDate.Value.Date)
+                ));
+
+            if (existingInventory != null)
             {
                 return existingInventory.Quantity;
             }

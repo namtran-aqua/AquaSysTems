@@ -1,4 +1,5 @@
 ﻿using AntDesign;
+using AquaSolution.Client.Pages.Administration;
 using AquaSolution.Shared.CommonDto;
 using AquaSolution.Shared.Departments;
 using AquaSolution.Shared.Factory;
@@ -221,6 +222,12 @@ namespace AquaSolution.Client.Components.Administration.Users
             if (!valid)
             {
                 return;
+            }
+            bool exists = AllManagers
+               .Any(x => x.WorkDayId == CreatedUserDto.WorkDayId);
+            if (exists)
+            {
+                await Message.Error("WorkDayId exists !");
             }
             CreatedUserDto.DepartmentId = ValueDepartment?.Id;
             CreatedUserDto.FactoryId = ValueFactory?.Id;

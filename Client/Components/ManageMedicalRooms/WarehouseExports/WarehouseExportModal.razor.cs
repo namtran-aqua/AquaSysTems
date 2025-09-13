@@ -64,7 +64,6 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.WarehouseExports
             if (IsView)
             {
                 createdWarehouseExportDto = new();
-                createdWarehouseExportDto.WarehouseExportDto.Code = LoadWarehouseExportDto.Code;
                 createdWarehouseExportDto.WarehouseExportDto.Name = LoadWarehouseExportDto.Name;
                 createdWarehouseExportDto.WarehouseExportDto.Note = LoadWarehouseExportDto.Note;
                 createdWarehouseExportDto.WarehouseExportDto.CreatedDate = LoadWarehouseExportDto.CreatedDate;
@@ -145,12 +144,7 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.WarehouseExports
 
             foreach (var itemDetail in createdWarehouseExportDto.WarehouseExportDetailDtos)
             {
-                if (itemDetail.ExpiryDate == null)
-                {
-                    await Message.Error("ExpiryDate cannot be left blank !");
-                    return;
-                }
-
+   
                 if (itemDetail.Quantity <= 0)
                 {
                     await Message.Error("Quantity must be greater than 0");
@@ -242,7 +236,7 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.WarehouseExports
                 });
         }
 
-        private async Task RemoveDetailRow(WarehouseExportDetailDto index)
+        private void RemoveDetailRow(WarehouseExportDetailDto index)
         {
             if (createdWarehouseExportDto.WarehouseExportDetailDtos.Count > 0)
             {

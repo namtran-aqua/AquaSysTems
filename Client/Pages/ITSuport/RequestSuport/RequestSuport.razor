@@ -46,76 +46,64 @@
             width: 173vh !important;
         }
 
-        .ant-table-cell {
-            text-align: center !important;
-        }
-
-        .ant-table-row {
-            text-align: center;
-        }
     </style>
     <div style="display: flex;  align-items: center; margin-bottom: 10px;">
         <button @onclick="CreatedAsync" class="btn btn-primary custom-button-type">
             <Icon Type="plus" />Created
         </button>
+        <!-- #region Search -->
+        <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
 
-    </div>
-    <!-- #region Search -->
-    <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
-        <Input Type="InputType.Number" Placeholder="RequestId"
-               Value="@RequestId"
-               style="width:95px;font-size:12px"
-               @onkeydown="HandleKeyDown"
-               @oninput="RequestIdInputChanged" />
+            <Input Placeholder="Email người yêu cầu"
+                   Value="@RequesterEmail"
+                   style="width:190px;font-size:12px"
+                   @onkeydown="HandleKeyDown"
+                   @oninput="RequesterEmailInputChanged" />
 
-        <Input Placeholder="Email người yêu cầu"
-               Value="@RequesterEmail"
-               style="width:190px;font-size:12px"
-               @onkeydown="HandleKeyDown"
-               @oninput="RequesterEmailInputChanged" />
+            <Input Placeholder="Tên người yêu cầu"
+                   Value="@RequesterName"
+                   style="width:170px;font-size:12px"
+                   @onkeydown="HandleKeyDown"
+                   @oninput="RequesterNameInputChanged" />
 
-        <Input Placeholder="Tên người yêu cầu"
-               Value="@RequesterName"
-               style="width:170px;font-size:12px"
-               @onkeydown="HandleKeyDown"
-               @oninput="RequesterNameInputChanged" />
-
-        <div>
-            <span style="font-weight:600">Technical</span>
-            <select @bind="TechnicalSuport" style="font-size:12px; padding:2px;width:170px">
-                <option value="@ListTechnicianFilter.LastOrDefault()?.Id" style="text-align:center">
-                    @ListTechnicianFilter.LastOrDefault()?.Name
-                </option>
-                @foreach (var tech in ListTechnicianFilter)
-                {
-                    <option value="@tech.Id"><Icon Type="team" />@tech.Name</option>
-                }
-            </select>
-        </div>
-
-        <div>
-            <span style="font-weight:600">Status</span>
-            <select @bind="Status" style="font-size:12px; padding:2px;width:100px;text-align:center;">
-                <option value="-99">@StatusOptionsFilter.FirstOrDefault(x => (int)x.Key == -99).Value</option>
-                @foreach (var tech in StatusOptionsFilter.Where(x => x.Key != (RequestSuportStatusType)(-99)))
-                {
-                    <option style="color:@GetTagColor.GetTagColorCss(tech.Key.ToString())" value="@((int)tech.Key)">
-                        @tech.Value
+            <div>
+                <span style="font-weight:600">Technical</span>
+                <select @bind="TechnicalSuport" style="font-size:12px; padding:2px;width:170px">
+                    <option value="@ListTechnicianFilter.LastOrDefault()?.Id" style="text-align:center">
+                        @ListTechnicianFilter.LastOrDefault()?.Name
                     </option>
-                }
-            </select>
+                    @foreach (var tech in ListTechnicianFilter)
+                    {
+                        <option value="@tech.Id"><Icon Type="team" />@tech.Name</option>
+                    }
+                </select>
+            </div>
+
+            <div>
+                <span style="font-weight:600">Status</span>
+                <select @bind="Status" style="font-size:12px; padding:2px;width:100px;text-align:center;">
+                    <option value="-99">@StatusOptionsFilter.FirstOrDefault(x => (int)x.Key == -99).Value</option>
+                    @foreach (var tech in StatusOptionsFilter.Where(x => x.Key != (RequestSuportStatusType)(-99)))
+                    {
+                        <option style="color:@GetTagColor.GetTagColorCss(tech.Key.ToString())" value="@((int)tech.Key)">
+                            @tech.Value
+                        </option>
+                    }
+                </select>
+            </div>
+
+            <button @onclick="Search" style="border-color:#fff">
+                <Icon Type="search" />Search
+            </button>
+
+            <button @onclick="Reset" style="border-color:#fff">
+                <Icon Type="undo" />Reset
+            </button>
         </div>
 
-        <button @onclick="Search" style="border-color:#fff">
-            <Icon Type="search" />Search
-        </button>
-
-        <button @onclick="Reset" style="border-color:#fff">
-            <Icon Type="undo" />Reset
-        </button>
+        <!-- #endregion -->
     </div>
-
-    <!-- #endregion -->
+   
 </div>
 
 <div style="width:100%;overflow-x:scroll ;max-height:70vh; ">
@@ -125,11 +113,12 @@
            DataSource="_requestSuportFillter">
         <ColumnDefinitions Context="row">
             <PropertyColumn Fixed="ColumnFixPlacement.Left" Title="RequestTitle" Property="c => c.RequestTitle"></PropertyColumn>
-            <PropertyColumn Title="RequestBy" Property="c => c.NameRequestBy"></PropertyColumn>
-            <PropertyColumn Title="TechnicianName" Property="c => c.TechnicianName"></PropertyColumn>
-            <PropertyColumn Title="Category" Property="c => c.RequestSuportCategoryName"></PropertyColumn>
-            <PropertyColumn Title="CreatedDate" Property="c => c.CreatedDate"></PropertyColumn>
-            <PropertyColumn Title="Status" Property="c => c.Status">
+            <PropertyColumn Width="220" Title="RequestBy" Property="c => c.RequestByName"></PropertyColumn>
+            <PropertyColumn Width="220" Title="Requester Email" Property="c => c.RequestByEmail"></PropertyColumn>
+            <PropertyColumn Width="220" Title="TechnicianName" Property="c => c.TechnicianName"></PropertyColumn>
+            <PropertyColumn Width="80" Title="Category" Property="c => c.RequestSuportCategoryName"></PropertyColumn>
+            <PropertyColumn Width="180" Title="CreatedDate" Property="c => c.CreatedDate"></PropertyColumn>
+            <PropertyColumn Width="100" Title="Status" Property="c => c.Status">
                 <Tag Color="@GetTagColor.GetTagColorCss(row.Status.ToString())">@row.Status</Tag>
             </PropertyColumn>
             <Column Fixed="ColumnFixPlacement.Right" TData="RequestSuportDto" Width="50px" Title="Action" Context="row">

@@ -38,6 +38,7 @@ namespace AquaSolution.Server.Services.Administration.FactoryService
         public async Task<List<FactoryDto>> GetListFactory()
         {
             var factoryData = from factory in await _factoryRepo.GetQueryableAsync()
+                              orderby factory.CreatedDate descending
                               select new FactoryDto
                               {
                                   Id = factory.Id,
@@ -62,7 +63,7 @@ namespace AquaSolution.Server.Services.Administration.FactoryService
             if(factory == null) return false;
             factory.Code = factoryDto.Code;
             factory.Name = factoryDto.Name;
-            factory.Description = factoryDto.Code;
+            factory.Description = factoryDto.Description;
             factory.FactoryType = factoryDto.FactoryType;
             factory.Note = factoryDto.Note;
             return await _factoryRepo.UpdateAsync(factory);
