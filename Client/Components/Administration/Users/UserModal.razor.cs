@@ -16,7 +16,6 @@ namespace AquaSolution.Client.Components.Administration.Users
         [Inject] private HttpClient Http { get; set; }
         [Parameter] public EventCallback OnSave { get; set; }
         private UserDto CurrenUser { get; set; }
-        private Func<Task> ResetListManager { get; set; }
         private bool IsModalVisible = false;
         private Form<CreatedAndUpdateUserDto> formRef;
         private CreatedAndUpdateUserDto CreatedUserDto = new CreatedAndUpdateUserDto();
@@ -24,7 +23,6 @@ namespace AquaSolution.Client.Components.Administration.Users
         private List<BaseDto> ListDepartment = new List<BaseDto>();
         private List<BaseDto> ListFactory = new List<BaseDto>();
         private List<BaseDto> ListPosition = new List<BaseDto>();
-        private List<UserContributerDto> Listmanager = new List<UserContributerDto>();
         private List<UserContributerDto> AllManagers = new();
         #endregion
         #region Innit
@@ -49,7 +47,6 @@ namespace AquaSolution.Client.Components.Administration.Users
                 if (_valueFactory != value)
                 {
                     _valueFactory = value;
-                   ResetListManager?.Invoke();
                 }
             }
         }
@@ -62,7 +59,6 @@ namespace AquaSolution.Client.Components.Administration.Users
                 if (_valueDepartment != value)
                 {
                     _valueDepartment = value;
-                    ResetListManager?.Invoke();
                 }
      
             }
@@ -96,7 +92,6 @@ namespace AquaSolution.Client.Components.Administration.Users
             await LoaPosition();
             await LoadFactory();
             await LoadManager();
-            ResetListManager += LoadManager;
             IsModalVisible = true;
             await InvokeAsync(StateHasChanged);
         }
@@ -170,68 +165,14 @@ namespace AquaSolution.Client.Components.Administration.Users
                 }
             }
         }
-        //private async Task LoadManager()
-        //{
-        //    Listmanager = new List<UserContributerDto>();
-        //    AllManagers = new();
-        //    AllManagers = await Http.GetFromJsonAsync<List<UserContributerDto>>("api/user/get-contributer");
-        //    if (Listmanager != null)
-        //    {
-        //        Listmanager = AllManagers
-        //            .Where(d =>
-        //                (ValueFactory != null && ValueDepartment != null && d.FactoryId == ValueFactory.Id && d.DepartmentId == ValueDepartment.Id) ||
-        //                (ValueFactory != null && ValueDepartment == null && d.FactoryId == ValueFactory.Id) ||
-        //                (ValueFactory == null && ValueDepartment != null && d.DepartmentId == ValueDepartment.Id) ||
-        //                (ValueFactory == null && ValueDepartment == null)
-        //            )
-        //            .ToList();
-        //        if (CreatedUserDto.ManagerId != null)
-        //        {
-        //            ValueManager = Listmanager.FirstOrDefault(x => x.Id == CreatedUserDto.ManagerId);
-        //        }
-        //        else
-        //        {
-        //            ValueManager = Listmanager.FirstOrDefault();
-        //        }
-        //    }
-        //    await InvokeAsync(StateHasChanged);
-        //}
         private async Task LoadManager()
         {
-            Listmanager = new List<UserContributerDto>();
             AllManagers = await Http.GetFromJsonAsync<List<UserContributerDto>>("api/user/get-contributer");
-
-            if (AllManagers != null)
+            if (CreatedUserDto.FactoryId != null)
             {
-                Listmanager = AllManagers.Where(d =>
-                    // Nếu chọn cả 2 thì lọc theo cả 2
-                    (ValueFactory != null && ValueDepartment != null &&
-                        d.FactoryId == ValueFactory.Id && d.DepartmentId == ValueDepartment.Id)
-
-                    // Nếu chỉ có Factory thì lọc theo Factory
-                    || (ValueFactory != null && ValueDepartment == null &&
-                        d.FactoryId == ValueFactory.Id)
-
-                    // Nếu chỉ có Department thì lọc theo Department
-                    || (ValueFactory == null && ValueDepartment != null &&
-                        d.DepartmentId == ValueDepartment.Id)
-
-                    // Nếu không chọn gì thì lấy tất cả
-                    || (ValueFactory == null && ValueDepartment == null)
-                ).ToList();
-
-                // Gán Manager mặc định
-                if (CreatedUserDto.ManagerId != null)
-                {
-                    ValueManager = Listmanager.FirstOrDefault(x => x.Id == CreatedUserDto.ManagerId);
-                }
-                else
-                {
-                    ValueManager = Listmanager.FirstOrDefault();
-                }
+                ValueManager = AllManagers.FirstOrDefault(x => x.Id == CreatedUserDto.ManagerId);
             }
-
-            await InvokeAsync(StateHasChanged);
+           
         }
 
 
