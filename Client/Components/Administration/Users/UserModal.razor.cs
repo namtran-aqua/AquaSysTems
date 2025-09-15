@@ -99,6 +99,7 @@ namespace AquaSolution.Client.Components.Administration.Users
         {
             try
             {
+                ValueDepartment= null;
                 ListDepartment = new List<BaseDto>();
                 var data = await Http.GetFromJsonAsync<List<DepartmentDto>>("api/department/get-all");
                 if (data != null)
@@ -128,6 +129,7 @@ namespace AquaSolution.Client.Components.Administration.Users
         private async Task LoaPosition()
         {
             ListPosition = new List<BaseDto>();
+            ValuePosition= null;
             var data = await Http.GetFromJsonAsync<List<PositionDto>>("api/position/get-all");
             if (data != null)
             {
@@ -148,6 +150,7 @@ namespace AquaSolution.Client.Components.Administration.Users
         private async Task LoadFactory()
         {
             ListFactory = new List<BaseDto>();
+            ValueFactory = null;
             var data = await Http.GetFromJsonAsync<List<FactoryDto>>("api/factory/get-all");
             if (data != null)
             {
@@ -167,6 +170,7 @@ namespace AquaSolution.Client.Components.Administration.Users
         }
         private async Task LoadManager()
         {
+            ValueManager= null;
             AllManagers = await Http.GetFromJsonAsync<List<UserContributerDto>>("api/user/get-contributer");
             if (CreatedUserDto.FactoryId != null)
             {
