@@ -66,7 +66,7 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.RequestClinics
                     });
                 }
 
-                //UserValue = ListSelectedcUsers.First(x => x.Id == CurrenUser.Id);
+                UserValue = ListSelectedcUsers.First(x => x.Id == CurrenUser.Id);
             }
 
             return Task.CompletedTask;
