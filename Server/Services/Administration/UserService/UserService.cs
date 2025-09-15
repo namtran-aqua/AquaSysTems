@@ -460,6 +460,7 @@ public class UserService : IUserService
         var data = from user in await _userRepo.GetQueryableAsync()
                    join department in await _departmentRepo.GetQueryableAsync()
                    on user.DepartmentId equals department.Id
+                   into d from department in d.DefaultIfEmpty()
                    select new UserContributerDto
                    {
                        Id = user.Id,

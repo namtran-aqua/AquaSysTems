@@ -68,10 +68,10 @@
                 </Template>
             </PropertyColumn>
             <PropertyColumn Width="80" Title="PurposeType" Property="c => c.PurposeType"></PropertyColumn>
-            <PropertyColumn Width="180" Title="Note" Property="c => c.Note"></PropertyColumn>
-            <PropertyColumn Width="400" Title="CreatedBy" Property="c => c.CreatedName"></PropertyColumn>
+            <PropertyColumn Width="400" Title="RequesterBy" Property="c => c.UserRequestName"></PropertyColumn>
             <PropertyColumn Width="130" Title="CreatedDate" Property="c => c.CreatedDate" Format="dd/MM/yyyy HH:mm"></PropertyColumn>
             <PropertyColumn Width="250" Title="Status" Style="@($"color: {GetTagColor.GetTagColorCss(row.Status.ToString())}")" Property="c => c.Status"></PropertyColumn>
+            <PropertyColumn Width="180" Title="Note" Property="c => c.Note"></PropertyColumn>
             <Column Fixed="ColumnFixPlacement.Right" TData="ProductDto" Width="50px" Title="Action" Context="row">
                 <Template>
                     <Popover Title="Actions" Trigger="new Trigger[] { Trigger.Click }" Placement="Placement.Bottom">

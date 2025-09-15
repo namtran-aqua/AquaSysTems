@@ -48,7 +48,7 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.RequestClinics
         private Task LoadUserByDepartment()
         {
             ListSelectedcUsers = new();
-            var listUser = Listusers.Where(x => x.DepartmentId == CurrenUser.DepartmentId).ToList();
+            var listUser = Listusers.ToList();
             if (listUser.Any())
             {
                 foreach (var user in listUser)

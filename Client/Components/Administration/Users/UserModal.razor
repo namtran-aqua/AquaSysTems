@@ -50,20 +50,22 @@
             </FormItem>
             </Col>
             <Col Span="8">
-            <FormItem Required="true" Label="Position">
+            <FormItem  Label="Position">
                 <Select TItem="BaseDto" TItemValue="BaseDto"
                         DataSource="@ListPosition"
                         @bind-Value="@ValuePosition"
+                        AllowClear="true"
                         ItemValue="c => c"
                         ItemLabel="c => c.Name">
                 </Select>
             </FormItem>
             </Col>
             <Col Span="8">
-            <FormItem Required="true" Label="Factory">
+            <FormItem  Label="Factory">
                 <Select TItem="BaseDto" TItemValue="BaseDto"
                         DataSource="@ListFactory"
                         @bind-Value="@ValueFactory"
+                        AllowClear="true"
                         ItemValue="c => c"
                         ItemLabel="c => c.Name">
                 </Select>
@@ -72,10 +74,11 @@
         </Row>
         <Row Gutter="16">
             <Col Span="12">
-            <FormItem Required="true" Label="Department">
+            <FormItem  Label="Department">
                 <Select TItem="BaseDto" TItemValue="BaseDto"
                         DataSource="@ListDepartment"
                         @bind-Value="@ValueDepartment"
+                        AllowClear="true"
                         ItemValue="c => c"
                         ItemLabel="c => c.Name">
                 </Select>
@@ -86,6 +89,9 @@
                 <Select TItem="UserContributerDto" TItemValue="UserContributerDto"
                         DataSource="@Listmanager"
                         @bind-Value="@ValueManager"
+                        AllowClear="true"
+                        EnableSearch
+                        AutoClearSearchValue="true"
                         ItemValue="c => c"
                         ItemLabel="c => c.Name">
                 </Select>

@@ -170,21 +170,57 @@ namespace AquaSolution.Client.Components.Administration.Users
                 }
             }
         }
+        //private async Task LoadManager()
+        //{
+        //    Listmanager = new List<UserContributerDto>();
+        //    AllManagers = new();
+        //    AllManagers = await Http.GetFromJsonAsync<List<UserContributerDto>>("api/user/get-contributer");
+        //    if (Listmanager != null)
+        //    {
+        //        Listmanager = AllManagers
+        //            .Where(d =>
+        //                (ValueFactory != null && ValueDepartment != null && d.FactoryId == ValueFactory.Id && d.DepartmentId == ValueDepartment.Id) ||
+        //                (ValueFactory != null && ValueDepartment == null && d.FactoryId == ValueFactory.Id) ||
+        //                (ValueFactory == null && ValueDepartment != null && d.DepartmentId == ValueDepartment.Id) ||
+        //                (ValueFactory == null && ValueDepartment == null)
+        //            )
+        //            .ToList();
+        //        if (CreatedUserDto.ManagerId != null)
+        //        {
+        //            ValueManager = Listmanager.FirstOrDefault(x => x.Id == CreatedUserDto.ManagerId);
+        //        }
+        //        else
+        //        {
+        //            ValueManager = Listmanager.FirstOrDefault();
+        //        }
+        //    }
+        //    await InvokeAsync(StateHasChanged);
+        //}
         private async Task LoadManager()
         {
             Listmanager = new List<UserContributerDto>();
-            AllManagers = new();
             AllManagers = await Http.GetFromJsonAsync<List<UserContributerDto>>("api/user/get-contributer");
-            if (Listmanager != null)
+
+            if (AllManagers != null)
             {
-                Listmanager = AllManagers
-                    .Where(d =>
-                        (ValueFactory != null && ValueDepartment != null && d.FactoryId == ValueFactory.Id && d.DepartmentId == ValueDepartment.Id) ||
-                        (ValueFactory != null && ValueDepartment == null && d.FactoryId == ValueFactory.Id) ||
-                        (ValueFactory == null && ValueDepartment != null && d.DepartmentId == ValueDepartment.Id) ||
-                        (ValueFactory == null && ValueDepartment == null)
-                    )
-                    .ToList();
+                Listmanager = AllManagers.Where(d =>
+                    // Nếu chọn cả 2 thì lọc theo cả 2
+                    (ValueFactory != null && ValueDepartment != null &&
+                        d.FactoryId == ValueFactory.Id && d.DepartmentId == ValueDepartment.Id)
+
+                    // Nếu chỉ có Factory thì lọc theo Factory
+                    || (ValueFactory != null && ValueDepartment == null &&
+                        d.FactoryId == ValueFactory.Id)
+
+                    // Nếu chỉ có Department thì lọc theo Department
+                    || (ValueFactory == null && ValueDepartment != null &&
+                        d.DepartmentId == ValueDepartment.Id)
+
+                    // Nếu không chọn gì thì lấy tất cả
+                    || (ValueFactory == null && ValueDepartment == null)
+                ).ToList();
+
+                // Gán Manager mặc định
                 if (CreatedUserDto.ManagerId != null)
                 {
                     ValueManager = Listmanager.FirstOrDefault(x => x.Id == CreatedUserDto.ManagerId);
@@ -194,8 +230,10 @@ namespace AquaSolution.Client.Components.Administration.Users
                     ValueManager = Listmanager.FirstOrDefault();
                 }
             }
+
             await InvokeAsync(StateHasChanged);
         }
+
 
         #endregion
         #region Action
