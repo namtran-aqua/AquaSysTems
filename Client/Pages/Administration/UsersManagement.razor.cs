@@ -220,52 +220,52 @@ namespace AquaSolution.Client.Pages.Administration
         }
         #endregion
         #region Import
-        private async Task HandleFileSelected(InputFileChangeEventArgs e)
-        {
+        //private async Task HandleFileSelected(InputFileChangeEventArgs e)
+        //{
 
-            try
-            {
-                var file = e.File;
-                if (file == null) return;
-                using var ms = await file.ToMemoryStreamAsync();
-                CreatedUser = await ExcelImportHelper.ReadFromExcelAsync<CreatedAndUpdateUserDto>(ms, (sheet, row) =>
-                {
-                    var dto = new CreatedAndUpdateUserDto
-                    {
-                        Id = Guid.NewGuid(),
-                        FirstName = sheet.Cells[row, 1].Text?.Trim() ?? string.Empty, // cột A
-                        LastName = sheet.Cells[row, 2].Text?.Trim() ?? string.Empty, // cột B
-                        FullName = sheet.Cells[row, 3].Text?.Trim() ?? string.Empty, // cột C
-                        WorkDayId = sheet.Cells[row, 4].Text?.Trim() ?? string.Empty, // cột D
-                        Email = sheet.Cells[row, 5].Text?.Trim() ?? string.Empty, // cột E
+        //    try
+        //    {
+        //        var file = e.File;
+        //        if (file == null) return;
+        //        using var ms = await file.ToMemoryStreamAsync();
+        //        CreatedUser = await ExcelImportHelper.ReadFromExcelAsync<CreatedAndUpdateUserDto>(ms, (sheet, row) =>
+        //        {
+        //            var dto = new CreatedAndUpdateUserDto
+        //            {
+        //                Id = Guid.NewGuid(),
+        //                FirstName = sheet.Cells[row, 1].Text?.Trim() ?? string.Empty, // cột A
+        //                LastName = sheet.Cells[row, 2].Text?.Trim() ?? string.Empty, // cột B
+        //                FullName = sheet.Cells[row, 3].Text?.Trim() ?? string.Empty, // cột C
+        //                WorkDayId = sheet.Cells[row, 4].Text?.Trim() ?? string.Empty, // cột D
+        //                Email = sheet.Cells[row, 5].Text?.Trim() ?? string.Empty, // cột E
 
-                        CreatedTime = DateTime.Now,
-                        IsActive = true,
-                        CreatedBy = "Admin",
+        //                CreatedTime = DateTime.Now,
+        //                IsActive = true,
+        //                CreatedBy = "Admin",
 
-                    };
-                    return dto;
-                });
-                foreach (var item in CreatedUser)
-                {
-                    var response = await Http.PostAsJsonAsync($"api/user/create", item);
-                    if (response.IsSuccessStatusCode)
-                    {
-                        await Message.Success("Created successfully.");
-                    }
-                    else
-                    {
-                        var error = await response.Content.ReadAsStringAsync();
-                        await Message.Error($"Lỗi: {error}");
-                    }
-                }
-            }
-            catch (System.Exception ex)
-            {
-                throw ex;
-            }
+        //            };
+        //            return dto;
+        //        });
+        //        foreach (var item in CreatedUser)
+        //        {
+        //            var response = await Http.PostAsJsonAsync($"api/user/create", item);
+        //            if (response.IsSuccessStatusCode)
+        //            {
+        //                await Message.Success("Created successfully.");
+        //            }
+        //            else
+        //            {
+        //                var error = await response.Content.ReadAsStringAsync();
+        //                await Message.Error($"Lỗi: {error}");
+        //            }
+        //        }
+        //    }
+        //    catch (System.Exception ex)
+        //    {
+        //        throw ex;
+        //    }
 
-        }
+        //}
         #endregion
     }
 }

@@ -366,13 +366,6 @@ public class UserService : IUserService
                 Avatar = "/uploads/avatars/default.jpg"
 
             };
-            var userRol = new UserRole
-            {
-                Id = Guid.NewGuid(),
-                UserId = user.Id,
-                RoleId = Guid.Parse("16C1886E-C7F2-480C-B6F5-CD4AA59CAC7A")
-            };
-            await _userRoleRepo.InsertAsync(userRol);
             await _userRepo.InsertAsync(user);
             await _userRepo.SaveChangesAsync();
             return true;

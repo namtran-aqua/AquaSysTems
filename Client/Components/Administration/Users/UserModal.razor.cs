@@ -120,10 +120,6 @@ namespace AquaSolution.Client.Components.Administration.Users
                     {
                         ValueDepartment = ListDepartment.FirstOrDefault(x => x.Id == CreatedUserDto.DepartmentId);
                     }
-                    else
-                    {
-                        ValueDepartment = ListDepartment.FirstOrDefault();
-                    }
 
                 }
 
@@ -152,10 +148,6 @@ namespace AquaSolution.Client.Components.Administration.Users
                 {
                     ValuePosition = ListPosition.FirstOrDefault(x => x.Id == CreatedUserDto.PositionId);
                 }
-                else
-                {
-                    ValuePosition = ListPosition.FirstOrDefault();
-                }
             }
         }
         private async Task LoadFactory()
@@ -175,10 +167,6 @@ namespace AquaSolution.Client.Components.Administration.Users
                 if (CreatedUserDto.FactoryId != null)
                 {
                     ValueFactory = ListFactory.FirstOrDefault(x => x.Id == CreatedUserDto.FactoryId);
-                }
-                else
-                {
-                    ValueFactory = ListFactory.FirstOrDefault();
                 }
             }
         }

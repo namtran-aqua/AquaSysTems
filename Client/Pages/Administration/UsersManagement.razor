@@ -61,7 +61,7 @@
         <button @onclick="AddUserDialog" class="btn btn-primary custom-button-type">
             <Icon Type="plus" />Created
         </button>
-        <InputFile class="custom-file-input" OnChange="@(e => HandleFileSelected(e))" />
+    @*     <InputFile class="custom-file-input" OnChange="@(e => HandleFileSelected(e))" /> *@
         <!-- #region Search -->
         <Input Placeholder="WorkDayId" Value="@WorkDayId" style="margin-left:2px;width:190px;font-size:12px" @onkeydown="HandleKeyDown" @oninput="WorkDayIdInputChanged" />
         <Input Placeholder="Full Name" Value="@FullName" style="margin-left:2px;width:190px;font-size:12px" @onkeydown="HandleKeyDown" @oninput="FullNameInputChanged" />
@@ -87,8 +87,9 @@
             </Column>
             <PropertyColumn Fixed="ColumnFixPlacement.Left" Title="Fullname" Property="c => c.FullName"></PropertyColumn>
             <PropertyColumn Title="WorkDayId" Property="c => c.WorkDayId"></PropertyColumn>
-            <PropertyColumn Title="Factory" Property="c => c.FactoryName"></PropertyColumn>
-            <PropertyColumn Title="DepartmentName" Property="c => c.DepartmentName"></PropertyColumn>
+            <PropertyColumn Sortable Title="Factory" Property="c => c.FactoryName"></PropertyColumn>
+            <PropertyColumn Sortable Title="DepartmentName" Property="c => c.DepartmentName"></PropertyColumn>
+            <PropertyColumn Sortable Title="Position" Property="c => c.PositionName"></PropertyColumn>
 
             <PropertyColumn Title="Email" Property="c => c.Email"></PropertyColumn>
             <PropertyColumn Sortable  Title="IsActive" Property="c => c.IsActive"></PropertyColumn>
