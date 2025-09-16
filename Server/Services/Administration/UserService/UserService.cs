@@ -470,6 +470,7 @@ public class UserService : IUserService
                        DepartmentType = department.DepartmentType,
                        WorkDayId = user.WorkDayId,
                        IsActive = user.IsActive,
+                       Email = user.Email
                    };
         var listUser = data.ToList();
         if (listUser != null)

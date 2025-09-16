@@ -58,9 +58,12 @@
             }
     </style>
     <div style="display: flex;  align-items: center; margin-bottom: 10px;">
-        <button @onclick="AddUserDialog" class="btn btn-primary custom-button-type">
-            <Icon Type="plus" />Created
-        </button>
+        @if (Created)
+        {
+            <button @onclick="AddUserDialog" class="btn btn-primary custom-button-type">
+                <Icon Type="plus" />Created
+            </button>
+        }
     @*     <InputFile class="custom-file-input" OnChange="@(e => HandleFileSelected(e))" /> *@
         <!-- #region Search -->
         <Input Placeholder="WorkDayId" Value="@WorkDayId" style="margin-left:2px;width:190px;font-size:12px" @onkeydown="HandleKeyDown" @oninput="WorkDayIdInputChanged" />
@@ -90,7 +93,6 @@
             <PropertyColumn Sortable Title="Factory" Property="c => c.FactoryName"></PropertyColumn>
             <PropertyColumn Sortable Title="DepartmentName" Property="c => c.DepartmentName"></PropertyColumn>
             <PropertyColumn Sortable Title="Position" Property="c => c.PositionName"></PropertyColumn>
-
             <PropertyColumn Title="Email" Property="c => c.Email"></PropertyColumn>
             <PropertyColumn Sortable  Title="IsActive" Property="c => c.IsActive"></PropertyColumn>
             <Column Fixed="ColumnFixPlacement.Right" TData="UserDto" Width="50px" Title="Action" Context="row">

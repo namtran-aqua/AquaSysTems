@@ -41,7 +41,7 @@ namespace AquaSolution.Client.Pages.Administration
         {
             await GetPage();
             await CheckPermission();
-            await LoadUsers();
+            await LoadData();
             isLoading = false;
         }
         private async Task GetPage()
@@ -51,12 +51,13 @@ namespace AquaSolution.Client.Pages.Administration
             PageId = await Http.GetFromJsonAsync<Guid>($"api/Page/GetPageIdByUrl/{url}");
 
         }
-        private async Task LoadUsers()
+        private async Task LoadData()
         {
             try
             {
                 users = await Http.GetFromJsonAsync<List<UserDto>>("api/user/get-all");
                 userFilter = users;
+                await Search();
             }
             catch (Exception ex)
             {
@@ -119,7 +120,7 @@ namespace AquaSolution.Client.Pages.Administration
             if (confirm)
             {
                 var response = await Http.DeleteAsync($"api/user/Delete/{user.Id}");
-                await LoadUsers();
+                await LoadData();
                 var content = await response.Content.ReadFromJsonAsync<ApiResponse>();
                 if (response.IsSuccessStatusCode)
                 {
@@ -140,7 +141,7 @@ namespace AquaSolution.Client.Pages.Administration
         #region Handle Data
         private async Task HandleSaved()
         {
-            await LoadUsers();
+            await LoadData();
         }
 
         #endregion
@@ -171,17 +172,6 @@ namespace AquaSolution.Client.Pages.Administration
         {
             try
             {
-                //var workDayId = WorkDayId?.Trim().ToLower();
-                //var fullName = FullName?.Trim().ToLower();
-                //var email = Email?.Trim().ToLower();
-
-                //var filtered = users
-                //    .Where(x =>
-                //        (string.IsNullOrWhiteSpace(workDayId) || (x.WorkDayId != null && x.WorkDayId.ToLower().Contains(workDayId))) &&
-                //        (string.IsNullOrWhiteSpace(fullName) || (x.FullName != null && x.FullName.ToLower().Contains(fullName))) &&
-                //        (string.IsNullOrWhiteSpace(email) || (x.Email != null && x.Email.ToLower().Contains(email)))
-                //    )
-                //    .ToList();
                 var workDayId = StringHelper.NormalizeText(WorkDayId?.Trim());
                 var fullName = StringHelper.NormalizeText(FullName?.Trim());
                 var email = StringHelper.NormalizeText(Email?.Trim());
@@ -202,7 +192,6 @@ namespace AquaSolution.Client.Pages.Administration
                 }
 
                 userFilter = filtered;
-                StateHasChanged();
             }
             catch (System.Exception ex)
             {

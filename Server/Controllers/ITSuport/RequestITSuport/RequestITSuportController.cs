@@ -1,9 +1,11 @@
 ﻿using AquaSolution.Server.Services.ITSuport.RequestSuportCategories;
+using AquaSolution.Server.SignalR;
 using AquaSolution.Shared.ITSuport.Attachments;
 using AquaSolution.Shared.ITSuport.RequestSuport;
 using AquaSolution.Shared.ITSuport.RequestSuportCategory;
 using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace AquaSolution.Server.Controllers.ITSuport.RequestSuportCategories
 {
@@ -12,10 +14,12 @@ namespace AquaSolution.Server.Controllers.ITSuport.RequestSuportCategories
     public class RequestITSuportController : ControllerBase
     {
         private readonly IRequestITSuportService _service;
-
-        public RequestITSuportController(IRequestITSuportService service)
+        private readonly IHubContext<SignalrHub> _hubContext;
+        public RequestITSuportController(IRequestITSuportService service,
+            IHubContext<SignalrHub> hubContext)
         {
             _service = service;
+            _hubContext = hubContext;
         }
 
         [HttpGet("get-all")]
@@ -44,7 +48,10 @@ namespace AquaSolution.Server.Controllers.ITSuport.RequestSuportCategories
 
             var success = await _service.CreatedAsync(dto);
             if (success)
+            {
+                await _hubContext.Clients.All.SendAsync("ChangeStatusRequestSuport");
                 return Ok(new { message = "Created successfully" });
+            }    
 
             return StatusCode(500, "Error creating category");
         }
@@ -55,7 +62,12 @@ namespace AquaSolution.Server.Controllers.ITSuport.RequestSuportCategories
         {
             var success = await _service.UpdateAsync(dto);
             if (success)
+            {
+                await _hubContext.Clients.All.SendAsync("ChangeStatusRequestSuport");
                 return Ok(new { message = "Updated successfully" });
+
+            }
+
 
             return NotFound("Category not found");
         }

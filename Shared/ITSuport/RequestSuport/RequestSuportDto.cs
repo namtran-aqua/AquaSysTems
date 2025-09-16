@@ -34,5 +34,6 @@ namespace AquaSolution.Shared.ITSuport.RequestSuport
         public Guid CreatedById { get; set; }
         public string CreatedName { get; set; }
         public string CreatedEmail { get; set; }
+        public DateTime? OnHoldDate { get; set; }
     }
 }

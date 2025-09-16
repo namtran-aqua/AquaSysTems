@@ -12,6 +12,7 @@ namespace AquaSolution.Shared.UserManagements
     {
         public Guid? DepartmentId { get;set; }
         public string WorkDayId { get; set; }
+        public string Email { get; set; }
         public DepartmentType? DepartmentType { get; set; }
         public Guid? FactoryId { get;set; }
         public  bool IsActive { get; set; }

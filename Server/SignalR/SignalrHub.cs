@@ -16,6 +16,11 @@ namespace AquaSolution.Server.SignalR
             await Clients.All.SendAsync("ChangeStatusRequestClinic");
         }
         #endregion
-
+        #region RequestSuport
+        public async Task ChangeStatusRequestSuport()
+        {
+            await Clients.All.SendAsync("ChangeStatusRequestSuport");
+        }
+        #endregion
     }
 }

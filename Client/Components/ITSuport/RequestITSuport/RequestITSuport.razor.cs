@@ -87,8 +87,6 @@ namespace AquaSolution.Client.Components.ITSuport.RequestITSuport
         private async Task SaveAsync()
         {
             var data = await MappingData();
-
-
             if (IsEdit)
             {
                 await UpdateAsync(data);
@@ -101,6 +99,7 @@ namespace AquaSolution.Client.Components.ITSuport.RequestITSuport
                     return;
                 }
                 await CreatedAsync(data);
+                await ConvertDataSendEmailRequest(RequestSuport, RequestSuportStatusType.Open);
             }
             IsModalVisible = false;
             await OnSave.InvokeAsync();
@@ -129,14 +128,61 @@ namespace AquaSolution.Client.Components.ITSuport.RequestITSuport
 
             if (!IsEdit)
             {
-               
+
                 data.Status = RequestSuportStatusType.Open;
                 data.CreatedDate = DateTime.Now;
             }
 
             return Task.FromResult(data);
         }
+        private async Task ConvertDataSendEmailRequest(RequestSuportDto data, RequestSuportStatusType statusType)
+        {
+            var technical = ListTechnician.FirstOrDefault(x => x.Id == data.TechnicianId);
+            var requester = ListUser.FirstOrDefault(x => x.Id == data.RequestById);
+            var dataSendEmail = new RequestSuportDto
+            {
+                RequestTitle = data.RequestTitle,
+                TechnicianName = technical.Name,
+                RequestDescription = data.RequestDescription,
+                RequestSolution = data.RequestSolution,
+                RequestSuportCategoryName = data.RequestSuportCategoryName,
+                Status = data.Status,
+                RequestByName = requester.Name,
+                TechnicianEmail = technical.Email,
+                RequestByEmail = requester.Email,
 
+                CreatedDate = data.CreatedDate,
+                InProgessDate = data.InProgessDate,
+                CancelDate = data.CancelDate,
+                OnHoldDate = data.OnHoldDate,
+                ResolveDate = data.ResolveDate,
+                DueDate = data.DueDate
+            };
+            switch (statusType)
+            {
+                case RequestSuportStatusType.InProgress:
+                    dataSendEmail.Status = RequestSuportStatusType.InProgress;
+                    dataSendEmail.InProgessDate = DateTime.Now;
+                    break;
+                case RequestSuportStatusType.Cancel:
+                    dataSendEmail.Status = RequestSuportStatusType.Cancel;
+                    dataSendEmail.CancelDate = DateTime.Now;
+                    break;
+                case RequestSuportStatusType.OnHold:
+                    dataSendEmail.Status = RequestSuportStatusType.OnHold;
+                    dataSendEmail.OnHoldDate = DateTime.Now;
+                    break;
+                case RequestSuportStatusType.Resolved:
+                    dataSendEmail.Status = RequestSuportStatusType.Resolved;
+                    dataSendEmail.ResolveDate = DateTime.Now;
+                    break;
+                case RequestSuportStatusType.Open:
+                    dataSendEmail.Status = RequestSuportStatusType.Open;
+                    dataSendEmail.CreatedDate = DateTime.Now;
+                    break;
+            }
+            await SendEmail.SendEmailStatusRequestAsync(dataSendEmail);
+        }
         private void Close()
         {
             IsModalVisible = false;
@@ -171,6 +217,7 @@ namespace AquaSolution.Client.Components.ITSuport.RequestITSuport
                     return;
                 }
             }
+            await ConvertDataSendEmailRequest(RequestSuport, data.Status);
             await UpdateAsync(data);
             IsModalVisible = false;
             await OnSave.InvokeAsync();

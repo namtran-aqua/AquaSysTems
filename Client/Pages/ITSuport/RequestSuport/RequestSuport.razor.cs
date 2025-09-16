@@ -7,6 +7,7 @@ using AquaSolution.Shared.ITSuport.RequestSuport;
 using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using System.ComponentModel.DataAnnotations;
 using System.Net.Http.Json;
@@ -19,7 +20,7 @@ namespace AquaSolution.Client.Pages.ITSuport.RequestSuport
         [Inject] private HttpClient Http { get; set; }
         private List<RequestSuportDto> _requestSuport = new();
         private List<RequestSuportDto> _requestSuportFillter = new();
-
+        private HubConnection? _hubConnection;
         private List<UserContributerDto> ListTechnician = new List<UserContributerDto>();
         private HasPermission hasPermission = new();
         private RequestITSuportDetailModal requestITSuportDetailModal =new();
@@ -34,6 +35,16 @@ namespace AquaSolution.Client.Pages.ITSuport.RequestSuport
         #region Innit
         protected override async Task OnInitializedAsync()
         {
+            _hubConnection = new HubConnectionBuilder()
+           .WithUrl(Navigation.ToAbsoluteUri(Navigation.BaseUri + "signalrhub"))
+           .Build();
+            _hubConnection.On("ChangeStatusRequestSuport", async () =>
+            {
+                await LoadData();
+                await Search();
+                //StateHasChanged();
+            });
+            await _hubConnection.StartAsync();
             await LoadData();
             await LoadStatusOptions();
             await LoadTechnician();
@@ -54,7 +65,7 @@ namespace AquaSolution.Client.Pages.ITSuport.RequestSuport
             var data = await Http.GetFromJsonAsync<List<RequestSuportDto>>("api/RequestITSuport/get-all");
             _requestSuport = data.ToList();
             _requestSuportFillter = _requestSuport.ToList();
-            await InvokeAsync(StateHasChanged);
+            StateHasChanged();
         }
         private async Task CheckPermission()
         {

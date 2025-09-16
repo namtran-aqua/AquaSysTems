@@ -30,10 +30,10 @@ namespace AquaSolution.Client.Shared
                     .WithUrl(NavigationManager.ToAbsoluteUri(NavigationManager.BaseUri + "signalrhub"))
                     .Build();
             _hubConnection.On("ReloadMenu", async () =>
-            {
+           {
                 await LoadAuthenticationState();
                 StateHasChanged();
-            });
+            }); 
             await _hubConnection.StartAsync();
             await LoadAuthenticationState();
             Auth.AuthenticationStateChanged += OnAuthenticationStateChanged;
