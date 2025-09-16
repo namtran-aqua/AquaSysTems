@@ -178,7 +178,7 @@ namespace AquaSolution.Client.Components.ITSuport.RequestITSuport
                     dataSendEmail.CreatedDate = DateTime.Now;
                     break;
             }
-            await SendEmailRequestSuport.SendEmailStatusRequestAsync(dataSendEmail);
+            //await SendEmailRequestSuport.SendEmailStatusRequestAsync(dataSendEmail);
         }
         private void Close()
         {

@@ -63,7 +63,7 @@
     }
 
 </style>
-<div class="login-page">
+@* <div class="login-page">
     <div class="login-box">
         <div class="login-logo">
             <img src="https://hrmsaquavietnam.com:6969/images/Aqua-Smart%20Home%20-%20blue.png" alt="AQUA smart home" />
@@ -74,6 +74,28 @@
         <button class="btn btn-primary" @onclick="DoLogin">Login</button>
     </div>
 </div>
- 
+  *@
+<div class="login-page">
+    <div class="login-box">
+        <div class="login-logo">
+            <img src="https://hrmsaquavietnam.com:6969/images/Aqua-Smart%20Home%20-%20blue.png" alt="AQUA smart home" />
+        </div>
+        <h4>Account Login</h4>
 
+        <input class="form-control" placeholder="Please input a username"
+               @bind="username" @onkeyup="HandleKeyUp" />
+
+        <div style="position: relative;">
+            <input class="form-control" placeholder="Please input a password"
+                   type="@(showPassword ? "text" : "password")"
+                   @bind="password" @onkeyup="HandleKeyUp" />
+            <span @onclick="TogglePassword"
+                  style="position:absolute; right:10px; top:50%; transform:translateY(-50%); cursor:pointer;font-size:20px">
+                @(showPassword ? "🙉" : "🙈")
+            </span>
+        </div>
+
+        <button class="btn btn-primary" @onclick="DoLogin">Login</button>
+    </div>
+</div>
 

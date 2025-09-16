@@ -43,7 +43,7 @@
             padding: 8px;
             text-align: center;
             box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.1);
-            width: 173vh !important;
+             background: transparent !important; 
         }
 
     </style>
@@ -99,13 +99,13 @@
    
 </div>
 
-<div style="width:100%;overflow-x:scroll ;max-height:70vh; ">
+<div style="width:98%;overflow-x:scroll ;max-height:70vh; ">
     <Table TItem="RequestSuportDto"
            Size="TableSize.Small"
            Class="customTable fix-table-header"
            DataSource="_requestSuportFillter">
         <ColumnDefinitions Context="row">
-            <PropertyColumn Fixed="ColumnFixPlacement.Left" Title="RequestTitle" Property="c => c.RequestTitle"></PropertyColumn>
+            <PropertyColumn  Width="300" Title="RequestTitle" Property="c => c.RequestTitle"></PropertyColumn>
             <PropertyColumn Width="220" Title="RequestBy" Property="c => c.RequestByName"></PropertyColumn>
             <PropertyColumn Width="220" Title="Requester Email" Property="c => c.RequestByEmail"></PropertyColumn>
             <PropertyColumn Width="220" Title="TechnicianName" Property="c => c.TechnicianName"></PropertyColumn>

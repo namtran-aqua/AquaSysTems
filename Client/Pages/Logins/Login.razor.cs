@@ -16,6 +16,7 @@ public partial class Login
     [Inject] private ISessionStorageService _sessionStorage { get; set; }
     private string username { get; set; }
     private string password { get; set; }
+    private bool showPassword = false;
 
     private async Task DoLogin()
     {
@@ -62,6 +63,11 @@ public partial class Login
         Nav.NavigateTo($"{baseUri}/");
 
     }
+    private void TogglePassword()
+    {
+        showPassword = !showPassword;
+    }
+
     private async Task HandleKeyUp(KeyboardEventArgs e)
     {
         if (e.Key == "Enter")

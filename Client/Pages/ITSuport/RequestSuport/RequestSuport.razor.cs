@@ -42,7 +42,7 @@ namespace AquaSolution.Client.Pages.ITSuport.RequestSuport
             {
                 await LoadData();
                 await Search();
-                //StateHasChanged();
+                StateHasChanged();
             });
             await _hubConnection.StartAsync();
             await LoadData();
@@ -202,20 +202,48 @@ namespace AquaSolution.Client.Pages.ITSuport.RequestSuport
                 .FirstOrDefault() as DisplayAttribute;
             return displayAttribute?.Name ?? status.ToString();
         }
+        //private async Task Search()
+        //{
+        //    try
+        //    {
+        //        var name = RequesterName?.Trim().ToLower();
+
+        //        var filtered = _requestSuport
+        //            .Where(x =>
+        //                (string.IsNullOrWhiteSpace(name) ||
+        //                    (!string.IsNullOrWhiteSpace(x.RequestByName) && x.RequestByName.ToLower().Contains(name))) &&
+        //                (TechnicalSuport == Guid.Empty || x.TechnicianId == TechnicalSuport) &&
+        //             (Status == -99 || x.Status == (RequestSuportStatusType)Status)
+        //            )
+        //            .ToList();
+        //        if (string.IsNullOrWhiteSpace(name) &&
+        //            TechnicalSuport == Guid.Empty && Status == -99)
+        //        {
+        //            filtered = _requestSuport;
+        //        }
+
+        //        _requestSuportFillter = filtered;
+        //    }
+        //    catch (System.Exception ex)
+        //    {
+        //        Console.WriteLine("Lỗi trong Search(): " + ex.Message);
+        //    }
+        //}
         private async Task Search()
         {
-            try
-            {
-                var name = RequesterName?.Trim().ToLower();
+            // Chuẩn hóa input (bỏ dấu + lowercase)
+                var name = StringHelper.NormalizeText(RequesterName?.Trim());
 
                 var filtered = _requestSuport
                     .Where(x =>
                         (string.IsNullOrWhiteSpace(name) ||
-                            (!string.IsNullOrWhiteSpace(x.RequestByName) && x.RequestByName.ToLower().Contains(name))) &&
+                            (!string.IsNullOrWhiteSpace(x.RequestByName) &&
+                             StringHelper.NormalizeText(x.RequestByName).Contains(name))) &&
                         (TechnicalSuport == Guid.Empty || x.TechnicianId == TechnicalSuport) &&
-                     (Status == -99 || x.Status == (RequestSuportStatusType)Status)
+                        (Status == -99 || x.Status == (RequestSuportStatusType)Status)
                     )
                     .ToList();
+
                 if (string.IsNullOrWhiteSpace(name) &&
                     TechnicalSuport == Guid.Empty && Status == -99)
                 {
@@ -223,13 +251,9 @@ namespace AquaSolution.Client.Pages.ITSuport.RequestSuport
                 }
 
                 _requestSuportFillter = filtered;
-                // StateHasChanged();
-            }
-            catch (System.Exception ex)
-            {
-                Console.WriteLine("Lỗi trong Search(): " + ex.Message);
-            }
+          
         }
+
         private Task Reset()
         {
             RequesterName = null;

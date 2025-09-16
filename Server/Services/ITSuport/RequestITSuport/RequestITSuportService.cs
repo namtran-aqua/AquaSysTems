@@ -49,7 +49,7 @@ namespace AquaSolution.Server.Services.ITSuport.RequestSuportCategories
                 RequestTitle = handleRequestSuportDto.RequestTitle,
                 CreatedById = handleRequestSuportDto.CreatedById,
             };
-            if(handleRequestSuportDto.Attachments !=null)
+            if (handleRequestSuportDto.Attachments != null)
             {
                 foreach (var attach in handleRequestSuportDto.Attachments)
                 {
@@ -64,7 +64,7 @@ namespace AquaSolution.Server.Services.ITSuport.RequestSuportCategories
                         CreatedTime = attach.CreatedTime
                     };
                     await _attachmentRepo.InsertAsync(attachment);
-                }    
+                }
             }
             await _requestSuportRepo.InsertAsync(requestSuport);
 
@@ -75,9 +75,9 @@ namespace AquaSolution.Server.Services.ITSuport.RequestSuportCategories
         public async Task<bool> DeleteAssync(Guid requestITSuportId)
         {
             var requestSuport = await _requestSuportRepo.FirstOrDefaultAsync(x => x.Id == requestITSuportId);
-            if(requestSuport !=null)
+            if (requestSuport != null)
             {
-              return await _requestSuportRepo.DeleteAsync(requestSuport);
+                return await _requestSuportRepo.DeleteAsync(requestSuport);
             }
             return false;
         }
@@ -87,7 +87,7 @@ namespace AquaSolution.Server.Services.ITSuport.RequestSuportCategories
             var user = await _userRepo.GetQueryableAsync();
             var query = from requestSuport in await _requestSuportRepo.GetQueryableAsync()
                         join created in user on requestSuport.CreatedById equals created.Id
-  
+
 
                         join requestCategory in await _requestSuportCategoryRepo.GetQueryableAsync()
                         on requestSuport.RequestSuportCategoryId equals requestCategory.Id
@@ -95,13 +95,18 @@ namespace AquaSolution.Server.Services.ITSuport.RequestSuportCategories
                         join requestBy in user on requestSuport.RequestBy equals requestBy.Id
 
                         join technicial in user on requestSuport.TechnicianId equals technicial.Id
-                        into t from technicial in t.DefaultIfEmpty()
+                        into t
+                        from technicial in t.DefaultIfEmpty()
 
                         join department in await _departmentRepo.GetQueryableAsync()
                         on requestBy.DepartmentId equals department.Id
+                        into d
+                        from department in d.DefaultIfEmpty()
 
                         join factory in await _factoryRepo.GetQueryableAsync()
                         on requestBy.FactoryId equals factory.Id
+                        into f
+                        from factory in f.DefaultIfEmpty()
                         select new RequestSuportDto
                         {
                             Id = requestSuport.Id,
@@ -124,11 +129,11 @@ namespace AquaSolution.Server.Services.ITSuport.RequestSuportCategories
                             CancelDate = requestSuport.CancelDate,
                             Department = department.Name,
                             Factory = $"{factory.Name} - {factory.Code}",
-                            CreatedName =created.FullName,
+                            CreatedName = created.FullName,
                             CreatedEmail = created.Email,
                         };
             var data = query
-                    .OrderByDescending(x => x.CreatedDate) 
+                    .OrderByDescending(x => x.CreatedDate)
                     .ToList();
             if (data != null)
             {
@@ -188,9 +193,9 @@ namespace AquaSolution.Server.Services.ITSuport.RequestSuportCategories
                         requestSuport.CancelDate = handleRequestSuportDto.CancelDate;
                         break;
 
-                }    
+                }
                 requestSuport.DueDate = handleRequestSuportDto.DueDate;
-                
+
                 var attachments = await _attachmentRepo.GetListAsync(x => x.RequestSuportId == requestSuport.Id);
                 if (attachments != null && attachments.Any())
                 {
