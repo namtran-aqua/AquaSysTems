@@ -43,7 +43,7 @@
             padding: 8px;
             text-align: center;
             box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.1);
-             background: transparent !important; 
+            background: transparent !important;
         }
 
     </style>
@@ -51,40 +51,12 @@
         <button @onclick="CreatedAsync" class="btn btn-primary custom-button-type">
             <Icon Type="plus" />Created
         </button>
-        <!-- #region Search -->
         <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;margin-left:5px">
             <Input Placeholder="Tên người yêu cầu"
                    Value="@RequesterName"
                    style="width:170px;font-size:12px"
                    @onkeydown="HandleKeyDown"
                    @oninput="RequesterNameInputChanged" />
-
-            <div>
-                <span style="font-weight:600">Technical</span>
-                <select @bind="TechnicalSuport" style="font-size:12px; padding:2px;width:170px">
-                    <option value="@ListTechnicianFilter.LastOrDefault()?.Id" style="text-align:center">
-                        @ListTechnicianFilter.LastOrDefault()?.Name
-                    </option>
-                    @foreach (var tech in ListTechnicianFilter)
-                    {
-                        <option value="@tech.Id"><Icon Type="team" />@tech.Name</option>
-                    }
-                </select>
-            </div>
-
-            <div>
-                <span style="font-weight:600">Status</span>
-                <select @bind="Status" style="font-size:12px; padding:2px;width:100px;text-align:center;">
-                    <option value="-99">@StatusOptionsFilter.FirstOrDefault(x => (int)x.Key == -99).Value</option>
-                    @foreach (var tech in StatusOptionsFilter.Where(x => x.Key != (RequestSuportStatusType)(-99)))
-                    {
-                        <option style="color:@GetTagColor.GetTagColorCss(tech.Key.ToString())" value="@((int)tech.Key)">
-                            @tech.Value
-                        </option>
-                    }
-                </select>
-            </div>
-
             <button @onclick="Search" style="border-color:#fff">
                 <Icon Type="search" />Search
             </button>
@@ -93,28 +65,30 @@
                 <Icon Type="undo" />Reset
             </button>
         </div>
-
-        <!-- #endregion -->
     </div>
-   
+
 </div>
 
 <div style="width:98%;overflow-x:scroll ;max-height:70vh; ">
+
     <Table TItem="RequestSuportDto"
            Size="TableSize.Small"
+           @ref="@tableRef"
            Class="customTable fix-table-header"
            DataSource="_requestSuportFillter">
         <ColumnDefinitions Context="row">
-            <PropertyColumn  Width="300" Title="RequestTitle" Property="c => c.RequestTitle"></PropertyColumn>
-            <PropertyColumn Width="220" Title="RequestBy" Property="c => c.RequestByName"></PropertyColumn>
-            <PropertyColumn Width="220" Title="Requester Email" Property="c => c.RequestByEmail"></PropertyColumn>
-            <PropertyColumn Width="220" Title="TechnicianName" Property="c => c.TechnicianName"></PropertyColumn>
-            <PropertyColumn Width="80" Title="Category" Property="c => c.RequestSuportCategoryName"></PropertyColumn>
-            <PropertyColumn Width="180" Title="CreatedDate" Property="c => c.CreatedDate"></PropertyColumn>
-            <PropertyColumn Width="100" Title="Status" Property="c => c.Status">
+            <PropertyColumn Width="300" Title="RequestTitle" Property="c => c.RequestTitle"></PropertyColumn>
+            <PropertyColumn Width="100" Title="Status" Property="c => c.Status" Filters="_statusFilter">
                 <Tag Color="@GetTagColor.GetTagColorCss(row.Status.ToString())">@row.Status</Tag>
             </PropertyColumn>
-            <Column Fixed="ColumnFixPlacement.Right" TData="RequestSuportDto" Width="50px"  Context="row">
+            <PropertyColumn Width="220" Title="RequestBy" Property="c => c.RequestByName"></PropertyColumn>
+            <PropertyColumn Width="220" Title="Requester Email" Property="c => c.RequestByEmail"></PropertyColumn>
+            <PropertyColumn Width="220" Title="TechnicianName" Property="c => c.TechnicianName" Filters="_technicianNameFilter"></PropertyColumn>
+            <PropertyColumn Width="80" Title="Category" Property="c => c.RequestSuportCategoryName"></PropertyColumn>
+            <PropertyColumn Width="180" Title="CreatedDate" Property="c => c.CreatedDate"></PropertyColumn>
+
+
+            <Column Fixed="ColumnFixPlacement.Right" TData="RequestSuportDto" Width="50px" Context="row">
                 <Template>
                     <Popover Title="Actions" Trigger="new Trigger[] { Trigger.Click }" Placement="Placement.Bottom">
                         <ChildContent>
