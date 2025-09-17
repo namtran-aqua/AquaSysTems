@@ -1,4 +1,5 @@
 ﻿
+using AntDesign;
 using AquaSolution.Client.Common;
 using AquaSolution.Client.Components.ITSuport.RequestITSuport;
 using AquaSolution.Shared.Enum;
@@ -18,12 +19,13 @@ namespace AquaSolution.Client.Pages.ITSuport.RequestSuport
     {
         #region Declaration
         [Inject] private HttpClient Http { get; set; }
+
         private List<RequestSuportDto> _requestSuport = new();
         private List<RequestSuportDto> _requestSuportFillter = new();
         private HubConnection? _hubConnection;
         private List<UserContributerDto> ListTechnician = new List<UserContributerDto>();
         private HasPermission hasPermission = new();
-        private RequestITSuportDetailModal requestITSuportDetailModal =new();
+        private RequestITSuportDetailModal requestITSuportDetailModal = new();
         private UserDto CurrenUser { get; set; }
         private RequestITSuport requestITSuport = new();
         private List<AttachmentDto> Attachment = new();
@@ -98,7 +100,7 @@ namespace AquaSolution.Client.Pages.ITSuport.RequestSuport
 
             if (response.IsSuccessStatusCode)
             {
-              
+
                 await Message.Success("Delete successfully !");
             }
             else
@@ -113,7 +115,7 @@ namespace AquaSolution.Client.Pages.ITSuport.RequestSuport
             Attachment = new();
             var data = await Http.GetFromJsonAsync<List<AttachmentDto>>($"api/RequestITSuport/get-attechment/{requestSuportId}");
             Attachment = data.ToList();
-            foreach(var item in Attachment)
+            foreach (var item in Attachment)
             {
                 var url = $"{item.FilePath}";
                 var response = await Http.DeleteAsync($"api/Common/delete-file-suport?avatarUrl={url}");
@@ -124,35 +126,10 @@ namespace AquaSolution.Client.Pages.ITSuport.RequestSuport
             await requestITSuportDetailModal.ShowModal(requestSuportDto);
         }
         #endregion
-        #region Search
+        #region Filter
         private Func<Task> SelectedChange;
         private string? RequesterName { get; set; }
-        private Guid _technicalSuport { get; set; } = Guid.Empty;
-        private Guid TechnicalSuport
-        {
-            get => _technicalSuport;
-            set
-            {
-                if (value != _technicalSuport)
-                {
-                    _technicalSuport = value;
-                    SelectedChange.Invoke();
-                }
-            }
-        }
-        private int _status { get; set; } = -99;
-        private int Status
-        {
-            get => _status;
-            set
-            {
-                if (value != _status)
-                {
-                    _status = value;
-                    SelectedChange.Invoke();
-                }
-            }
-        }
+
         private async Task HandleKeyDown(KeyboardEventArgs e)
         {
             if (e.Key == "Enter")
@@ -160,108 +137,66 @@ namespace AquaSolution.Client.Pages.ITSuport.RequestSuport
                 await Search();
             }
         }
- 
+        TableFilter<string>[] _technicianNameFilter = Array.Empty<TableFilter<string>>();
         private void RequesterNameInputChanged(ChangeEventArgs e)
         {
             RequesterName = e.Value?.ToString();
         }
-
-        private List<UserContributerDto> ListTechnicianFilter = new();
-
-        private List<KeyValuePair<RequestSuportStatusType, string>> StatusOptions = new();
-        private List<KeyValuePair<RequestSuportStatusType, string>> StatusOptionsFilter = new();
-
+        TableFilter<RequestSuportStatusType>[] _statusFilter = Array.Empty<TableFilter<RequestSuportStatusType>>();
         private async Task LoadTechnician()
         {
             ListTechnician = new List<UserContributerDto>();
             var data = await Http.GetFromJsonAsync<List<UserContributerDto>>("api/user/get-contributer");
             ListTechnician = data.Where(x => x.DepartmentType == DepartmentType.IT).ToList();
-            ListTechnician.Add(new UserContributerDto
-            {
-                Id = Guid.Empty,
-                Name = "--ALL--"
-            });
-            ListTechnicianFilter = ListTechnician;
+            _technicianNameFilter = ListTechnician
+               .Select(x => new TableFilter<string>
+               {
+                   Text = x.Name,
+                   Value = x.Name,
+                   Selected = false
+               })
+               .ToArray();
         }
 
         private async Task LoadStatusOptions()
         {
-            StatusOptions = Enum.GetValues(typeof(RequestSuportStatusType))
-                    .Cast<RequestSuportStatusType>()
-                    .Select(e => new KeyValuePair<RequestSuportStatusType, string>(e, GetDisplayName(e)))
-                    .ToList();
-            StatusOptionsFilter = StatusOptions;
-            StatusOptionsFilter.Add(new KeyValuePair<RequestSuportStatusType, string>((RequestSuportStatusType)(-99), "--ALL--"));
+            _statusFilter = Enum.GetValues(typeof(RequestSuportStatusType))
+               .Cast<RequestSuportStatusType>()
+               .Select(e => new TableFilter<RequestSuportStatusType>
+               {
+                   Text =  EnumHelper.GetDisplayName(e), 
+                   Value = e,                
+                   Selected = false
+               })
+               .ToArray();
 
         }
-        private string GetDisplayName(RequestSuportStatusType status)
-        {
-            var displayAttribute = status.GetType()
-                .GetField(status.ToString())
-                .GetCustomAttributes(typeof(DisplayAttribute), false)
-                .FirstOrDefault() as DisplayAttribute;
-            return displayAttribute?.Name ?? status.ToString();
-        }
-        //private async Task Search()
-        //{
-        //    try
-        //    {
-        //        var name = RequesterName?.Trim().ToLower();
-
-        //        var filtered = _requestSuport
-        //            .Where(x =>
-        //                (string.IsNullOrWhiteSpace(name) ||
-        //                    (!string.IsNullOrWhiteSpace(x.RequestByName) && x.RequestByName.ToLower().Contains(name))) &&
-        //                (TechnicalSuport == Guid.Empty || x.TechnicianId == TechnicalSuport) &&
-        //             (Status == -99 || x.Status == (RequestSuportStatusType)Status)
-        //            )
-        //            .ToList();
-        //        if (string.IsNullOrWhiteSpace(name) &&
-        //            TechnicalSuport == Guid.Empty && Status == -99)
-        //        {
-        //            filtered = _requestSuport;
-        //        }
-
-        //        _requestSuportFillter = filtered;
-        //    }
-        //    catch (System.Exception ex)
-        //    {
-        //        Console.WriteLine("Lỗi trong Search(): " + ex.Message);
-        //    }
-        //}
         private async Task Search()
         {
-            // Chuẩn hóa input (bỏ dấu + lowercase)
-                var name = StringHelper.NormalizeText(RequesterName?.Trim());
+            var name = StringHelper.NormalizeText(RequesterName?.Trim());
 
-                var filtered = _requestSuport
-                    .Where(x =>
-                        (string.IsNullOrWhiteSpace(name) ||
-                            (!string.IsNullOrWhiteSpace(x.RequestByName) &&
-                             StringHelper.NormalizeText(x.RequestByName).Contains(name))) &&
-                        (TechnicalSuport == Guid.Empty || x.TechnicianId == TechnicalSuport) &&
-                        (Status == -99 || x.Status == (RequestSuportStatusType)Status)
-                    )
-                    .ToList();
+            var filtered = _requestSuport
+                .Where(x =>
+                    (string.IsNullOrWhiteSpace(name) ||
+                        (!string.IsNullOrWhiteSpace(x.RequestByName) &&
+                         StringHelper.NormalizeText(x.RequestByName).Contains(name)))
+                )
+                .ToList();
 
-                if (string.IsNullOrWhiteSpace(name) &&
-                    TechnicalSuport == Guid.Empty && Status == -99)
-                {
-                    filtered = _requestSuport;
-                }
-
-                _requestSuportFillter = filtered;
-          
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                filtered = _requestSuport;
+            }
+            _requestSuportFillter = filtered;
         }
-
-        private Task Reset()
+        private Table<RequestSuportDto> tableRef;
+        private async Task Reset()
         {
             RequesterName = null;
-            TechnicalSuport = Guid.Empty;
-            Status = -99;
             _requestSuportFillter = _requestSuport;
-            StateHasChanged();
-            return Task.CompletedTask;
+            tableRef?.ReloadData();
+            await InvokeAsync(StateHasChanged);
+
         }
         #endregion
     }

@@ -55,7 +55,7 @@
            Class="customTable fix-table-header"
            DataSource="inventoryPeriodDtos">
         <ColumnDefinitions Context="row">
-            <PropertyColumn Width="100" Title="Code" Property="c => c.Code"></PropertyColumn>
+            <PropertyColumn Width="200" Title="Code" Property="c => c.Code"></PropertyColumn>
             <PropertyColumn Width="150" Title="Name" Property="c => c.Name">
                 <Template>
                     <a href="javascript:void(0);" @onclick="() => View(row)">
@@ -63,8 +63,10 @@
                     </a>
                 </Template>
             </PropertyColumn>
+            <PropertyColumn Width="80" Title="Month" Property="c => c.Month"></PropertyColumn>
+            <PropertyColumn Width="80" Title="Year" Property="c => c.Year"></PropertyColumn>
             <PropertyColumn Width="200" Title="CreatedBy" Property="c => c.CreatedByName"></PropertyColumn>
-            <PropertyColumn Width="160" Title="TimeCreated" Property="c => c.CreatedDate" Format="dd/MM/yyy"></PropertyColumn>
+            <PropertyColumn Width="120" Title="TimeCreated" Property="c => c.CreatedDate" Format="dd/MM/yyy HH:mm"></PropertyColumn>
         </ColumnDefinitions>
     </Table> 
 </div>

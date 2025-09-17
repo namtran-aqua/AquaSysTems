@@ -3,7 +3,11 @@ using AntDesign;
 using AquaSolution.Client.Common;
 using AquaSolution.Client.Components.Administration.Users;
 using AquaSolution.Shared.CommonDto;
+using AquaSolution.Shared.Departments;
 using AquaSolution.Shared.Enum;
+using AquaSolution.Shared.Factory;
+using AquaSolution.Shared.ITSuport.RequestSuport;
+using AquaSolution.Shared.Position;
 using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
@@ -42,6 +46,7 @@ namespace AquaSolution.Client.Pages.Administration
             await GetPage();
             await CheckPermission();
             await LoadData();
+            await LoadDataFilterAsync();
             isLoading = false;
         }
         private async Task GetPage()
@@ -148,7 +153,6 @@ namespace AquaSolution.Client.Pages.Administration
         #region Search
         private string? WorkDayId { get; set; }
         private string? FullName { get; set; }
-        private string? Email { get; set; }
         private async Task HandleKeyDown(KeyboardEventArgs e)
         {
             if (e.Key == "Enter")
@@ -164,29 +168,22 @@ namespace AquaSolution.Client.Pages.Administration
         {
             FullName = e.Value?.ToString();
         }
-        private void EmailInputChanged(ChangeEventArgs e)
-        {
-            Email = e.Value?.ToString();
-        }
         private async Task Search()
         {
             try
             {
                 var workDayId = StringHelper.NormalizeText(WorkDayId?.Trim());
                 var fullName = StringHelper.NormalizeText(FullName?.Trim());
-                var email = StringHelper.NormalizeText(Email?.Trim());
 
                 var filtered = users
                     .Where(x =>
                         (string.IsNullOrWhiteSpace(workDayId) || (!string.IsNullOrEmpty(x.WorkDayId) && StringHelper.NormalizeText(x.WorkDayId).Contains(workDayId))) &&
-                        (string.IsNullOrWhiteSpace(fullName) || (!string.IsNullOrEmpty(x.FullName) && StringHelper.NormalizeText(x.FullName).Contains(fullName))) &&
-                        (string.IsNullOrWhiteSpace(email) || (!string.IsNullOrEmpty(x.Email) && StringHelper.NormalizeText(x.Email).Contains(email)))
+                        (string.IsNullOrWhiteSpace(fullName) || (!string.IsNullOrEmpty(x.FullName) && StringHelper.NormalizeText(x.FullName).Contains(fullName)))
                     )
                     .ToList();
 
                 if (string.IsNullOrWhiteSpace(workDayId) &&
-                    string.IsNullOrWhiteSpace(fullName) &&
-                    string.IsNullOrWhiteSpace(email))
+                    string.IsNullOrWhiteSpace(fullName))
                 {
                     filtered = users;
                 }
@@ -198,14 +195,62 @@ namespace AquaSolution.Client.Pages.Administration
                 Console.WriteLine("Lỗi trong Search(): " + ex.Message);
             }
         }
-        private Task Reset()
+        private async Task Reset()
         {
             WorkDayId = null;
             FullName = null;
-            Email = null;
             userFilter = users;
-            StateHasChanged();
-            return Task.CompletedTask;
+            tableRef?.ReloadData();
+            await InvokeAsync(StateHasChanged);
+        }
+        private Table<UserDto> tableRef;
+        private List<DepartmentDto> ListDepartment = new();
+        private List<FactoryDto> ListFactory = new();
+        private List<PositionDto> ListPosition = new();
+        TableFilter<string>[] _departmentFilter = Array.Empty<TableFilter<string>>();
+        TableFilter<string>[] _factoryFilter = Array.Empty<TableFilter<string>>();
+        TableFilter<string>[] _positionFilter = Array.Empty<TableFilter<string>>();
+
+        private async Task LoadDataFilterAsync()
+        {
+            ListDepartment = await Http.GetFromJsonAsync<List<DepartmentDto>>("api/department/get-all") ?? new List<DepartmentDto>();
+            _departmentFilter = ListDepartment
+                .Where(x => !string.IsNullOrWhiteSpace(x.Name)) // loại bỏ null/empty
+                .Select(x => new TableFilter<string>
+                {
+                    Text = x.Name,
+                    Value = x.Name,
+                    Selected = false
+                })
+                .ToArray();
+
+            ListFactory = await Http.GetFromJsonAsync<List<FactoryDto>>("api/factory/get-all") ?? new List<FactoryDto>();
+            _factoryFilter = ListFactory
+                .Where(x => !string.IsNullOrWhiteSpace(x.Name))
+                .Select(x => new TableFilter<string>
+                {
+                    Text = x.Name,
+                    Value = x.Name,
+                    Selected = false
+                })
+                .ToArray();
+
+            ListPosition = await Http.GetFromJsonAsync<List<PositionDto>>("api/position/get-all") ?? new List<PositionDto>();
+            _positionFilter = ListPosition
+                .Where(x => !string.IsNullOrWhiteSpace(x.Name))
+                .Select(x => new TableFilter<string>
+                {
+                    Text = x.Name,
+                    Value = x.Name,
+                    Selected = false
+                })
+                .ToArray();
+            foreach (var user in users)
+            {
+                user.FactoryName ??= string.Empty;
+                user.DepartmentName ??= string.Empty;
+                user.PositionName ??= string.Empty;
+            }
         }
         #endregion
         #region Import

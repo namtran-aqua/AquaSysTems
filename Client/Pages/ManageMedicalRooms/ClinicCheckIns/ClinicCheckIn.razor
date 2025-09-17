@@ -48,12 +48,29 @@
             min-height: 65vh !important;
         }
     </style>
+    <div style="display: flex;  align-items: center; margin-bottom: 10px; ">
+        <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;margin-left:5px">
+            <Input Placeholder="Tên người yêu cầu"
+                   Value="@RequesterName"
+                   style="width:170px;font-size:12px"
+                   @onkeydown="HandleKeyDown"
+                   @oninput="RequesterNameInputChanged" />
+            <button @onclick="Search" style="border-color:#fff">
+                <Icon Type="search" />Search
+            </button>
+
+            <button @onclick="Reset" style="border-color:#fff">
+                <Icon Type="undo" />Reset
+            </button>
+        </div>
+    </div>
 </div>
 <div style="width:98%;overflow-x:scroll ;max-height:70vh; ">
     <Table TItem="MyRequestClinicDto"
            Size="TableSize.Small"
+           @ref="@tableRef"
            Class="customTable fix-table-header"
-           DataSource="RequestClinicUser">
+           DataSource="FilterRequestClinicUser">
         <ColumnDefinitions Context="row">
             <PropertyColumn Width="400" Title="RequestTitle" Property="c => c.RequestTitle">
                 <Template>
@@ -62,11 +79,13 @@
                     </a>
                 </Template>
             </PropertyColumn>
-            <PropertyColumn Width="80" Title="PurposeType" Property="c => c.PurposeType"></PropertyColumn>
-            <PropertyColumn Width="180" Title="Note" Property="c => c.Note"></PropertyColumn>
-            <PropertyColumn Width="250" Title="CreatedBy" Property="c => c.CreatedName"></PropertyColumn>
+            <PropertyColumn Width="150" Title="Status" Property="c => c.Status" Filters="_statusFilter">
+                <Tag Color="@GetTagColor.GetTagColorCss(row.Status.ToString())">@row.Status</Tag>
+            </PropertyColumn>
+            <PropertyColumn Width="80" Title="PurposeType" Property="c => c.PurposeType" Filters="_purposeTypeFilter"></PropertyColumn>
+            <PropertyColumn Width="250" Title="Requester" Property="c => c.UserRequestName"></PropertyColumn>
             <PropertyColumn Width="130" Title="CreatedDate" Property="c => c.CreatedDate" Format="dd/MM/yyyy HH:mm"></PropertyColumn>
-            <PropertyColumn Width="150" Title="Status" Style="@($"color: {GetTagColor.GetTagColorCss(row.Status.ToString())}")" Property="c => c.Status"></PropertyColumn>
+            <PropertyColumn Width="180" Title="Note" Property="c => c.Note"></PropertyColumn>
             <Column Fixed="ColumnFixPlacement.Right" TData="ProductDto" Width="50px" Title="" Context="row">
                 @if (row.Status == StatusClinicType.Approval)
                 {
