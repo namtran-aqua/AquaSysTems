@@ -204,7 +204,47 @@ public class InventoryService : IInventoryService
 
                 var prevDetail = prevDetails.FirstOrDefault(d => d.ProductId == item.ProductId);
                 if (prevDetail != null)
+                {
                     reportInventory.BeginningInventory = prevDetail.TotalStock;
+                    #region Lấy tổng số lượng mới nhập (NewInbound)
+                    var newInbound = importDetails
+                        .Join(imports,
+                              detail => detail.WarehouseImportId,
+                              import => import.Id,
+                              (detail, import) => new { detail, import })
+                        .Where(x => x.detail.ProductId == item.ProductId
+                                    && x.import.CreatedDate.Year == year
+                                    && x.import.CreatedDate.Month == month)
+                        .Sum(x => x.detail.Quantity);
+                    reportInventory.NewInbound = newInbound;
+                    #endregion
+                    // Lấy tổng thuốc xuất kho trong tháng trước
+                    var consumExport = exportDetails
+                        .Join(exports,
+                              detail => detail.WarehouseExportId,
+                              export => export.Id,
+                              (detail, export) => new { detail, export })
+                        .Where(x => x.detail.ProductId == item.ProductId
+                                    && x.export.CreatedDate.Year == year
+                                    && x.export.CreatedDate.Month == month)
+                        .Sum(x => x.detail.Quantity);
+
+                    // Lấy tổng thuốc đã dùng trong đơn thuốc trong tháng trước
+                    var consumPrescription = prescriptionDetails
+                        .Join(prescriptions,
+                              detail => detail.PrescriptionId,
+                              pres => pres.Id,
+                              (detail, pres) => new { detail, pres })
+                        .Where(x => x.detail.ProductId == item.ProductId
+                                    && x.pres.CreatedDate.Year == year
+                                    && x.pres.CreatedDate.Month == month)
+                        .Sum(x => x.detail.Quantity);
+
+                    // Cộng lại
+                    reportInventory.ConsumPosition = consumExport + consumPrescription;
+                }    
+                   
+
                 else
                     reportInventory.BeginningInventory = item.TotalQuantity;
                 //=================================================================
