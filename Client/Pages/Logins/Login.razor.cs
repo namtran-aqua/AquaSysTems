@@ -39,6 +39,7 @@ public partial class Login
         if (response.StatusCode == HttpStatusCode.Unauthorized)
         {
             await Message.Error("Incorrect Account or Password, Please Check Again !");
+            return;
         }
         if (!response.IsSuccessStatusCode)
         {
