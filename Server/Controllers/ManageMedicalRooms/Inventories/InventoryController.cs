@@ -39,5 +39,21 @@ namespace AquaSolution.Server.Controllers.ManageMedicalRooms.Inventories
 
             return StatusCode(500, "Failed to create report");
         }
+        [HttpGet("get-report/{month:int}/{year:int}")]
+        public async Task<IActionResult> GetReportByMonthYear(int month, int year)
+        {
+            var result = await _inventoryService.LoadReportAsync(month, year);
+
+            if (result == null)
+                result = new LoadReportInventoryDto
+                {
+                    Month = month,
+                    Year = year,
+                    LoadReportInventoryDetail = new List<LoadReportInventoryDetailDto>()
+                };
+
+            return Ok(result);
+        }
+
     }
 }

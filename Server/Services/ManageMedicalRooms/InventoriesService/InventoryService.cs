@@ -21,6 +21,8 @@ public class InventoryService : IInventoryService
 
     private readonly IRepository<ReportInventoryDetail> _reportInventoryDetailRepo;
     private readonly IRepository<ReportInventory> _reportInventoryRepo;
+    private readonly IRepository<User> _userRepo;
+
 
     public InventoryService(IRepository<Product> productRepo,
         IRepository<Inventories> inventoryRepo,
@@ -31,7 +33,8 @@ public class InventoryService : IInventoryService
         IRepository<Prescription> prescriptionRepo,
         IRepository<PrescriptionDetail> prescriptionDetailRepo,
         IRepository<ReportInventoryDetail> reportInventoryDetailRepo,
-        IRepository<ReportInventory> reportInventoryRepo
+        IRepository<ReportInventory> reportInventoryRepo, IRepository<User> userRepo
+
 
         )
     {
@@ -45,6 +48,7 @@ public class InventoryService : IInventoryService
         _prescriptionDetailRepo = prescriptionDetailRepo;
         _reportInventoryRepo = reportInventoryRepo;
         _reportInventoryDetailRepo = reportInventoryDetailRepo;
+        _userRepo = userRepo;
     }
 
     public async Task<bool> InsertReportInventoryAsync(CreatedReportInventoryDto createdReportInventoryDto)
@@ -130,6 +134,48 @@ public class InventoryService : IInventoryService
 
     }
 
+    public async Task<LoadReportInventoryDto> LoadReportAsync(int month, int year)
+    {
+        // Lấy báo cáo theo tháng + năm
+        var reportInventory = await _reportInventoryRepo
+            .FirstOrDefaultAsync(x => x.Month == month && x.Year == year);
+
+        if (reportInventory == null)
+            return null;
+
+        // Join sang user để lấy CreatedByName
+        var user = reportInventory.CreatedBy != Guid.Empty
+            ? await _userRepo.FirstOrDefaultAsync(u => u.Id == reportInventory.CreatedBy)
+            : null;
+
+        // Lấy danh sách chi tiết
+        var details = await _reportInventoryDetailRepo
+            .GetListAsync(x => x.ReportInventoryId == reportInventory.Id);
+
+        // Map DTO
+        var result = new LoadReportInventoryDto
+        {
+            Id = reportInventory.Id,
+            CreatedBy = reportInventory.CreatedBy,
+            CreatedByName = user?.FullName ?? "Unknown",
+            CreatedDate = reportInventory.CreatedDate,
+            Month = reportInventory.Month,
+            Year = reportInventory.Year,
+            LoadReportInventoryDetail = details.Select(d => new LoadReportInventoryDetailDto
+            {
+                ProductId = d.ProductId,
+                ProductName = d.ProductName,
+                ExpirationDate = d.ExpirationDate,
+                BeginningInventory = d.BeginningInventory,
+                NewInbound = d.NewInbound,
+                ConsumPosition = d.ConsumPosition,
+                TotalStock = d.TotalStock,
+                Unit = d.Unit
+            }).ToList()
+        };
+
+        return result;
+    }
     public async Task<LoadReportInventoryDto> LoadReportInventoryAsync()
     {
 

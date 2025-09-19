@@ -19,8 +19,10 @@ namespace AquaSolution.Client.Pages.ManageMedicalRooms.ReportInventories
         }
         private async Task LoadData()
         {
+            //var data = await Http.GetFromJsonAsync<LoadReportInventoryDto>(
+            //    $"api/Inventory/get-report");
             var data = await Http.GetFromJsonAsync<LoadReportInventoryDto>(
-                $"api/Inventory/get-report");
+                    $"api/Inventory/get-report/{MonthValue}/{YearValue}");
             loadReportInventory = data;
 
             await InvokeAsync(StateHasChanged);

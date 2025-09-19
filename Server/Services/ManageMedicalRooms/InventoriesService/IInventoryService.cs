@@ -6,6 +6,8 @@ namespace AquaSolution.Server.Services.ManageMedicalRooms.InventoriesService
     {
         Task<List<InventoryDto>> LoadListAsync();
         Task<LoadReportInventoryDto> LoadReportInventoryAsync();
+        Task<LoadReportInventoryDto> LoadReportAsync(int month, int year);
+
         Task<bool> InsertReportInventoryAsync(CreatedReportInventoryDto createdReportInventoryDto);
 
     }
