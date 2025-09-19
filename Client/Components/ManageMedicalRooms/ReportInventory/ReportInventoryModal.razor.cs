@@ -21,6 +21,8 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.ReportInventory
         #region Innit 
         public async Task ShowModal()
         {
+            var CurrenUserClass = new CurrenUser(Http, AuthStateProvider);
+            CurrenUser = await CurrenUserClass.LoadCurrenUser();
             await LoadReportInventory();
             IsModalVisible = true;
             StateHasChanged();
@@ -30,8 +32,6 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.ReportInventory
             var data = await Http.GetFromJsonAsync<LoadReportInventoryDto>(
            $"api/Inventory/get-report");
             loadReportInventory = data;
-
-
         }
         #endregion
         #region Action
@@ -58,10 +58,9 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.ReportInventory
         }
         private async Task<CreatedReportInventoryDto> ConvertDataCreated()
         {
-            var CurrenUserClass = new CurrenUser(Http, AuthStateProvider);
-            CurrenUser = await CurrenUserClass.LoadCurrenUser();
+
             var createdReportInventory = new CreatedReportInventoryDto();
-            createdReportInventory.CreatedBy = loadReportInventory.CreatedBy??CurrenUser.Id;
+            createdReportInventory.CreatedBy = CurrenUser.Id;
             createdReportInventory.CreatedDate = DateTime.Now;
             createdReportInventory.Month = loadReportInventory.Month;
             createdReportInventory.Year = loadReportInventory.Year;

@@ -233,7 +233,6 @@ public class InventoryService : IInventoryService
             reportInventorys.CreatedDate = DateTime.Now;
             reportInventorys.Month = month;
             reportInventorys.Year = year;
-            reportInventorys.CreatedBy = prevReport?.CreatedBy;
             foreach (var item in baseInventory)
             {
 
