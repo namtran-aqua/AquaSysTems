@@ -21,45 +21,83 @@
 	<div style="max-height:70vh;overflow-y:auto"> 
 		<Collapse DefaultActiveKey="@(new[] { "1" })">
 			<Panel Class="customInfo" Header="Request Info" Key="1">
-				<Descriptions Size="DescriptionsSize.Small" Style="margin-bottom: 15px;" Column="4">
-					<DescriptionsItem  Title="@("- RequestTitle")" Span="3">@(RequestSuport.RequestTitle)</DescriptionsItem>
-					<DescriptionsItem Span="1" Title="@("Status")"> 
-				       <Tag Color="@GetTagColor.GetTagColorCss(RequestSuport.Status.ToString())">@RequestSuport.Status</Tag>
-		
-					</DescriptionsItem>
 
-					<DescriptionsItem Title="@("- RequestCategory")" Span="2">@(RequestSuport.RequestSuportCategoryName)</DescriptionsItem>
+                <Descriptions Size="DescriptionsSize.Small" Style="margin-bottom: 15px;" Column="4">
+                    <!-- Request Title & Status -->
+                    <DescriptionsItem Title="- RequestTitle" Span="3">
+                        @(RequestSuport.RequestTitle)
+                    </DescriptionsItem>
+                    <DescriptionsItem Title="Status" Span="1">
+                        <Tag Color="@GetTagColor.GetTagColorCss(RequestSuport.Status.ToString())">
+                            @RequestSuport.Status
+                        </Tag>
+                    </DescriptionsItem>
 
-					<DescriptionsItem Title="@("- Technical Support Name")" Span="2">@(RequestSuport.TechnicianName)</DescriptionsItem>
+                    <!-- Requester Info (left) -->
+                    <DescriptionsItem Title="- Requester Name" Span="2">
+                        @(RequestSuport.RequestByName)
+                    </DescriptionsItem>
+                    <DescriptionsItem Title="- Technical Support Name" Span="2">
+                        @(RequestSuport.TechnicianName)
+                    </DescriptionsItem>
 
-					<DescriptionsItem Title="@("- Requester Name")" Span="2">@(RequestSuport.RequestByName)</DescriptionsItem>
-					<DescriptionsItem Title="@("- Technical Support Email")" Span="2">@(RequestSuport.TechnicianEmail)</DescriptionsItem>
-					<DescriptionsItem Title="@("- Requester Email")" Span="2">@(RequestSuport.RequestByEmail)</DescriptionsItem>
-					<DescriptionsItem Title="@("- Requester Factory")" Span="2">@(RequestSuport.Factory)</DescriptionsItem>
-					<DescriptionsItem Title="@("- Requester Department")" Span="2">@(RequestSuport.Department)</DescriptionsItem>
-					<DescriptionsItem Title="@("- Created By Name")" Span="2">@(RequestSuport.CreatedName)</DescriptionsItem>
-					<DescriptionsItem Title="@("- Created By Email")" Span="2">@(RequestSuport.CreatedEmail)</DescriptionsItem>
-					<DescriptionsItem Span="4"></DescriptionsItem>
-					<DescriptionsItem Title="@("- RequestDescription")" Span="4">@(new MarkupString(RequestSuport.RequestDescription?.Replace("\n", "<br/>")))</DescriptionsItem>
-					<DescriptionsItem Title="@("- RequestSolution")" Span="4">@(new MarkupString(RequestSuport.RequestSolution?.Replace("\n", "<br/>")))</DescriptionsItem>
+                    <DescriptionsItem Title="- Requester Email" Span="2">
+                        @(RequestSuport.RequestByEmail)
+                    </DescriptionsItem>
+                    <DescriptionsItem Title="- Technical Support Email" Span="2">
+                        @(RequestSuport.TechnicianEmail)
+                    </DescriptionsItem>
 
-					<DescriptionsItem Title="@("✮ DueDate")">
-						@(RequestSuport.DueDate?.ToString("dd/MM/yyyy HH:mm") ?? "No Time")
-					</DescriptionsItem>
+                    <DescriptionsItem Title="- Requester Factory" Span="2">
+                        @(RequestSuport.Factory)
+                    </DescriptionsItem>
 
-					<DescriptionsItem Title="@("✮ ResolveDate")">
-						@(RequestSuport.ResolveDate?.ToString("dd/MM/yyyy HH:mm") ?? "No Time")
-					</DescriptionsItem>
+                   
+                    <DescriptionsItem Title="- Created By Name" Span="2">
+                        @(RequestSuport.CreatedName)
+                    </DescriptionsItem>
+                    <DescriptionsItem Title="- Requester Department" Span="2">
+                        @(RequestSuport.Department)
+                    </DescriptionsItem>
 
-					<DescriptionsItem Title="@("✮ StartDate")">
-						@(RequestSuport.InProgessDate?.ToString("dd/MM/yyyy HH:mm") ?? "No Time")
-					</DescriptionsItem>
+                    <DescriptionsItem Title="- Created By Email" Span="2">
+                        @(RequestSuport.CreatedEmail)
+                    </DescriptionsItem>
 
-					<DescriptionsItem Title="@("✮ CancelDate")">
-						@(RequestSuport.CancelDate?.ToString("dd/MM/yyyy HH:mm") ?? "No Time")
-					</DescriptionsItem>
+                    <DescriptionsItem Title="- RequestCategory" Span="2">
+                        @(RequestSuport.RequestSuportCategoryName)
+                    </DescriptionsItem>
+                 
+                    <DescriptionsItem Span="2"></DescriptionsItem>
 
-				</Descriptions>
+                    <!-- RequestDescription & Solution -->
+                    <DescriptionsItem Title="- RequestDescription" Span="4">
+                        @(new MarkupString(RequestSuport.RequestDescription?.Replace("\n", "<br/>")))
+                    </DescriptionsItem>
+
+                    <DescriptionsItem Title="- RequestSolution" Span="4">
+                        @(new MarkupString(RequestSuport.RequestSolution?.Replace("\n", "<br/>")))
+                    </DescriptionsItem>
+
+                    <!-- Dates -->
+                    <DescriptionsItem Title="✮ DueDate">
+                        @(RequestSuport.DueDate?.ToString("dd/MM/yyyy HH:mm") ?? "No Time")
+                    </DescriptionsItem>
+
+                    <DescriptionsItem Title="✮ ResolveDate">
+                        @(RequestSuport.ResolveDate?.ToString("dd/MM/yyyy HH:mm") ?? "No Time")
+                    </DescriptionsItem>
+
+                    <DescriptionsItem Title="✮ StartDate">
+                        @(RequestSuport.InProgessDate?.ToString("dd/MM/yyyy HH:mm") ?? "No Time")
+                    </DescriptionsItem>
+
+                    <DescriptionsItem Title="✮ CancelDate">
+                        @(RequestSuport.CancelDate?.ToString("dd/MM/yyyy HH:mm") ?? "No Time")
+                    </DescriptionsItem>
+                </Descriptions>
+
+
 			</Panel>
 			<Panel Class="customDocument" Header="Documents" Key="2">
 				<Table DataSource="@Attachment" HidePagination Size="TableSize.Small">

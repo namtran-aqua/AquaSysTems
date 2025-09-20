@@ -230,7 +230,7 @@ public class InventoryService : IInventoryService
 
         if (baseInventory.Count > 0)
         {
-            reportInventorys.CreatedDate = DateTime.Now;
+             reportInventorys.CreatedDate = DateTime.Now;
             reportInventorys.Month = month;
             reportInventorys.Year = year;
             foreach (var item in baseInventory)
