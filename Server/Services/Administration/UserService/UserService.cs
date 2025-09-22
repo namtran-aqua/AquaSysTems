@@ -84,6 +84,7 @@ public class UserService : IUserService
                 .WhereAsync(p => permissionIds.Contains(p.Id));
 
             var permissionNames = permissions.Select(p => p.Action.ToString()).Distinct().ToList();
+      
 
             var claims = new List<Claim>
                     {
@@ -91,6 +92,13 @@ public class UserService : IUserService
                         new Claim(ClaimTypes.Name, user.FullName),
                         new Claim(ClaimTypes.Email, user.Email ?? ""),
                     };
+            //add Claim
+            var perrmission_user= await GetPermissionRole(user.Id);
+            foreach (var p in perrmission_user)
+            {
+                claims.Add(new Claim("permission", $"{p.PageId}:{p.Action}"));
+            }
+            //
             foreach (var role in roles)
                 claims.Add(new Claim(ClaimTypes.Role, role.Name.ToString()));
 
@@ -103,7 +111,7 @@ public class UserService : IUserService
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            var expires = DateTime.UtcNow.AddSeconds(5);
+            var expires = DateTime.UtcNow.AddMinutes(60);
 
             var token = new JwtSecurityToken(
                 claims: claims,
@@ -124,8 +132,6 @@ public class UserService : IUserService
     }
     public async Task<UserDto?> GetCurrentUserAsync(Guid userId)
     {
-
-
         try
         {
             var request = _httpContextAccessor.HttpContext.Request;
@@ -150,7 +156,7 @@ public class UserService : IUserService
                 GroupId = user.GroupId,
                 GroupName = group?.Name,
                 ManagerName = manager?.FullName,
-                ManagerId = user.ManagerId==null?Guid.Empty: user.ManagerId.Value,
+                ManagerId = user.ManagerId == null ? Guid.Empty : user.ManagerId.Value,
                 CreatedTime = user.CreatedTime,
                 IsDeleted = user.IsDeleted,
                 Avatar = string.IsNullOrEmpty(user.Avatar)
@@ -163,7 +169,7 @@ public class UserService : IUserService
                 FactoryName = factory?.Name,
                 PositionName = position?.Name,
                 IsActive = user.IsActive,
-                ManagerWorkDay =manager?.WorkDayId,
+                ManagerWorkDay = manager?.WorkDayId,
             };
 
             var userRoles = await _userRoleRepo.WhereAsync(ur => ur.UserId == user.Id);
@@ -235,11 +241,11 @@ public class UserService : IUserService
 
             return userDto;
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             throw ex;
         }
-       
+
 
     }
 
@@ -460,14 +466,15 @@ public class UserService : IUserService
         var data = from user in await _userRepo.GetQueryableAsync()
                    join department in await _departmentRepo.GetQueryableAsync()
                    on user.DepartmentId equals department.Id
-                   into d from department in d.DefaultIfEmpty()
+                   into d
+                   from department in d.DefaultIfEmpty()
                    where user.IsActive == true
                    select new UserContributerDto
                    {
                        Id = user.Id,
                        Name = user.FullName,
-                       FactoryId =user.FactoryId,
-                       DepartmentId =user.DepartmentId,
+                       FactoryId = user.FactoryId,
+                       DepartmentId = user.DepartmentId,
                        DepartmentType = department.DepartmentType,
                        WorkDayId = user.WorkDayId,
                        IsActive = user.IsActive,
@@ -486,10 +493,12 @@ public class UserService : IUserService
         var user = from userSelected in await _userRepo.GetQueryableAsync()
                    join department in await _departmentRepo.GetQueryableAsync()
                    on userSelected.DepartmentId equals department.Id
-                   into d from department in d.DefaultIfEmpty()
+                   into d
+                   from department in d.DefaultIfEmpty()
                    join factory in await _factoryRepo.GetQueryableAsync()
                    on userSelected.FactoryId equals factory.Id
-                   into f from factory in f.DefaultIfEmpty()
+                   into f
+                   from factory in f.DefaultIfEmpty()
 
                    select new UserSelectedDto
                    {
@@ -504,5 +513,21 @@ public class UserService : IUserService
 
                    };
         return user.ToList();
+    }
+    private async Task<List<UserPermissionDto>>GetPermissionRole(Guid userId)
+    {
+           var permission_User =
+           from ur in await _userRoleRepo.GetQueryableAsync()
+           join rp in await _rolePermissionRepo.GetQueryableAsync() on ur.RoleId equals rp.RoleId
+           join p in await _permissionRepo.GetQueryableAsync() on rp.PermissionId equals p.Id
+           join page in await _pageRepo.GetQueryableAsync() on p.PageId equals page.Id
+           where ur.UserId == userId
+           select new UserPermissionDto
+           {
+               PageId = page.Id,
+               PageName = page.Name,
+               Action = p.Action
+           };
+        return permission_User.ToList();
     }
 }

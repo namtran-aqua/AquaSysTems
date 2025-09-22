@@ -1,4 +1,5 @@
 ﻿using Blazored.SessionStorage;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -6,11 +7,12 @@ using System.Security.Claims;
 public class CustomAuthenticationStateProvider : AuthenticationStateProvider
 {
     private readonly ISessionStorageService _sessionStorage;
-    private ClaimsPrincipal _user = new ClaimsPrincipal(new ClaimsIdentity());
+    private readonly NavigationManager _navigation;
 
-    public CustomAuthenticationStateProvider(ISessionStorageService sessionStorage)
+    public CustomAuthenticationStateProvider(ISessionStorageService sessionStorage, NavigationManager navigation)
     {
         _sessionStorage = sessionStorage;
+        _navigation = navigation;
     }
 
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
@@ -19,7 +21,9 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
 
         if (string.IsNullOrWhiteSpace(token) || token.Count(c => c == '.') != 2)
         {
-            // Token không hợp lệ
+            // Không có token => quay về trang login
+            _navigation.NavigateTo("/login", forceLoad: false);
+
             return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
         }
 
@@ -28,6 +32,14 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
             var handler = new JwtSecurityTokenHandler();
             var jwt = handler.ReadJwtToken(token);
 
+            // Nếu token hết hạn thì cũng logout
+            if (jwt.ValidTo < DateTime.UtcNow)
+            {
+                await _sessionStorage.RemoveItemAsync("authToken");
+                _navigation.NavigateTo("/login", forceLoad: true);
+                return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
+            }
+
             var identity = new ClaimsIdentity(jwt.Claims, "jwt");
             var user = new ClaimsPrincipal(identity);
 
@@ -35,11 +47,11 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
         }
         catch
         {
-            // Nếu token lỗi format vẫn trả về Anonymous
+            // Token lỗi => quay về login
+            _navigation.NavigateTo("/login", forceLoad: true);
             return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
         }
     }
-
 
     public void MarkUserAsAuthenticated(string username, List<Claim> claims)
     {
@@ -52,7 +64,7 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
 
     public void MarkUserAsLoggedOut()
     {
-        _user = new ClaimsPrincipal(new ClaimsIdentity());
-        NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_user)));
+        var user = new ClaimsPrincipal(new ClaimsIdentity());
+        NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(user)));
     }
 }

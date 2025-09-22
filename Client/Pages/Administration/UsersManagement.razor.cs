@@ -73,14 +73,10 @@ namespace AquaSolution.Client.Pages.Administration
         {
             var CurrenUserClass = new CurrenUser(Http, AuthStateProvider);
             CurrenUser = await CurrenUserClass.LoadCurrenUser();
-            Created = await hasPermission.CheckPermissions(PageId, PermissionActionType.Add.ToString(), CurrenUser);
-
-            Edit = await hasPermission.CheckPermissions(PageId, PermissionActionType.Edit.ToString(), CurrenUser);
-
-            Delete = await hasPermission.CheckPermissions(PageId, PermissionActionType.Delete.ToString(), CurrenUser);
-
-            EditRole = await hasPermission.CheckPermissions(PageId, PermissionActionType.EditRole.ToString(), CurrenUser);
-
+            EditRole =await permissionService.HasPermissionAsync(PageId, PermissionActionType.EditRole);
+            Created = await permissionService.HasPermissionAsync(PageId, PermissionActionType.Add);
+            Edit = await permissionService.HasPermissionAsync(PageId, PermissionActionType.Edit);
+            Delete = await permissionService.HasPermissionAsync(PageId, PermissionActionType.Delete);
         }
         #endregion
         #region Action

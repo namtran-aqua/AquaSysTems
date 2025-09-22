@@ -28,6 +28,6 @@ builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<CustomAuthenticationStateProvider>();
 builder.Services.AddScoped<AuthenticationStateProvider>(provider => provider.GetRequiredService<CustomAuthenticationStateProvider>());
 builder.Services.AddAntDesign();
-
+builder.Services.AddScoped<PermissionService>();
 //--------------------------------------------------------------------
 await builder.Build().RunAsync();
