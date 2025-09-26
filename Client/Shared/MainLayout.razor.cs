@@ -1,4 +1,123 @@
-﻿using AquaSolution.Shared.Menus;
+﻿//using AquaSolution.Shared.Menus;
+//using AquaSolution.Shared.UserManagements;
+//using Microsoft.AspNetCore.Components;
+//using Microsoft.AspNetCore.Components.Authorization;
+//using Microsoft.AspNetCore.SignalR.Client;
+//using System.IdentityModel.Tokens.Jwt;
+//using System.Net.Http.Json;
+//using System.Security.Claims;
+
+//namespace AquaSolution.Client.Shared
+//{
+//    public partial class MainLayout
+//    {
+//        private ClaimsPrincipal user;
+//        private UserDto? userDto { get; set; }
+//        [Inject] private HttpClient Http { get; set; } = default!;
+//        [Inject] NavigationManager NavigationManager { get; set; }
+//        private HubConnection? _hubConnection;
+//        private CurrentUserInfo? CurrentUser;
+//        [CascadingParameter] private Task<AuthenticationState> authenticationStateTask { get; set; }
+//        List<MenuDto>? menu = new();
+//        private System.Timers.Timer? _timer;
+//        protected override async Task OnInitializedAsync()
+//        {
+//            _timer = new System.Timers.Timer(3600000);
+//            _timer.Elapsed += async (_, _) => await CheckTokenExpired();
+//            _timer.Start();
+
+//            _hubConnection = new HubConnectionBuilder()
+//                    .WithUrl(NavigationManager.ToAbsoluteUri(NavigationManager.BaseUri + "signalrhub"))
+//                    .Build();
+//            _hubConnection.On("ReloadMenu", async () =>
+//            {
+//                var token = await _sessionStorage.GetItemAsync<string>("authToken");
+//                if (!string.IsNullOrEmpty(token))
+//                {
+//                    await LoadAuthenticationState();
+//                    StateHasChanged();
+//                }
+//            });
+
+//            await _hubConnection.StartAsync();
+//            await LoadAuthenticationState();
+//            Auth.AuthenticationStateChanged += OnAuthenticationStateChanged;
+//        }
+//        private async Task CheckTokenExpired()
+//        {
+//            var token = await _sessionStorage.GetItemAsync<string>("authToken");
+//            if (string.IsNullOrEmpty(token)) return;
+
+//            var handler = new JwtSecurityTokenHandler();
+//            var jwt = handler.ReadJwtToken(token);
+//            var exp = jwt.ValidTo;
+
+//            if (DateTime.UtcNow >= exp)
+//            {
+//                await _sessionStorage.RemoveItemAsync("authToken");
+//                await Http.PostAsync("api/auth/logout", null);
+//                var baseUri = NavigationManager.BaseUri.TrimEnd('/');
+//                NavigationManager.NavigateTo($"{baseUri}/login");
+//            }
+//        }
+//        private void Home()
+//        {
+//            var baseUri = NavigationManager.BaseUri.TrimEnd('/');
+//            NavigationManager.NavigateTo($"{baseUri}/");
+//        }
+//        private async void OnAuthenticationStateChanged(Task<AuthenticationState> task)
+//        {
+//            await LoadAuthenticationState();
+//            StateHasChanged();
+//        }
+//        private async Task LoadAuthenticationState()
+//        {
+//            var authState = await authenticationStateTask;
+//            user = authState.User;
+
+//            if (user.Identity?.IsAuthenticated == true)
+//            {
+//                var userIdStr = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+//                Guid.TryParse(userIdStr, out var userId);
+
+//                CurrentUser = new CurrentUserInfo
+//                {
+//                    UserId = userId,
+//                    FullName = user.FindFirst(ClaimTypes.Name)?.Value ?? "",
+//                    Email = user.FindFirst(ClaimTypes.Email)?.Value ?? "",
+//                    Roles = user.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList(),
+//                    Permissions = user.FindAll("permission").Select(p => p.Value).ToList()
+//                };
+//                userDto = await Http.GetFromJsonAsync<UserDto>($"api/user/get-curernUser/{CurrentUser.UserId}");
+//                if (CurrentUser.Roles.Contains("Admin"))
+//                {
+//                    menu = await httpClient.GetFromJsonAsync<List<MenuDto>>($"api/Menu/GetAllMenu");
+//                }
+//                else
+//                {
+//                    menu = await httpClient.GetFromJsonAsync<List<MenuDto>>($"api/Menu/GetMenu/{userId}");
+//                }
+//            }
+//            else
+//            {
+//                CurrentUser = null;
+//            }
+//        }
+//        public void Dispose()
+//        {
+//            Auth.AuthenticationStateChanged -= OnAuthenticationStateChanged;
+//            _timer?.Stop();
+//            _timer?.Dispose();
+//        }
+//        private string GetLink(string url)
+//        {
+//            var basePath = NavigationManager.BaseUri.TrimEnd('/'); 
+//            var urlReturn = $"{basePath}{url}";
+//            return urlReturn;
+//        }
+//    }
+//}
+using AquaSolution.Shared.Menus;
 using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -9,7 +128,7 @@ using System.Security.Claims;
 
 namespace AquaSolution.Client.Shared
 {
-    public partial class MainLayout
+    public partial class MainLayout : IDisposable
     {
         private ClaimsPrincipal user;
         private UserDto? userDto { get; set; }
@@ -20,51 +139,76 @@ namespace AquaSolution.Client.Shared
         [CascadingParameter] private Task<AuthenticationState> authenticationStateTask { get; set; }
         List<MenuDto>? menu = new();
         private System.Timers.Timer? _timer;
+
         protected override async Task OnInitializedAsync()
         {
-            _timer = new System.Timers.Timer(3600000);
+            _timer = new System.Timers.Timer(60000); // chạy mỗi 1 phút
             _timer.Elapsed += async (_, _) => await CheckTokenExpired();
             _timer.Start();
 
             _hubConnection = new HubConnectionBuilder()
                     .WithUrl(NavigationManager.ToAbsoluteUri(NavigationManager.BaseUri + "signalrhub"))
                     .Build();
+
             _hubConnection.On("ReloadMenu", async () =>
-           {
-                await LoadAuthenticationState();
-                StateHasChanged();
-            }); 
+            {
+                var token = await _sessionStorage.GetItemAsync<string>("authToken");
+                if (!string.IsNullOrEmpty(token))
+                {
+                    try
+                    {
+                        await LoadAuthenticationState();
+                        StateHasChanged();
+                    }
+                    catch { }
+                }
+            });
+
             await _hubConnection.StartAsync();
             await LoadAuthenticationState();
             Auth.AuthenticationStateChanged += OnAuthenticationStateChanged;
         }
+
         private async Task CheckTokenExpired()
         {
             var token = await _sessionStorage.GetItemAsync<string>("authToken");
             if (string.IsNullOrEmpty(token)) return;
 
-            var handler = new JwtSecurityTokenHandler();
-            var jwt = handler.ReadJwtToken(token);
-            var exp = jwt.ValidTo;
-
-            if (DateTime.UtcNow >= exp)
+            JwtSecurityToken jwt;
+            try
             {
-                await _sessionStorage.RemoveItemAsync("authToken");
-                await Http.PostAsync("api/auth/logout", null);
-                var baseUri = NavigationManager.BaseUri.TrimEnd('/');
-                NavigationManager.NavigateTo($"{baseUri}/login", true);
+                jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
+            }
+            catch
+            {
+                await LogoutUser();
+                return;
+            }
+
+            if (DateTime.UtcNow >= jwt.ValidTo)
+            {
+                await LogoutUser();
             }
         }
+
+        private async Task LogoutUser()
+        {
+            await _sessionStorage.RemoveItemAsync("authToken");
+            await Http.PostAsync("api/auth/logout", null);
+            NavigationManager.NavigateTo("/login"); // không reload toàn trang
+        }
+
         private void Home()
         {
-            var baseUri = NavigationManager.BaseUri.TrimEnd('/');
-            NavigationManager.NavigateTo($"{baseUri}/");
+            NavigationManager.NavigateTo("/");
         }
+
         private async void OnAuthenticationStateChanged(Task<AuthenticationState> task)
         {
             await LoadAuthenticationState();
             StateHasChanged();
         }
+
         private async Task LoadAuthenticationState()
         {
             var authState = await authenticationStateTask;
@@ -83,32 +227,36 @@ namespace AquaSolution.Client.Shared
                     Roles = user.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList(),
                     Permissions = user.FindAll("permission").Select(p => p.Value).ToList()
                 };
-                userDto = await Http.GetFromJsonAsync<UserDto>($"api/user/get-curernUser/{CurrentUser.UserId}");
-                if (CurrentUser.Roles.Contains("Admin"))
+
+                try
                 {
-                    menu = await httpClient.GetFromJsonAsync<List<MenuDto>>($"api/Menu/GetAllMenu");
+                    userDto = await Http.GetFromJsonAsync<UserDto>($"api/user/get-curernUser/{CurrentUser.UserId}");
+
+                    if (CurrentUser.Roles.Contains("Admin"))
+                        menu = await Http.GetFromJsonAsync<List<MenuDto>>($"api/Menu/GetAllMenu");
+                    else
+                        menu = await Http.GetFromJsonAsync<List<MenuDto>>($"api/Menu/GetMenu/{userId}");
                 }
-                else
-                {
-                    menu = await httpClient.GetFromJsonAsync<List<MenuDto>>($"api/Menu/GetMenu/{userId}");
-                }
+                catch { }
             }
             else
             {
                 CurrentUser = null;
             }
         }
+
         public void Dispose()
         {
             Auth.AuthenticationStateChanged -= OnAuthenticationStateChanged;
             _timer?.Stop();
             _timer?.Dispose();
         }
+
         private string GetLink(string url)
         {
-            var basePath = NavigationManager.BaseUri.TrimEnd('/'); 
-            var urlReturn = $"{basePath}{url}";
-            return urlReturn;
+            var basePath = NavigationManager.BaseUri.TrimEnd('/');
+            return $"{basePath}{url}";
         }
     }
 }
+
