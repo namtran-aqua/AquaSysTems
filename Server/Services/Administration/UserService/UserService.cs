@@ -112,7 +112,6 @@ public class UserService : IUserService
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             var expires = DateTime.UtcNow.AddMinutes(60);
-
             var token = new JwtSecurityToken(
                 claims: claims,
                 expires: expires,
