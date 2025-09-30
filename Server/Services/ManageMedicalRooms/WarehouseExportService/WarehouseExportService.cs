@@ -65,7 +65,7 @@ namespace AquaSolution.Server.Services.ManageMedicalRooms.WarehouseExportService
                                                WarehouseExportType = warehouseExport.WarehouseExportType,
                                                CreatedByName = user.FullName,
                                            };
-                var datareturn = warehouseExportQuery.OrderBy(x => x.CreatedDate).ToList();
+                var datareturn = warehouseExportQuery.OrderByDescending(x => x.CreatedDate).ToList();
                 if (datareturn.Any()) { return datareturn; }
                 return new List<LoadWarehouseExportDto>();
 

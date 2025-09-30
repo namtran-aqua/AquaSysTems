@@ -161,12 +161,12 @@
 
                         <Column Width="150" TData="WarehouseExportDetailDto" Title="DateManufacture">
                             <Template>
-                                <DatePicker  Disabled="IsView"  @bind-Value="row2.DateManufacture" />
+                                <DatePicker Disabled="true" @bind-Value="row2.DateManufacture" Format="dd/MM/yyyy" />
                             </Template>
                         </Column>
                         <Column Width="150" TData="WarehouseExportDetailDto" Title="ExpiryDate">
                             <Template>
-                                <DatePicker Disabled="IsView" @bind-Value="row2.ExpiryDate" />
+                                <DatePicker Disabled="true" @bind-Value="row2.ExpiryDate" Format="dd/MM/yyyy" />
                             </Template>
                         </Column>
                         @if (!IsView)
