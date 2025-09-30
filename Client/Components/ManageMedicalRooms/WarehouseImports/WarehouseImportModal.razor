@@ -102,8 +102,9 @@
                        TItem="WarehouseImportDetailDto"
                        Size="TableSize.Small"
                        Class="CustomTable  fix-table-header"
-                       PaginationPosition="false"
                        RowKey="@(row2 => row2.Id)"
+                       Bordered
+                       HidePagination
                        DataSource="createdWarehouseImportDto.WarehouseImportDetailDtos">
                     <ColumnDefinitions Context="row2">
                         <Column Width="270" TData="WarehouseImportDetailDto" Title="Product">

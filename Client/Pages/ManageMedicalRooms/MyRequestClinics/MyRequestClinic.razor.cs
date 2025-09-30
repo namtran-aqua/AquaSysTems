@@ -70,44 +70,6 @@ namespace AquaSolution.Client.Pages.ManageMedicalRooms.MyRequestClinics
             paramShowModal.handleMyRequestClinicDto =new HandleMyRequestClinicDto();
             await myRequestClinicModal.ShowModalAsync(paramShowModal);
         }
-        private async Task EditedAsync(MyRequestClinicDto myRequestClinicDto)
-        {
-            var paramShowModal = new ParamShowModal();
-            paramShowModal.currenUser = CurrenUser;
-            paramShowModal.users = users;
-            paramShowModal.IsEdit = true;
-            paramShowModal.handleMyRequestClinicDto = new HandleMyRequestClinicDto
-            {
-                Id = myRequestClinicDto.Id,
-                WorkDayUserRequestId = myRequestClinicDto.WorkDayUserRequestId,
-                UserRequestId = myRequestClinicDto.UserRequestId,
-                UserRequestName = myRequestClinicDto.UserRequestName,
-                RequestTitle = myRequestClinicDto.RequestTitle,
-                PurposeType = myRequestClinicDto.PurposeType,
-                ManagerId = myRequestClinicDto.ManagerId,
-                ManagerName = myRequestClinicDto.ManagerName,
-                EmailRequestter = myRequestClinicDto.EmailRequestter,
-                WorkDayManager = myRequestClinicDto.WorkDayManager,
-                Status = myRequestClinicDto.Status,
-                ApprovalDate = myRequestClinicDto.ApprovalDate,
-                ApprovalById = myRequestClinicDto.ApprovalById,
-                ApprovalByName = myRequestClinicDto.ApprovalByName,
-                RejectDate = myRequestClinicDto.RejectDate,
-                RejectById = myRequestClinicDto.RejectById,
-                RejectByName = myRequestClinicDto.RejectByName,
-                SuccesDate = myRequestClinicDto.SuccesDate,
-                PharmacyManagerId = myRequestClinicDto.PharmacyManagerId,
-                PharmacyManagerName = myRequestClinicDto.PharmacyManagerName,
-                CreatedDate = myRequestClinicDto.CreatedDate,
-                Note = myRequestClinicDto.Note,
-                HistoryReuqest = myRequestClinicDto.HistoryReuqest,
-                CreatedBy = myRequestClinicDto.CreatedBy,
-                CreatedName = myRequestClinicDto.CreatedName,
-                CreatedWorkDay = myRequestClinicDto.CreatedWorkDay,
-
-            };
-            await myRequestClinicModal.ShowModalAsync(paramShowModal);
-        }
         private async Task DeletedAsync(MyRequestClinicDto myRequestClinicDto)
         {
 

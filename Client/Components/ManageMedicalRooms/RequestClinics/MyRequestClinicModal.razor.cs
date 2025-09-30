@@ -62,7 +62,8 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.RequestClinics
                         ManagerId = user.ManagerId,
                         ManagerName = user.ManagerName,
                         WorkDayManager = user.ManagerWorkDay,
-                        Email = user.Email
+                        Email = user.Email,
+                        DepartmentName = user.DepartmentName
                     });
                 }
 
@@ -87,7 +88,7 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.RequestClinics
                     HandleMyRequestClinic.ManagerName = value.ManagerName;
                     HandleMyRequestClinic.WorkDayManager = value.WorkDayManager;
                     HandleMyRequestClinic.EmailRequestter = value.Email;
-
+                    DepartmentName = value.DepartmentName;
                 }
             }
         }

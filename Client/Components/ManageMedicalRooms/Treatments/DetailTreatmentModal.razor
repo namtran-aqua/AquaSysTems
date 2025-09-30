@@ -83,7 +83,8 @@
             </Panel>
 
             <Panel Class="customDocument" Header="Detail Prescription" Key="2">
-                <Table  DataSource="@_medicalHistoryDto.PrescriptionDetail" HidePagination Size="TableSize.Small">
+                <Table DataSource="@_medicalHistoryDto.PrescriptionDetail" Bordered
+                       HidePagination Size="TableSize.Small">
                     <ChildContent Context="item">
                         <Column Title="ProductName" TData="string">@item.ProductName</Column>
                         <Column Title="Unit" TData="string">@item.Unit</Column>
