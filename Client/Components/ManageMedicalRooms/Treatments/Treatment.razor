@@ -163,12 +163,12 @@
 
                             <Column Width="150" TData="CreatedPrescriptionDetailDto" Title="DateManufacture">
                                 <Template>
-                                    <DatePicker Disabled="true" @bind-Value="row2.DateManufacture" />
+                                    <DatePicker Disabled="true" @bind-Value="row2.DateManufacture" Format="dd/MM/yyyy" />
                                 </Template>
                             </Column>
                             <Column Width="150" TData="CreatedPrescriptionDetailDto" Title="ExpiryDate">
                                 <Template>
-                                    <DatePicker Disabled="true" @bind-Value="row2.ExpiryDate" />
+                                    <DatePicker Disabled="true" @bind-Value="row2.ExpiryDate" Format="dd/MM/yyyy" />
                                 </Template>
                             </Column>
                             @if (!IsView)

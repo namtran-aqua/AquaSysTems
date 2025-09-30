@@ -26,7 +26,6 @@ namespace AquaSolution.Client.Pages.ManageMedicalRooms.WarehouseExport
 
         }
             #endregion
-
         #region Action
         private async Task ImportWarehouse()
         {

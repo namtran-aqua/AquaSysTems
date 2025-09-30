@@ -58,7 +58,7 @@ namespace AquaSolution.Server.Services.ManageMedicalRooms.WarehouseImportService
                                            CreatedByName = user.FullName,
 
                                        };
-            var datareturn = warehouseImportQuery.OrderBy(x=>x.CreatedDate).ToList();
+            var datareturn = warehouseImportQuery.OrderByDescending(x=>x.CreatedDate).ToList();
             if (datareturn.Any()) { return datareturn; }
             return new List<LoadWarehouseImportDto>();
         }
