@@ -18,7 +18,7 @@ namespace AquaSolution.Client.Pages.ManageMedicalRooms.Inventories
         #region Declaration
         [Inject] private HttpClient Http { get; set; }
         private List<InventoryDto> _listInventory = new List<InventoryDto>();
-        private List<InventoryDto> _listInventoryFilter = new List<InventoryDto>();
+        //private List<InventoryDto> _listInventoryFilter = new List<InventoryDto>();
         private ReportInventoryModal reportInventoryModal;
         private Table<InventoryDto> tableRef;
         #endregion
@@ -31,7 +31,7 @@ namespace AquaSolution.Client.Pages.ManageMedicalRooms.Inventories
         private async Task LoadDataAsync()
         {
             _listInventory = await Http.GetFromJsonAsync<List<InventoryDto>>("api/Inventory/get-all");
-            _listInventoryFilter =_listInventory;
+            //_listInventoryFilter =_listInventory;
             await InvokeAsync(StateHasChanged);
         }
         #endregion
@@ -69,13 +69,14 @@ namespace AquaSolution.Client.Pages.ManageMedicalRooms.Inventories
             {
                 filtered = _listInventory;
             }
-            _listInventoryFilter = filtered;
+            _listInventory= filtered;
+            //_listInventoryFilter = filtered;
         }
 
         private async Task Reset()
         {
             ProductName = null;
-            _listInventoryFilter = _listInventory;
+            //_listInventoryFilter = _listInventory;
             tableRef?.ReloadData();
             await InvokeAsync(StateHasChanged);
         }
