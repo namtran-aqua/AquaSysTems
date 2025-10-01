@@ -1,31 +1,12 @@
-﻿@* @inject NavigationManager Nav
+﻿@inject NavigationManager Nav
 
 @code {
     protected override void OnInitialized()
     {
-        var baseUri = Nav.BaseUri.TrimEnd('/');
-        Nav.NavigateTo($"{baseUri}/login", true);
+        // var baseUri = Nav.BaseUri.TrimEnd('/');
+        // Nav.NavigateTo($"{baseUri}/login", true);
+        Nav.NavigateTo("login", true);
     }
 }
- *@
-@inject NavigationManager Nav
-@inject Blazored.SessionStorage.ISessionStorageService SessionStorage
 
-@code {
-    private DebugLogger logger;
-
-    protected override async Task OnInitializedAsync()
-    {
-        logger = new DebugLogger(SessionStorage);
-
-        await logger.LogAsync("Navigating to login page");
-
-        var baseUri = Nav.BaseUri.TrimEnd('/');
-        var targetUrl = $"{baseUri}/login";
-
-        await logger.LogAsync($"Target URL: {targetUrl}");
-
-        Nav.NavigateTo(targetUrl, true);
-    }
-}
 
