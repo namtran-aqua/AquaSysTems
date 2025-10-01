@@ -8,16 +8,16 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-
 var builder = WebApplication.CreateBuilder(args);
 
-// ----------------------- Services ----------------------- //
+// Add services to the container.
+
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+//-----------------------CustomConfig---------------------------------
 builder.Services.AddDbContext<AquaDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddControllers();
-
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -31,6 +31,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 Encoding.UTF8.GetBytes("VerySecretKey12345"))
         };
 
+        // Optional: để thấy lỗi nếu token invalid
         options.Events = new JwtBearerEvents
         {
             OnAuthenticationFailed = context =>
@@ -40,28 +41,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             }
         };
     });
-
 builder.Services.AddAppServices();
 builder.Services.AddAuthorization();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSignalR();
-
-// ----------------------- Build app ----------------------- //
+//--------------------------------------------------------------------
 var app = builder.Build();
-
-// ----------------------- Database migrate ----------------------- //
+app.UsePathBase("/AquaSolution");
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AquaDbContext>();
     db.Database.Migrate();
-    // DbSeeder.SeedData(db); // nếu có
+    //DbSeeder.SeedData(db);
 }
-
-// ----------------------- Middleware ----------------------- //
-app.UsePathBase("/AquaSolution"); // base path
-app.UseHttpsRedirection();
-
+// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseWebAssemblyDebugging();
@@ -71,8 +65,6 @@ else
     app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
-
-// Swagger
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
@@ -80,21 +72,18 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = "swagger";
 });
 
-app.UseAuthentication();
-app.UseAuthorization();
+app.UseAuthentication(); 
+app.UseAuthorization();  
+app.UseHttpsRedirection();
 
-// Blazor WebAssembly
-app.UseBlazorFrameworkFiles("/AquaSolution"); // subfolder
+app.UseBlazorFrameworkFiles();
 app.UseStaticFiles();
 
 app.UseRouting();
 
-// Razor / API / SignalR
 app.MapRazorPages();
 app.MapControllers();
 app.MapHub<SignalrHub>("/signalrhub");
-
-// SPA fallback cho mọi route client-side
-app.MapFallbackToFile("/AquaSolution/{*path:nonfile}", "index.html");
+app.MapFallbackToFile("index.html");
 
 app.Run();
