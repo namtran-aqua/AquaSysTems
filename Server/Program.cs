@@ -170,6 +170,6 @@ app.UseRouting();
 app.MapRazorPages();
 app.MapControllers();
 app.MapHub<SignalrHub>("/signalrhub");
-//app.MapFallbackToFile("index.html");
-app.MapFallbackToFile("/AquaSolution/{*path:nonfile}", "index.html");
+app.MapFallbackToFile("index.html");
+
 app.Run();
