@@ -54,7 +54,7 @@
             <Row Gutter="16" Style="height:65px">
        
                 <Col Span="8">
-                <FormItem Required="true" Label="Name">
+                <FormItem Required="true" Label="Title">
                     <Input Disabled="IsView" @bind-Value="createdWarehouseExportDto.WarehouseExportDto.Name" />
                 </FormItem>
                 </Col>
@@ -135,16 +135,19 @@
                                 <Input Disabled="true" @bind-Value="row2.Unit" />
                             </Template>
                         </Column> 
-
-                        <Column Width="110" TData="WarehouseExportDetailDto" Title="ActualQuantity">
-                            <Template>
-                                <Input Disabled="true"
-                                       Value="@((_product2.FirstOrDefault(p => p.Id == row2.ProductId
-                                        && p.ExpirationDate == row2.ExpiryDate
-                                        && p.ManufacturingDate == row2.DateManufacture)?.Quantity ?? 0).ToString())" />
+                        @if (!IsView)
+                        {
+                            <Column Width="110" TData="WarehouseExportDetailDto" Title="ActualQuantity">
+                                <Template>
+                                    <Input Disabled="true"
+                                           Value="@((_product2.FirstOrDefault(p => p.Id == row2.ProductId
+                                                                                   && p.ExpirationDate == row2.ExpiryDate
+                                                                                   && p.ManufacturingDate == row2.DateManufacture)?.Quantity ?? 0).ToString())" />
 
                             </Template>
                         </Column>
+                        }
+  
 
                         <Column Width="100" TData="WarehouseExportDetailDto" Title="Quantity">
                             <Template>
