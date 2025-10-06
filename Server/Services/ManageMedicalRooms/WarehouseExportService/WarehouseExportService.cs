@@ -118,7 +118,7 @@ namespace AquaSolution.Server.Services.ManageMedicalRooms.WarehouseExportService
                     WarehouseExportType = createdWarehouseExportDto.WarehouseExportDto.WarehouseExportType,
                 };
                 var userName = await _userRepo.FirstOrDefaultAsync(x => x.Id == warehouseExport.CreatedBy);
-                history.Append($"User {userName.FullName}");
+                history.AppendLine($"User {userName.FullName}  - đã cập nhật tồn kho productName:");
                 await _warehouseExportRepo.InsertAsync(warehouseExport);
 
                 foreach (var item in createdWarehouseExportDto.WarehouseExportDetailDtos)
@@ -145,9 +145,9 @@ namespace AquaSolution.Server.Services.ManageMedicalRooms.WarehouseExportService
                     var oldInventory =await _handleInventory.GetActualInventory(handleInventorydto);
                     await _handleInventory.MinusInventory(handleInventorydto);
                     var oldInventoryFormatted = oldInventory?.ToString("0") ?? "0";
-                    history.AppendLine($" - đã cập nhật tồn kho productName {item.ProductName} từ {oldInventoryFormatted} trừ đi {item.Quantity} - vào lúc {DateTime.Now:yyyy-MM-dd HH:mm:ss}- Type : {createdWarehouseExportDto.WarehouseExportDto.WarehouseExportType}");
+                    history.AppendLine($" +{item.ProductName} từ {oldInventoryFormatted} trừ đi {item.Quantity}  vào lúc {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
                 }
-
+                history.AppendLine($"-Type : {createdWarehouseExportDto.WarehouseExportDto.WarehouseExportType}");
         
                 var sysTemHistory = new SysTemHistory
                 {
