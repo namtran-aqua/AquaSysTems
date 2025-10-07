@@ -1,9 +1,9 @@
 ﻿namespace AquaSolution.Shared.Enum.KPIType
 {
-    public enum KPIFormulaType
+    public enum KPIIndexType
     {
-       KF1,
-       KF2,
-       KF3
+        KPI,
+        KeyTask,
+        OMG
     }
 }

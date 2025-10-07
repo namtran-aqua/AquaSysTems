@@ -47,18 +47,7 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.WarehouseImports
         }
         private WarehouseImportDetailDto? _currentDetail;
         private ProductDto? _product;
-        private ProductDto? ProductDto 
-        { 
-            get => _product;
-            set
-            {
-                if (value != _product)
-                {
-                    _product = value;
-                }
-       
-            }
-        }
+
         private async Task SetDataView()
         {
             if (IsView)
@@ -194,6 +183,5 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.WarehouseImports
             }
         }
         #endregion
-
     }
 }

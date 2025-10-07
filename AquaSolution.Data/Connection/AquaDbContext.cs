@@ -52,7 +52,13 @@ namespace AquaSolution.Data.Connection
         public DbSet<RequestSuport> tbl_RequestSuport { get; set; }
         public DbSet<Attachment> tbl_Attachment { get; set; }
         #endregion
+        #region KPI
+        public DbSet<QuaterCalculated> tbl_QuaterCalculateds { get; set; }
+        public DbSet<Formula> tbl_Formulas { get; set; }
+        public DbSet<KPITask> tbl_KPITasks { get; set; }
+        public DbSet<UserTask> tbl_UserTasks { get; set; }
 
+        #endregion
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfiguration(new MenuConfiguration());
@@ -67,7 +73,6 @@ namespace AquaSolution.Data.Connection
             modelBuilder.ApplyConfiguration(new FactoryConfiguration());
             modelBuilder.ApplyConfiguration(new PositionConfiguration());
             modelBuilder.ApplyConfiguration(new ApprovalFlowConfiguration());
-
             #region Clinic
             modelBuilder.ApplyConfiguration(new RequestClinicConfiguration());
             modelBuilder.ApplyConfiguration(new ProductConfiguration());
@@ -97,7 +102,13 @@ namespace AquaSolution.Data.Connection
             modelBuilder.ApplyConfiguration(new RequestSuportCategoryConfiguration());
 
             #endregion
+            #region KPI
+            modelBuilder.ApplyConfiguration(new KPITaskConfiguration());
+            modelBuilder.ApplyConfiguration(new FormulaConfiguration());
+            modelBuilder.ApplyConfiguration(new QuaterCalculatedConfiguration());
+            modelBuilder.ApplyConfiguration(new UserTaskConfiguration());
 
+            #endregion
 
         }
     }
