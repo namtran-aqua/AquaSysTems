@@ -1,0 +1,80 @@
+﻿@using AntDesign
+@using AquaSolution.Client.Common
+@inject ModalService Modal
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+@{
+    RenderFragment footer = @<Template>
+
+        <Button Style="color:#808080" OnClick="@Close" @key="@("back")">Close</Button>
+
+    </Template>;
+}
+<Modal @bind-Visible="IsModalVisible" Style="z-index: 9999;width:1000px ;height:78vh !important ;top:3px" Footer="@footer">
+
+    <Descriptions Size="DescriptionsSize.Small" Style="margin-bottom: 15px;" Column="2">
+
+        <!-- Thông tin chính -->
+        <DescriptionsItem Title="- Task Name" Span="2">
+            @(Detail.TaskName)
+        </DescriptionsItem>
+
+        <DescriptionsItem Title="- Task Description" Span="2">
+            @(Detail.TaskDescription)
+        </DescriptionsItem>
+
+        <!-- Phân loại -->
+        <DescriptionsItem Title="- KPI Category" Span="1">
+            @(Detail.KPICategory)
+        </DescriptionsItem>
+        <DescriptionsItem Title="- KPI Index Type" Span="1">
+            @(Detail.KPIIndexType)
+        </DescriptionsItem>
+
+        <!-- Phương pháp & nguồn dữ liệu -->
+        <DescriptionsItem Title="- Calculated Method" Span="1">
+            @(Detail.CalculatedMdethod)
+        </DescriptionsItem>
+        <DescriptionsItem Title="- Data Source" Span="1">
+            @(Detail.DataSource)
+        </DescriptionsItem>
+
+        <!-- Tổ chức -->
+        <DescriptionsItem Title="- Requester Factory" Span="1">
+            @(Detail.Factory)
+        </DescriptionsItem>
+        <DescriptionsItem Title="- Requester Department" Span="1">
+            @(Detail.Department)
+        </DescriptionsItem>
+
+        <!-- Người liên quan -->
+        <DescriptionsItem Title="- PIC (Owner)" Span="1">
+            @(Detail.OwnerName)
+        </DescriptionsItem>
+        <DescriptionsItem Title="- Created By" Span="1">
+            @(Detail.CreatedByName)
+        </DescriptionsItem>
+
+        <!-- Tính toán -->
+        <DescriptionsItem Title="- Quarter Calculated" Span="1">
+            @(Detail.QuaterCalculated)
+        </DescriptionsItem>
+        <DescriptionsItem Title="- Formula" Span="1">
+            @(Detail.Formula)
+        </DescriptionsItem>
+
+        <DescriptionsItem Title="- Max" Span="1">
+            @(Detail.Max)
+        </DescriptionsItem>
+        <DescriptionsItem Title="- Bottom" Span="1">
+            @(Detail.Bottom)
+        </DescriptionsItem>
+
+        <DescriptionsItem Title="- Unit" Span="2">
+            @(Detail.Unit)
+        </DescriptionsItem>
+
+    </Descriptions>
+
+</Modal>
