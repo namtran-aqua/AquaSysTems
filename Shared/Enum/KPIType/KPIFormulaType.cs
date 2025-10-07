@@ -1,9 +1,10 @@
 ﻿
 namespace AquaSolution.Shared.Enum.KPIType
 {
-    public enum ApprovalSettingType
+    public enum KPIFormulaType
     {
-        DirectManagement,
-        Assignee
+        KF1,
+        KF2,
+        KF3
     }
 }

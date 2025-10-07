@@ -1,0 +1,158 @@
+﻿@using AntDesign
+@using AquaSolution.Shared.CommonDto;
+@using AquaSolution.Shared.UserManagements
+@using AquaSolution.Shared.Administration.UserManagements
+@using AquaSolution.Shared.Enum.KPIType
+@inject IMessageService Message
+@{
+    RenderFragment footer = @<Template>
+
+        <Button OnClick="@SaveAsync" @key="@( "submit" )"
+                Type="ButtonType.Primary">
+            Save
+        </Button>
+
+        <Button Style="color:#808080" OnClick="@Close" @key="@("back")">Close</Button>
+
+    </Template>;
+}
+<Modal @bind-Visible="IsModalVisible" Style="z-index: 9999;width:1000px;margin-top:-75px" Footer="@footer">
+    <Form @ref="@formRef"
+          Model="@HandleTaskDto"
+          Layout="FormLayout.Vertical"
+          OnFinish="SaveAsync"
+          ValidateMode="FormValidateMode.Complex"
+          ValidateOnChange="true">
+
+        <Row Gutter="16">
+            <Col Span="18">
+            <FormItem Required="true" Label="TaskName">
+                <TextArea ShowCount MinRows="1" MaxRows="1" @bind-Value="@HandleTaskDto.TaskName" AllowClear="true" />
+            </FormItem>
+            </Col>
+            <Col Span="3">
+            <FormItem Required="true" Label="Unit">
+                <TextArea ShowCount MinRows="1" MaxRows="1" @bind-Value="@HandleTaskDto.Unit" AllowClear="true" />
+            </FormItem>
+            </Col>
+            <Col Span="3">
+            <FormItem Required="true" Label="DataSource">
+                <TextArea ShowCount MinRows="1" MaxRows="1" @bind-Value="@HandleTaskDto.DataSource" AllowClear="true" />
+            </FormItem>
+            </Col>
+        </Row>
+
+        <Row Gutter="16">
+
+            <Col Span="8">
+            <FormItem Required="true" Label="PIC">
+                <Select TItem="UserContributerDto" TItemValue="Guid"
+                        DataSource="@ListUser"
+                        @bind-Value="@HandleTaskDto.OwnerId"
+                        EnableSearch
+                        AutoClearSearchValue="false"
+                        ItemValue="c => c.Id??Guid.Empty"
+                        ItemLabel="c => c.Name?? string.Empty">
+                </Select>
+
+            </FormItem>
+            </Col>
+
+            <Col Span="5">
+            <FormItem Required="true" Label="Factory">
+                <Select TItem="BaseDto" TItemValue="Guid"
+                        DataSource="@ListFactory"
+                        @bind-Value="@HandleTaskDto.FactoryId"
+                        EnableSearch
+                        AutoClearSearchValue="false"
+                        ItemValue="c => c.Id??Guid.Empty"
+                        ItemLabel="c => c.Name?? string.Empty">
+                </Select>
+
+            </FormItem>
+            </Col>
+
+            <Col Span="5">
+            <FormItem Required="true" Label="Department">
+                <Select TItem="BaseDto" TItemValue="Guid"
+                        DataSource="@ListDepartment"
+                        @bind-Value="@HandleTaskDto.DepartmentId"
+                        EnableSearch
+                        AutoClearSearchValue="false"
+                        ItemValue="c => c.Id??Guid.Empty"
+                        ItemLabel="c => c.Name?? string.Empty">
+                </Select>
+
+            </FormItem>
+            </Col>
+            <Col Span="3">
+            <FormItem Required="true" Label="Max">
+                <AntDesign.InputNumber @bind-Value="@HandleTaskDto.Max"  />
+            </FormItem>
+            </Col>
+            <Col Span="3">
+            <FormItem Required="true" Label="Bottom">
+                <AntDesign.InputNumber @bind-Value="@HandleTaskDto.Bottom"  />
+            </FormItem>
+            </Col>
+        </Row>
+       <Row Gutter="16">
+            <Col Span="6">
+            <FormItem Label="CategoryType" Required="true">
+                <Select TItem="KPICategoryType"
+                        TItemValue="KPICategoryType"
+                        DataSource="@ListKPICategoryType"
+                        @bind-Value="@HandleTaskDto.KPICategory"
+                        ItemValue="c => c"
+                        ItemLabel="c => c.ToString()">
+                </Select>
+            </FormItem>
+            </Col>
+            <Col Span="6">
+            <FormItem Label="IndexType" Required="true">
+                <Select TItem="KPIIndexType"
+                        TItemValue="KPIIndexType"
+                        DataSource="@ListKPIIndexType"
+                        @bind-Value="@HandleTaskDto.KPIIndexType"
+                        ItemValue="c => c"
+                        ItemLabel="c => c.ToString()">
+                </Select>
+            </FormItem>
+            </Col>
+            <Col Span="6">
+            <FormItem Label="Formula" Required="true">
+                <Select TItem="KPIIndexType"
+                        TItemValue="KPIIndexType"
+                        DataSource="@ListKPIIndexType"
+                        @bind-Value="@HandleTaskDto.KPIIndexType"
+                        ItemValue="c => c"
+                        ItemLabel="c => c.ToString()">
+                </Select>
+            </FormItem>
+            </Col>
+            <Col Span="6">
+            <FormItem Label="QuarterCalculate" Required="true">
+                <Select TItem="KPIIndexType"
+                        TItemValue="KPIIndexType"
+                        DataSource="@ListKPIIndexType"
+                        @bind-Value="@HandleTaskDto.KPIIndexType"
+                        ItemValue="c => c"
+                        ItemLabel="c => c.ToString()">
+                </Select>
+            </FormItem>
+            </Col>
+        </Row>
+        <Row Gutter="16">
+            <Col Span="12">
+            <FormItem Required="true" Label="TaskDescriptionEN">
+                <TextArea ShowCount MinRows="2" MaxRows="2" @bind-Value="@HandleTaskDto.TaskDescription" AllowClear="true" />
+            </FormItem>
+            </Col>
+            <Col Span="12">
+            <FormItem Required="true" Label="CalculateMethodEN">
+                <TextArea ShowCount MinRows="2" MaxRows="2" @bind-Value="@HandleTaskDto.CalculatedMdethod" AllowClear="true" />
+            </FormItem>
+            </Col>
+        </Row>
+    </Form>
+</Modal>
