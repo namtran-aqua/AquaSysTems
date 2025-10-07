@@ -107,7 +107,7 @@
                        HidePagination
                        DataSource="createdWarehouseImportDto.WarehouseImportDetailDtos">
                     <ColumnDefinitions Context="row2">
-                        <Column Width="270" TData="WarehouseImportDetailDto" Title="Product">
+                        <Column Width="270" TData="WarehouseImportDetailDto" Title="THUỐC">
                             <Template>
                                 <Select TItem="ProductDto" TItemValue="ProductDto"
                                         DataSource="@_products"
@@ -122,29 +122,29 @@
                             </Template>
                         </Column>
 
-                        <Column Width="110" TData="WarehouseImportDetailDto" Title="Unit">
+                        <Column Width="110" TData="WarehouseImportDetailDto" Title="ĐVT">
                             <Template>
                                 <Input Disabled="true" @bind-Value="row2.Unit" />
                             </Template>
                         </Column>
-                        <Column Width="100" TData="WarehouseImportDetailDto" Title="Quantity">
+                        <Column Width="100" TData="WarehouseImportDetailDto" Title="SỐ LƯỢNG">
                             <Template>
                                 <AntDesign.InputNumber Step="1" TValue="decimal"
                                                        Precision="1" Disabled="IsView" @bind-Value="row2.Quantity" />
                             </Template>
                         </Column>
-                        <Column Width="130" TData="WarehouseImportDetailDto" Title="ProductType">
+                        <Column Width="130" TData="WarehouseImportDetailDto" Title="LOẠI">
                             <Template>
                                 <Input Disabled="true" @bind-Value="row2.ProductType" />
                             </Template>
                         </Column>
 
-                        <Column Width="150" TData="WarehouseImportDetailDto" Title="DateManufacture">
+                        <Column Width="150" TData="WarehouseImportDetailDto" Title="NGÀY SX">
                             <Template>
                                 <DatePicker Disabled="IsView" @bind-Value="row2.DateManufacture" Format="dd/MM/yyyy" />
                             </Template>
                         </Column>
-                        <Column Width="150" TData="WarehouseImportDetailDto" Title="ExpiryDate">
+                        <Column Width="150" TData="WarehouseImportDetailDto" Title="HSD">
                             <Template>
                                 <DatePicker Disabled="IsView" @bind-Value="row2.ExpiryDate" Format="dd/MM/yyyy"/>
                             </Template>

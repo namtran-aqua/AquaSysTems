@@ -49,9 +49,9 @@
     </style>
 
     <button @onclick="ExportReportMonth" class="btn btn-primary custom-button-type">
-        <Icon Type="plus" />ExportReportMonth
+        <Icon Type="plus" />Xuất Báo Cáo
     </button>
-    <Input Placeholder="Produc tName" Value="@ProductName" style="margin-left:2px;width:190px;font-size:12px" @onkeydown="HandleKeyDown" @oninput="ProductNameChange" />
+    <Input Placeholder="Tên Thuốc" Value="@ProductName" style="margin-left:2px;width:190px;font-size:12px" @onkeydown="HandleKeyDown" @oninput="ProductNameChange" />
     <button @onclick="Search" style="margin-left:5px;border-color:#fff"><Icon Type="search" />Search</button>
     <button @onclick="Reset" style="margin-left:5px;border-color:#fff"><Icon Type="undo" />Reset</button>
 </div>
@@ -62,14 +62,14 @@
            Class="customTable fix-table-header"
            DataSource="_listInventoryFilter">
         <ColumnDefinitions Context="row">
-            <PropertyColumn Width="150" Title="ProductCode" Property="c => c.ProductCode"></PropertyColumn>
-            <PropertyColumn Width="250" Title="ProductName" Property="c => c.ProductName"></PropertyColumn>
-            <PropertyColumn Width="80" Title="Unit" Property="c => c.Unit"></PropertyColumn>
-            <PropertyColumn Width="180" Title="ProductType" Property="c => c.ProductType"></PropertyColumn>
-            <PropertyColumn Width="100" Title="Quantity" Property="c => c.QuantityFormatted"></PropertyColumn>
-            <PropertyColumn Width="80" Title="ManufacturingDate" Property="c => c.ManufacturingDate" Format="yyyy/MM/dd"></PropertyColumn>
-            <PropertyColumn Width="80" Title="ExpirationDate" Property="c => c.ExpirationDate" Format="yyyy/MM/dd"></PropertyColumn>
-            <PropertyColumn Width="80" Title="expired" Property="c => c.expired"></PropertyColumn>
+            <PropertyColumn Width="150" Title="Mã Thuốc" Property="c => c.ProductCode"></PropertyColumn>
+            <PropertyColumn Width="250" Title="Tên Thuốc" Property="c => c.ProductName"></PropertyColumn>
+            <PropertyColumn Width="80" Title="ĐVT" Property="c => c.Unit"></PropertyColumn>
+            <PropertyColumn Width="180" Title="Loại" Property="c => c.ProductType"></PropertyColumn>
+            <PropertyColumn Width="100" Title="Số Lượng" Property="c => c.QuantityFormatted"></PropertyColumn>
+            <PropertyColumn Width="80" Title="Ngày SX" Property="c => c.ManufacturingDate" Format="yyyy/MM/dd"></PropertyColumn>
+            <PropertyColumn Width="80" Title="HSD" Property="c => c.ExpirationDate" Format="yyyy/MM/dd"></PropertyColumn>
+            <PropertyColumn Width="80" Title="Hêt Hạn" Property="c => c.expired"></PropertyColumn>
         </ColumnDefinitions>
     </Table>
 </div>
