@@ -3,14 +3,16 @@ using AquaSolution.Client.Common;
 using AquaSolution.Client.Components.KPI.KPITask;
 using AquaSolution.Shared.Enum;
 using AquaSolution.Shared.Enum.KPIType;
+using AquaSolution.Shared.KPI.Formula;
 using AquaSolution.Shared.KPI.KPITasks;
 using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
 using System.Net.Http.Json;
 
 
-namespace AquaSolution.Client.Pages.KPI
+namespace AquaSolution.Client.Pages.KPI.KPITask
 {
     public partial class KPITaskManagement
     {
@@ -25,6 +27,7 @@ namespace AquaSolution.Client.Pages.KPI
         private Guid PageId { get; set; }
         private UserDto CurrenUser { get; set; }
         private HandleTaskModal handleTaskModal;
+        private KPITaskDetailModal KPITaskDetailModal;
         #endregion
         #region Innit
         protected override async Task OnInitializedAsync()
@@ -36,8 +39,18 @@ namespace AquaSolution.Client.Pages.KPI
         }
         private async Task LoadData()
         {
-            //DataSource = await Http.GetFromJsonAsync<List<KPITaskDto>>("api/KPITask");
-            //StateHasChanged();
+            var result = await Http.GetFromJsonAsync<List<KPITaskDto>>("api/KPITask/get-list");
+
+            if (result is not null)
+            {
+                DataSource = result;
+            }
+            else
+            {
+                DataSource = new();
+            }
+
+            StateHasChanged();
         }
         private async Task GetPage()
         {
@@ -74,12 +87,10 @@ namespace AquaSolution.Client.Pages.KPI
                 OwnerId = kPITaskDto.OwnerId,
                 KPIIndexType = kPITaskDto.KPIIndexType,
                 QuaterCalculatedId = kPITaskDto.QuaterCalculatedId,
-                QuaterCalculated = kPITaskDto.QuaterCalculated ?? string.Empty,
                 FormulaId = kPITaskDto.FormulaId,
                 Max = kPITaskDto.Max,
                 Bottom = kPITaskDto.Bottom,
                 FactoryId = kPITaskDto.FactoryId,
-                Factory = kPITaskDto.Factory ?? string.Empty,
                 Unit = kPITaskDto.Unit ?? string.Empty,
                 DepartmentId = kPITaskDto.DepartmentId,
             };
@@ -87,11 +98,24 @@ namespace AquaSolution.Client.Pages.KPI
         }
         private async Task ViewAsync(KPITaskDto kPITaskDto)
         {
-
+            await KPITaskDetailModal.ShowModal(kPITaskDto);
         }
         private async Task DeleteAsync(KPITaskDto kPITaskDto)
         {
+            var confirm = await JS.InvokeAsync<bool>("confirm", "Bạn có chắc chắn muốn xóa không?");
+            if (!confirm)
+                return;
+            var response = await Http.DeleteAsync($"api/KPITask/delete/{kPITaskDto.Id}");
 
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadData();
+                await Message.Success("Deleted successfully");
+            }
+            else
+            {
+                await Message.Error("An unexpected error occurred");
+            }
         }
 
         #endregion

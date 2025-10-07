@@ -3,6 +3,8 @@
 @using AquaSolution.Shared.UserManagements
 @using AquaSolution.Shared.Administration.UserManagements
 @using AquaSolution.Shared.Enum.KPIType
+@using AquaSolution.Shared.KPI.Formula
+@using AquaSolution.Shared.KPI.QuaterCalculated
 @inject IMessageService Message
 @{
     RenderFragment footer = @<Template>
@@ -120,24 +122,26 @@
             </FormItem>
             </Col>
             <Col Span="6">
-            <FormItem Label="Formula" Required="true">
-                <Select TItem="KPIIndexType"
-                        TItemValue="KPIIndexType"
-                        DataSource="@ListKPIIndexType"
-                        @bind-Value="@HandleTaskDto.KPIIndexType"
-                        ItemValue="c => c"
-                        ItemLabel="c => c.ToString()">
+            <FormItem Required="true" label="Formula">
+                <Select TItem="FormulaDto" TItemValue="Guid"
+                        DataSource="@ListFormula"
+                        EnableSearch
+                        AutoClearSearchValue="false"
+                        @bind-Value="@HandleTaskDto.FormulaId"
+                        ItemValue="c => c.Id"
+                        ItemLabel="c => c.FormulaName?? string.Empty">
                 </Select>
             </FormItem>
             </Col>
             <Col Span="6">
-            <FormItem Label="QuarterCalculate" Required="true">
-                <Select TItem="KPIIndexType"
-                        TItemValue="KPIIndexType"
-                        DataSource="@ListKPIIndexType"
-                        @bind-Value="@HandleTaskDto.KPIIndexType"
-                        ItemValue="c => c"
-                        ItemLabel="c => c.ToString()">
+            <FormItem Required="true" label="QuaterCalculated">
+                <Select TItem="QuaterCalculatedDto" TItemValue="Guid"
+                        DataSource="@ListQuaterCalculated"
+                        EnableSearch
+                        AutoClearSearchValue="false"
+                        @bind-Value="@HandleTaskDto.QuaterCalculatedId"
+                        ItemValue="c => c.Id"
+                        ItemLabel="c => c.Calculated?? string.Empty">
                 </Select>
             </FormItem>
             </Col>

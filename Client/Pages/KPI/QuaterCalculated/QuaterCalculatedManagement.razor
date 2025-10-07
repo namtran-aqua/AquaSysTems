@@ -1,12 +1,14 @@
-﻿@page "/task-management"
+﻿@page "/quater-calculated-management"
 @using AquaSolution.Client.Common
 @using AquaSolution.Client.Components.Administration.Users
 @using AntDesign
+@inject IJSRuntime JS
 @inject ModalService modal
 @inject NavigationManager Navigation
 @inject IMessageService Message
 @using AquaSolution.Client.Components.KPI.KPITask
-@using AquaSolution.Shared.KPI.KPITasks
+@using AquaSolution.Client.Components.KPI.QuaterCalculated
+@using AquaSolution.Shared.KPI.QuaterCalculated
 @using Microsoft.AspNetCore.Components.Authorization
 @inject AuthenticationStateProvider AuthStateProvider
 @inject PermissionService permissionService
@@ -42,7 +44,7 @@
             padding: 8px;
             text-align: center;
             box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.1);
-             background: transparent !important; 
+            background: transparent !important;
         }
 
 
@@ -61,34 +63,23 @@
             }
     </style>
     <div style="display: flex;  align-items: center; margin-bottom: 10px;">
-        @if (Created)
-        {
-            <button @onclick="CreatedAsync" class="btn btn-primary custom-button-type">
-                <Icon Type="plus" />Created
-            </button>
-        }
-        <!-- #region Search -->
-        <Input Placeholder="Task Name" Value="@TaskName" style="margin-left:2px;width:190px;font-size:12px" @onkeydown="HandleKeyDown" @oninput="TaskNameInputChanged" />
-        <button @onclick="Search" style="margin-left:5px;border-color:#fff"><Icon Type="search" />Search</button>
-        <button @onclick="Reset" style="margin-left:5px;border-color:#fff"><Icon Type="undo" />Reset</button>
+        <button @onclick="CreatedAsync" class="btn btn-primary custom-button-type">
+            <Icon Type="plus" />Created
+        </button>
     </div>
     <!-- #endregion -->
 
 </div>
 <div style="width:100%;overflow-x:scroll ;max-height:70vh; ">
-    <Table TItem="KPITaskDto"
+    <Table TItem="QuaterCalculatedDto"
            @ref="tableRef"
            Size="TableSize.Small"
            Class="customTable fix-table-header"
            DataSource="DataSource">
         <ColumnDefinitions Context="row">
-            <PropertyColumn Width="250px" Title="TaskName" Property="c => c.TaskName"></PropertyColumn>
-            <PropertyColumn Width="100px" Title="Category" Property="c => c.KPICategory" Filters="_kPICategoryFilter"></PropertyColumn>
-            <PropertyColumn Width="100px" Title="Index" Property="c => c.KPIIndexType" Filters="_kPIIndexTypeFilter"></PropertyColumn>
-            <PropertyColumn Width="150px" Title="Department" Property="c => c.Department" Filters="_departmentFilter"></PropertyColumn>
-            <PropertyColumn Width="90px" Title="Factory" Property="c => c.Factory" Filters="_factoryFilter"></PropertyColumn>
-
-            <Column Fixed="ColumnFixPlacement.Right" TData="KPITaskDto" Width="50px" Context="row">
+            <PropertyColumn Width="250px" Title="Calculated" Property="c => c.Calculated"></PropertyColumn>
+            <PropertyColumn Width="100px" Title="KPIQuarterCalculateType" Property="c => c.KPIQuarterCalculateType"></PropertyColumn>
+            <Column Fixed="ColumnFixPlacement.Right" TData="QuaterCalculatedDto" Width="50px" Context="row">
                 <Template>
                     <Popover Title="Actions" Trigger="new Trigger[] { Trigger.Click }" Placement="Placement.Bottom">
                         <ChildContent>
@@ -96,22 +87,13 @@
                         </ChildContent>
                         <ContentTemplate>
                             <div style="display: flex; flex-direction: column; gap: 4px; padding: 8px;">
-                                <Button Type="ButtonType.Text" OnClick="@(async () => await ViewAsync(row))" Style="text-align: left;">
-                                    <Icon Type="plus" /> Detail
+                                <Button Type="ButtonType.Text" OnClick="@(async () => await EditAsync(row))" Style="text-align: left;">
+                                    <Icon Type="edit" /> Edit
                                 </Button>
-                                @if (Edit)
-                                {
-                                    <Button Type="ButtonType.Text" OnClick="@(async () => await EditAsync(row))" Style="text-align: left;">
-                                        <Icon Type="edit" /> Edit
-                                    </Button>
-                                }
-                     
-                                @if (Delete)
-                                {
-                                    <Button Type="ButtonType.Text" OnClick="@(async () => await DeleteAsync(row))" Style="text-align: left;">
-                                        <Icon Type="delete" /> Delete
-                                    </Button>
-                                }
+                                <Button Type="ButtonType.Text" OnClick="@(async () => await DeleteAsync(row))" Style="text-align: left;">
+                                    <Icon Type="delete" /> Delete
+                                </Button>
+
                             </div>
                         </ContentTemplate>
                     </Popover>
@@ -120,4 +102,4 @@
         </ColumnDefinitions>
     </Table>
 </div>
-<HandleTaskModal @ref="handleTaskModal" OnSave="LoadData"></HandleTaskModal>
+<QuaterCalculatedModal @ref="quaterCalculatedModal" OnSave="LoadData"></QuaterCalculatedModal>

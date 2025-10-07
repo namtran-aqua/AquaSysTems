@@ -1,0 +1,56 @@
+﻿@using AntDesign
+@using AquaSolution.Shared.KPI.Formula;
+@using AquaSolution.Shared.UserManagements
+@using AquaSolution.Shared.Administration.UserManagements
+@using AquaSolution.Shared.Enum.KPIType
+@inject IMessageService Message
+@{
+    RenderFragment footer = @<Template>
+
+        <Button OnClick="@SaveAsync" @key="@( "submit" )"
+                Type="ButtonType.Primary">
+            Save
+        </Button>
+
+        <Button Style="color:#808080" OnClick="@Close" @key="@("back")">Close</Button>
+
+    </Template>;
+}
+<Modal @bind-Visible="IsModalVisible" Style="z-index: 9999;width:1000px;margin-top:-75px" Footer="@footer">
+    <Form @ref="@formRef"
+          Model="@formulaDto"
+          Layout="FormLayout.Vertical"
+          OnFinish="SaveAsync"
+          ValidateMode="FormValidateMode.Complex"
+          ValidateOnChange="true">
+
+        <Row Gutter="16">
+            <Col Span="8">
+            <FormItem Required="true" Label="FormulaName">
+                <TextArea ShowCount MinRows="1" MaxRows="1" @bind-Value="@formulaDto.FormulaName" AllowClear="true" />
+            </FormItem>
+            </Col>
+   
+            <Col Span="8">
+            <FormItem Required="true" Label="Description">
+                <TextArea ShowCount MinRows="1" MaxRows="1" @bind-Value="@formulaDto.Description" AllowClear="true" />
+            </FormItem>
+            </Col>
+            <Col Span="6">
+            <FormItem Label="FormulaType" Required="true">
+                <Select TItem="KPIFormulaType"
+                        TItemValue="KPIFormulaType"
+                        DataSource="@ListKPIFormulaType"
+                        @bind-Value="@formulaDto.KPIFormulaType"
+                        ItemValue="c => c"
+                        ItemLabel="c => c.ToString()">
+                </Select>
+            </FormItem>
+            </Col>
+        </Row>
+
+       
+
+         
+    </Form>
+</Modal>

@@ -6,7 +6,9 @@ using AquaSolution.Shared.Departments;
 using AquaSolution.Shared.Enum;
 using AquaSolution.Shared.Enum.KPIType;
 using AquaSolution.Shared.Factory;
+using AquaSolution.Shared.KPI.Formula;
 using AquaSolution.Shared.KPI.KPITasks;
+using AquaSolution.Shared.KPI.QuaterCalculated;
 using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Components;
 using System.Net.Http.Json;
@@ -51,6 +53,8 @@ namespace AquaSolution.Client.Components.KPI.KPITask
             await LoadUser();
             await LoadDepartment();
             await LoadFactory();
+            await LoadFormula();
+            await LoadQuaterCalculated();
             GetEnum();
             StateHasChanged();
         }
@@ -101,19 +105,91 @@ namespace AquaSolution.Client.Components.KPI.KPITask
             ListKPIIndexType = Enum.GetValues(typeof(KPIIndexType))
                       .Cast<KPIIndexType>()
                       .ToList();
-            //if (HandleTaskDto != null)
-            //{
-            //    DepartmentType = ListDepartmentType
-            //             .FirstOrDefault(x => x == _model.DepartmentType);
-            //}
+        }
+        private List<FormulaDto> ListFormula = new();
+        private async Task LoadFormula()
+        {
+            var result = await Http.GetFromJsonAsync<List<FormulaDto>>("api/formula/get-list");
 
+            if (result is not null)
+            {
+                ListFormula = result;
+            }
+            else
+            {
+                ListFormula = new();
+            }
+        }
+        private List<QuaterCalculatedDto> ListQuaterCalculated = new();
+        private async Task LoadQuaterCalculated()
+        {
+            var result = await Http.GetFromJsonAsync<List<QuaterCalculatedDto>>("api/quaterCalculated/get-list");
+
+            if (result is not null)
+            {
+                ListQuaterCalculated = result;
+            }
+            else
+            {
+                ListQuaterCalculated = new();
+            }
         }
         #endregion
         #region Actions
         private async Task SaveAsync()
         {
-            var a = HandleTaskDto;
+            var valid = formRef.Validate();
+            if (!valid)
+            {
+                return;
+            }
+            bool isSave = false;
+            if (IsEdit)
+            {
+                isSave = await UpdateAsync();
+            }
+            else
+            {
+                isSave = await CreatedAsync();
+            }
+            if (isSave)
+            {
+                await OnSave.InvokeAsync();
+                IsModalVisible = false;
+            }
         }
+        private async Task<bool> CreatedAsync()
+        {
+
+            var response = await Http.PostAsJsonAsync("api/KPITask/create", HandleTaskDto);
+
+            if (response.IsSuccessStatusCode)
+            {
+                await Message.Success("Created successfully.");
+                return true;
+            }
+            else
+            {
+                await Message.Error("Created failed.");
+                return false;
+            }
+        }
+        private async Task<bool> UpdateAsync()
+        {
+            var response = await Http.PutAsJsonAsync("api/KPITask/update", HandleTaskDto);
+
+            if (response.IsSuccessStatusCode)
+            {
+                await Message.Success("Updated successfully.");
+                return true;
+            }
+            else
+            {
+                await Message.Error("Updated failed.");
+                return false;
+            }
+        }
+
         private void Close()
         {
             IsModalVisible = false;

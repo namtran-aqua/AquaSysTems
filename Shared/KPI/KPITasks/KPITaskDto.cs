@@ -16,6 +16,7 @@ namespace AquaSolution.Shared.KPI.KPITasks
         public string CalculatedMdethod { get; set; }
         public string DataSource { get; set; }
         public Guid OwnerId { get; set; }
+        public string OwnerName { get; set; }
         public KPIIndexType KPIIndexType { get; set; }
         public Guid QuaterCalculatedId { get; set; }
         public string QuaterCalculated { get; set; }
