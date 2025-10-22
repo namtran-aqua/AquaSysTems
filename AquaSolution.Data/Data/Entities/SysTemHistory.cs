@@ -11,6 +11,6 @@ namespace AquaSolution.Data.Data.Entities
     {
         public Guid Id { get; set; }
         public string? HistoryFlow { get; set; }
-
+        public DateTime CreatedDate { get; set; }
     }
 }

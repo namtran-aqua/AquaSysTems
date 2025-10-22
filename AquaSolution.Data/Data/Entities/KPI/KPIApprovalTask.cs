@@ -6,7 +6,7 @@ namespace AquaSolution.Data.Data.Entities.KPI
     public class KPIApprovalTask
     {
         public Guid Id { get; set; }
-        public Guid KPIRequestId { get; set; }
+        public Guid SubmitId { get; set; }
         public Guid RequesterId { get; set; }
         public EApprovalStatusType StatusType { get; set; }
         public string? Comment { get; set; }

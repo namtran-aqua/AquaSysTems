@@ -179,9 +179,9 @@ using AquaSolution.Data.Connection;
 using AquaSolution.Data.Data;
 using AquaSolution.Server;
 using AquaSolution.Server.SignalR;
-using AquaSolution.Shared.Permissions;
+
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;

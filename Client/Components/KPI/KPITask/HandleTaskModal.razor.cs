@@ -51,7 +51,6 @@ namespace AquaSolution.Client.Components.KPI.KPITask
             await LoadDepartment();
             await LoadFactory();
             await LoadFormula();
-            await LoadQuaterCalculated();
             GetEnum();
             StateHasChanged();
         }
@@ -117,20 +116,7 @@ namespace AquaSolution.Client.Components.KPI.KPITask
                 ListFormula = new();
             }
         }
-        private List<QuaterCalculatedDto> ListQuaterCalculated = new();
-        private async Task LoadQuaterCalculated()
-        {
-            var result = await Http.GetFromJsonAsync<List<QuaterCalculatedDto>>("api/quaterCalculated/get-list");
 
-            if (result is not null)
-            {
-                ListQuaterCalculated = result;
-            }
-            else
-            {
-                ListQuaterCalculated = new();
-            }
-        }
         #endregion
         #region Actions
         private async Task SaveAsync()

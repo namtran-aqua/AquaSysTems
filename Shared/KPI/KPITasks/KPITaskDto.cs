@@ -18,10 +18,10 @@ namespace AquaSolution.Shared.KPI.KPITasks
         public Guid OwnerId { get; set; }
         public string OwnerName { get; set; }
         public KPIIndexType KPIIndexType { get; set; }
-        public Guid QuaterCalculatedId { get; set; }
-        public string QuaterCalculated { get; set; }
+
         public Guid FormulaId { get; set; }
         public string Formula { get; set; }
+        public KPIFormulaType KPIFormulaType { get; set; }
         public decimal Max { get; set; }
         public decimal Bottom { get; set; }
         public Guid FactoryId { get; set; }

@@ -10,6 +10,8 @@ namespace AquaSolution.Data.Data.MappingConfigurations.KPI
         {
             builder.ToTable("tbl_KPIRequests");
             builder.HasKey(e => e.Id);
+ 
+            builder.HasKey(e => e.SubmitId);
   
             builder.Property(e => e.RequestStatus)
                      .HasConversion<string>()

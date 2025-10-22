@@ -48,6 +48,7 @@ namespace AquaSolution.Client.Components.ITSuport.RequestITSuport
         {
             var CurrenUserClass = new CurrenUser(Http, AuthStateProvider);
             CurrenUser = await CurrenUserClass.LoadCurrenUser();
+
             ListTechnician = new List<UserContributerDto>();
             var data = await Http.GetFromJsonAsync<List<UserContributerDto>>("api/user/get-contributer");
             ListUser = data.ToList();
@@ -89,7 +90,7 @@ namespace AquaSolution.Client.Components.ITSuport.RequestITSuport
             }
             else
             {
-                var valid = formRef.Validate();
+                var valid =  formRef.Validate();
                 if (!valid)
                 {
                     return;
@@ -233,12 +234,12 @@ namespace AquaSolution.Client.Components.ITSuport.RequestITSuport
             else
             {
                 var error = await response.Content.ReadAsStringAsync();
-                await Message.Error($"Update failed: {error}");
+                await Message.Error($"Update failed");
 
             }
         }
         private async Task CreatedAsync(HandleRequestSuportDto handleRequestSuportDto)
-        {
+        {  
             var response = await Http.PostAsJsonAsync("api/RequestITSuport/created", handleRequestSuportDto);
 
             if (response.IsSuccessStatusCode)
@@ -249,7 +250,7 @@ namespace AquaSolution.Client.Components.ITSuport.RequestITSuport
             else
             {
                 var error = await response.Content.ReadAsStringAsync();
-                await Message.Error($"Create failed: {error}");
+                await Message.Error($"Create failed");
             }
         }
         #endregion

@@ -9,6 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Components\KPI\KPIMonthlyTarget\**" />
+    <Content Remove="Components\KPI\KPIMonthlyTarget\**" />
+    <EmbeddedResource Remove="Components\KPI\KPIMonthlyTarget\**" />
+    <None Remove="Components\KPI\KPIMonthlyTarget\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AntDesign.ProLayout" Version="1.1.2" />
     <PackageReference Include="Blazored.SessionStorage" Version="2.4.0" />
     <PackageReference Include="EPPlus" Version="7.4.0" />

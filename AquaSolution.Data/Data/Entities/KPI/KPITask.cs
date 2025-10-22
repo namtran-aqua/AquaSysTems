@@ -1,5 +1,4 @@
-﻿using AquaSolution.Shared.Enum;
-using AquaSolution.Shared.Enum.KPIType;
+﻿using AquaSolution.Shared.Enum.KPIType;
 
 namespace AquaSolution.Data.Data.Entities
 {
@@ -14,7 +13,6 @@ namespace AquaSolution.Data.Data.Entities
         public string Unit { get; set; }
         public Guid OwnerId { get; set; }
         public KPIIndexType KPIIndexType { get; set; }
-        public Guid QuaterCalculatedId { get; set; }
         public Guid FormulaId { get; set; }
         public decimal Max { get; set; }
         public decimal Bottom { get; set; }

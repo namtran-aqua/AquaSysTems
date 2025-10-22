@@ -9,7 +9,6 @@ public class KPITaskService : IKPITaskService
 {
     private readonly IRepository<KPITask> _kPITaskRepo;
     private readonly IRepository<User> _userRepo;
-    private readonly IRepository<QuaterCalculated> _quaterCalculatedRepo;
     private readonly IRepository<Formula> _formulaRepo;
     private readonly IRepository<Department> _departmentRepo;
     private readonly IRepository<Factory> _factoryIdRepo;
@@ -18,7 +17,6 @@ public class KPITaskService : IKPITaskService
 
     public KPITaskService(IRepository<KPITask> kPITaskRepo,
         IRepository<User> userRepo,
-        IRepository<QuaterCalculated> quaterCalculatedRepo,
         IRepository<Formula> formulaRepo,
         IRepository<Department> departmentRepo,
         IRepository<Factory> factoryIdRepo
@@ -26,7 +24,6 @@ public class KPITaskService : IKPITaskService
     {
         _kPITaskRepo = kPITaskRepo;
         _userRepo = userRepo;
-        _quaterCalculatedRepo = quaterCalculatedRepo;
         _formulaRepo = formulaRepo;
         _departmentRepo = departmentRepo;
         _factoryIdRepo = factoryIdRepo;
@@ -44,7 +41,6 @@ public class KPITaskService : IKPITaskService
             DataSource = formulaDto.DataSource,
             OwnerId = formulaDto.OwnerId,
             KPIIndexType = formulaDto.KPIIndexType,
-            QuaterCalculatedId = formulaDto.QuaterCalculatedId,
             FormulaId = formulaDto.FormulaId,
             Max = formulaDto.Max,
             Bottom = formulaDto.Bottom,
@@ -71,7 +67,6 @@ public class KPITaskService : IKPITaskService
         var user = await _userRepo.GetQueryableAsync();
         var query = from kpiTask in await _kPITaskRepo.GetQueryableAsync()
                     join owner in user on kpiTask.OwnerId equals owner.Id
-                    join quater in await _quaterCalculatedRepo.GetQueryableAsync() on kpiTask.QuaterCalculatedId equals quater.Id
                     join formula in await _formulaRepo.GetQueryableAsync() on kpiTask.FormulaId equals formula.Id
                     join department in await _departmentRepo.GetQueryableAsync() on kpiTask.DepartmentId equals department.Id
                     join factory in await _factoryIdRepo.GetQueryableAsync() on kpiTask.FactoryId equals factory.Id
@@ -87,8 +82,6 @@ public class KPITaskService : IKPITaskService
                         OwnerId = kpiTask.OwnerId,
                         OwnerName = owner.FullName,
                         KPIIndexType = kpiTask.KPIIndexType,
-                        QuaterCalculatedId = kpiTask.QuaterCalculatedId,
-                        QuaterCalculated = quater.Calculated,
                         FormulaId = kpiTask.FormulaId,
                         Formula = formula.FormulaName,
                         Max = kpiTask.Max,
@@ -100,17 +93,18 @@ public class KPITaskService : IKPITaskService
                         Unit = kpiTask.Unit,
                         CreatedById = kpiTask.CreatedById,
                         CreatedByName = createdBy.FullName,
-                        CreatedDate = kpiTask.CreatedDate
+                        CreatedDate = kpiTask.CreatedDate,
+                        KPIFormulaType = formula.KPIFormulaType,
                     };
-                    var result = await query.ToListAsync(); 
-        if(result == null || result.Count == 0)
-            return new List<KPITaskDto>();  
+        var result = await query.ToListAsync();
+        if (result == null || result.Count == 0)
+            return new List<KPITaskDto>();
         return result;
 
     }
     public async Task<bool> UpdateAsync(HandleTaskDto formulaDto)
     {
-       var entity = await _kPITaskRepo.GetByIdAsync(formulaDto.Id);
+        var entity = await _kPITaskRepo.GetByIdAsync(formulaDto.Id);
         if (entity == null)
             return false;
         entity.TaskName = formulaDto.TaskName;
@@ -120,7 +114,6 @@ public class KPITaskService : IKPITaskService
         entity.DataSource = formulaDto.DataSource;
         entity.OwnerId = formulaDto.OwnerId;
         entity.KPIIndexType = formulaDto.KPIIndexType;
-        entity.QuaterCalculatedId = formulaDto.QuaterCalculatedId;
         entity.FormulaId = formulaDto.FormulaId;
         entity.Max = formulaDto.Max;
         entity.Bottom = formulaDto.Bottom;

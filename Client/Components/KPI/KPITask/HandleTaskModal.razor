@@ -46,7 +46,7 @@
 
         <Row Gutter="16">
 
-            <Col Span="8">
+            <Col Span="9">
             <FormItem Required="true" Label="PIC">
                 <Select TItem="UserContributerDto" TItemValue="Guid"
                         DataSource="@ListUser"
@@ -60,7 +60,7 @@
             </FormItem>
             </Col>
 
-            <Col Span="5">
+            <Col Span="4">
             <FormItem Required="true" Label="Factory">
                 <Select TItem="BaseDto" TItemValue="Guid"
                         DataSource="@ListFactory"
@@ -99,7 +99,7 @@
             </Col>
         </Row>
        <Row Gutter="16">
-            <Col Span="6">
+            <Col Span="8">
             <FormItem Label="CategoryType" Required="true">
                 <Select TItem="KPICategoryType"
                         TItemValue="KPICategoryType"
@@ -110,7 +110,7 @@
                 </Select>
             </FormItem>
             </Col>
-            <Col Span="6">
+            <Col Span="8">
             <FormItem Label="IndexType" Required="true">
                 <Select TItem="KPIIndexType"
                         TItemValue="KPIIndexType"
@@ -121,7 +121,7 @@
                 </Select>
             </FormItem>
             </Col>
-            <Col Span="6">
+            <Col Span="8">
             <FormItem Required="true" label="Formula">
                 <Select TItem="FormulaDto" TItemValue="Guid"
                         DataSource="@ListFormula"
@@ -130,18 +130,6 @@
                         @bind-Value="@HandleTaskDto.FormulaId"
                         ItemValue="c => c.Id"
                         ItemLabel="c => c.FormulaName?? string.Empty">
-                </Select>
-            </FormItem>
-            </Col>
-            <Col Span="6">
-            <FormItem Required="true" label="QuaterCalculated">
-                <Select TItem="QuaterCalculatedDto" TItemValue="Guid"
-                        DataSource="@ListQuaterCalculated"
-                        EnableSearch
-                        AutoClearSearchValue="false"
-                        @bind-Value="@HandleTaskDto.QuaterCalculatedId"
-                        ItemValue="c => c.Id"
-                        ItemLabel="c => c.Calculated?? string.Empty">
                 </Select>
             </FormItem>
             </Col>

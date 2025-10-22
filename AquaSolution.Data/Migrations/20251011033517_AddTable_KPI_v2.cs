@@ -51,15 +51,12 @@ namespace AquaSolution.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "tbl_KPITargets",
+                name: "tbl_KPIMonthlyTargets",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     UserTaskId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Month = table.Column<int>(type: "int", nullable: false),
-                    Quater = table.Column<int>(type: "int", nullable: false),
-                    HaftYear = table.Column<int>(type: "int", nullable: false),
-                    Year = table.Column<int>(type: "int", nullable: false),
                     TargetValue = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETDATE()"),
                     UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -68,21 +65,21 @@ namespace AquaSolution.Data.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_tbl_KPITargets", x => x.Id);
+                    table.PrimaryKey("PK_tbl_KPIMonthlyTargets", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_tbl_KPITargets_tbl_UserTasks_UserTaskId",
+                        name: "FK_tbl_KPIMonthlyTargets_tbl_UserTasks_UserTaskId",
                         column: x => x.UserTaskId,
                         principalTable: "tbl_UserTasks",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_tbl_KPITargets_tbl_Users_UpdatedBy",
+                        name: "FK_tbl_KPIMonthlyTargets_tbl_Users_UpdatedBy",
                         column: x => x.UpdatedBy,
                         principalTable: "tbl_Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_tbl_KPITargets_tbl_Users_UserId",
+                        name: "FK_tbl_KPIMonthlyTargets_tbl_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "tbl_Users",
                         principalColumn: "Id",
@@ -160,15 +157,13 @@ namespace AquaSolution.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "tbl_KPIActuals",
+                name: "tbl_KPIMonthlyActuals",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    KPITargetId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    KPIMonthlyTargetId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     KPITotalScoreId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Month = table.Column<int>(type: "int", nullable: false),
-                    Quater = table.Column<int>(type: "int", nullable: false),
-                    HaftYear = table.Column<int>(type: "int", nullable: false),
                     Year = table.Column<int>(type: "int", nullable: false),
                     TargetValue = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETDATE()"),
@@ -178,21 +173,21 @@ namespace AquaSolution.Data.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_tbl_KPIActuals", x => x.Id);
+                    table.PrimaryKey("PK_tbl_KPIMonthlyActuals", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_tbl_KPIActuals_tbl_KPITargets_KPITargetId",
-                        column: x => x.KPITargetId,
-                        principalTable: "tbl_KPITargets",
+                        name: "FK_tbl_KPIMonthlyActuals_tbl_KPIMonthlyTargets_KPIMonthlyTargetId",
+                        column: x => x.KPIMonthlyTargetId,
+                        principalTable: "tbl_KPIMonthlyTargets",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_tbl_KPIActuals_tbl_KPITotalScores_KPITotalScoreId",
+                        name: "FK_tbl_KPIMonthlyActuals_tbl_KPITotalScores_KPITotalScoreId",
                         column: x => x.KPITotalScoreId,
                         principalTable: "tbl_KPITotalScores",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_tbl_KPIActuals_tbl_Users_UpdatedBy",
+                        name: "FK_tbl_KPIMonthlyActuals_tbl_Users_UpdatedBy",
                         column: x => x.UpdatedBy,
                         principalTable: "tbl_Users",
                         principalColumn: "Id",
@@ -200,18 +195,18 @@ namespace AquaSolution.Data.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_tbl_KPIActuals_KPITargetId",
-                table: "tbl_KPIActuals",
-                column: "KPITargetId");
+                name: "IX_tbl_KPIMonthlyActuals_KPIMonthlyTargetId",
+                table: "tbl_KPIMonthlyActuals",
+                column: "KPIMonthlyTargetId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_tbl_KPIActuals_KPITotalScoreId",
-                table: "tbl_KPIActuals",
+                name: "IX_tbl_KPIMonthlyActuals_KPITotalScoreId",
+                table: "tbl_KPIMonthlyActuals",
                 column: "KPITotalScoreId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_tbl_KPIActuals_UpdatedBy",
-                table: "tbl_KPIActuals",
+                name: "IX_tbl_KPIMonthlyActuals_UpdatedBy",
+                table: "tbl_KPIMonthlyActuals",
                 column: "UpdatedBy");
 
             migrationBuilder.CreateIndex(
@@ -250,18 +245,18 @@ namespace AquaSolution.Data.Migrations
                 column: "RejectBy");
 
             migrationBuilder.CreateIndex(
-                name: "IX_tbl_KPITargets_UpdatedBy",
-                table: "tbl_KPITargets",
+                name: "IX_tbl_KPIMonthlyTargets_UpdatedBy",
+                table: "tbl_KPIMonthlyTargets",
                 column: "UpdatedBy");
 
             migrationBuilder.CreateIndex(
-                name: "IX_tbl_KPITargets_UserId",
-                table: "tbl_KPITargets",
+                name: "IX_tbl_KPIMonthlyTargets_UserId",
+                table: "tbl_KPIMonthlyTargets",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_tbl_KPITargets_UserTaskId",
-                table: "tbl_KPITargets",
+                name: "IX_tbl_KPIMonthlyTargets_UserTaskId",
+                table: "tbl_KPIMonthlyTargets",
                 column: "UserTaskId");
 
             migrationBuilder.CreateIndex(
@@ -274,13 +269,13 @@ namespace AquaSolution.Data.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "tbl_KPIActuals");
+                name: "tbl_KPIMonthlyActuals");
 
             migrationBuilder.DropTable(
                 name: "tbl_KPIApprovalTasks");
 
             migrationBuilder.DropTable(
-                name: "tbl_KPITargets");
+                name: "tbl_KPIMonthlyTargets");
 
             migrationBuilder.DropTable(
                 name: "tbl_KPITotalScores");

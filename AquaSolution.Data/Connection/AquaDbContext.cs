@@ -2,6 +2,7 @@
 using AquaSolution.Data.Data.Entities.KPI;
 using AquaSolution.Data.Data.MappingConfigurations;
 using AquaSolution.Data.Data.MappingConfigurations.KPI;
+using AquaSolution.Data.KPI.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace AquaSolution.Data.Connection
@@ -55,17 +56,20 @@ namespace AquaSolution.Data.Connection
         public DbSet<Attachment> tbl_Attachment { get; set; }
         #endregion
         #region KPI
-        public DbSet<QuaterCalculated> tbl_QuaterCalculateds { get; set; }
         public DbSet<Formula> tbl_Formulas { get; set; }
         public DbSet<KPITask> tbl_KPITasks { get; set; }
         public DbSet<UserTask> tbl_UserTasks { get; set; }
 
-        public DbSet<KPIActual> tbl_KPIActuals { get; set; }
+        public DbSet<KPIMonthlyActual> tbl_KPIMonthlyActuals { get; set; }
         public DbSet<KPIApprovalTask> tbl_KPIApprovalTasks { get; set; }
         public DbSet<KPIRequest> tbl_KPIRequests { get; set; }
-        public DbSet<KPITarget> tbl_KPITargets { get; set; }
+        public DbSet<KPIMonthlyTarget> tbl_KPIMonthlyTargets { get; set; }
         public DbSet<KPITotalScore> tbl_KPITotalScores { get; set; }
         public DbSet<KPIDetailScore> tbl_KPIDetailScores { get; set; }
+        public DbSet<DealineKPISubmitManagement> tbl_DealineKPISubmitManagement { get; set; }
+        public DbSet<KPIIndexWeight> tbl_KPIIndexWeights { get; set; }
+        public DbSet<KPIActualMaster> tbl_KPIActualMasters { get; set; }
+
 
         #endregion
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -114,15 +118,16 @@ namespace AquaSolution.Data.Connection
             #region KPI
             modelBuilder.ApplyConfiguration(new KPITaskConfiguration());
             modelBuilder.ApplyConfiguration(new FormulaConfiguration());
-            modelBuilder.ApplyConfiguration(new QuaterCalculatedConfiguration());
             modelBuilder.ApplyConfiguration(new UserTaskConfiguration());
 
-            modelBuilder.ApplyConfiguration(new KPIActualConfiguration());
+            modelBuilder.ApplyConfiguration(new KPIMonthlyActualConfiguration());
             modelBuilder.ApplyConfiguration(new KPIApprovalTaskConfiguration());
             modelBuilder.ApplyConfiguration(new KPIRequestConfiguration());
-            modelBuilder.ApplyConfiguration(new KPITargetConfiguration());
+            modelBuilder.ApplyConfiguration(new KPIMonthlyTargetConfiguration());
             modelBuilder.ApplyConfiguration(new KPITotalScoreConfiguration());
             modelBuilder.ApplyConfiguration(new KPIDetailScoreConfiguration());
+            modelBuilder.ApplyConfiguration(new KPIIndexWeightConfiguration());
+            modelBuilder.ApplyConfiguration(new KPIActualMasterConfiguration());
 
             #endregion
 

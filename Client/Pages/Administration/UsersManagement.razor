@@ -89,7 +89,13 @@
                     </div>
                 </Template>
             </Column>
-            <PropertyColumn Width="250px" Title="Fullname" Property="c => c.FullName"></PropertyColumn>
+            <PropertyColumn Width="250px" Title="Fullname" Property="c => c.FullName">
+                <Template>
+                    <a href="javascript:void(0);" @onclick="() => DetailUser(row)">
+                        @row.FullName
+                    </a>
+                </Template>
+            </PropertyColumn>
             <PropertyColumn Width="100px" Title="WorkDayId" Property="c => c.WorkDayId"></PropertyColumn>
             <PropertyColumn Width="100px" Title="Factory" Property="c => c.FactoryName" Filters="_factoryFilter"></PropertyColumn>
             <PropertyColumn Width="150px" Title="DepartmentName" Property="c => c.DepartmentName" Filters="_departmentFilter"></PropertyColumn>

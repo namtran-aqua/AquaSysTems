@@ -13,7 +13,8 @@ using AquaSolution.Server.Services.Common.HandleInventories;
 using AquaSolution.Server.Services.ITSuport.RequestSuportCategories;
 using AquaSolution.Server.Services.KPi.FormulaService;
 using AquaSolution.Server.Services.KPi.KPITaskService;
-using AquaSolution.Server.Services.KPi.QuaterCalculatedService;
+using AquaSolution.Server.Services.KPI.KPISubmit;
+using AquaSolution.Server.Services.KPI.KPIUserTask;
 using AquaSolution.Server.Services.ManageMedicalRooms.InventoriesService;
 using AquaSolution.Server.Services.ManageMedicalRooms.InventoryPeriodService;
 using AquaSolution.Server.Services.ManageMedicalRooms.MedicineSupplyRequestService;
@@ -61,8 +62,12 @@ namespace AquaSolution.Server
             #endregion
             #region KPI
             services.AddScoped<IFormulaService, FormulaService>();
-            services.AddScoped<IQuaterCalculatedService, QuaterCalculatedService>();
             services.AddScoped<IKPITaskService, KPITaskService>();
+            services.AddScoped<IUserTaskService, UserTaskService>();
+            services.AddScoped<IKPIMonthlyTargetService, KPIMonthlyTargetService>();
+            services.AddScoped<IKPISubmitService, KPISubmitService>();
+            services.AddScoped<IDealineManagementService, DealineManagementService>();
+
             #endregion
             return services;
         }

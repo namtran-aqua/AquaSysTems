@@ -81,7 +81,7 @@
            @ref="tableRef"
            Size="TableSize.Small"
            Class="customTable fix-table-header"
-           DataSource="DataSource">
+           DataSource="DataFilter">
         <ColumnDefinitions Context="row">
             <PropertyColumn Width="250px" Title="TaskName" Property="c => c.TaskName">
                 <Template>
@@ -94,7 +94,12 @@
             <PropertyColumn Width="100px" Title="Index" Property="c => c.KPIIndexType" Filters="_kPIIndexTypeFilter"></PropertyColumn>
             <PropertyColumn Width="150px" Title="Department" Property="c => c.Department" Filters="_departmentFilter"></PropertyColumn>
             <PropertyColumn Width="90px" Title="Factory" Property="c => c.Factory" Filters="_factoryFilter"></PropertyColumn>
-
+            <PropertyColumn Width="90px" Title="DataSource" Property="c => c.DataSource"></PropertyColumn>
+            <PropertyColumn Width="200px" Title="PIC" Property="c => c.OwnerName"></PropertyColumn>
+            <PropertyColumn Width="90px" Title="Unit" Property="c => c.Unit"></PropertyColumn>
+            <PropertyColumn Width="90px" Title="Unit" Property="c => c.Max"></PropertyColumn>
+            <PropertyColumn Width="90px" Title="Bottom" Property="c => c.Bottom"></PropertyColumn>
+            <PropertyColumn Width="150px" Title="Formula" Property="c => c.Formula"></PropertyColumn>
             <Column Fixed="ColumnFixPlacement.Right" TData="KPITaskDto" Width="50px" Context="row">
                 <Template>
                     <Popover Title="Actions" Trigger="new Trigger[] { Trigger.Click }" Placement="Placement.Bottom">

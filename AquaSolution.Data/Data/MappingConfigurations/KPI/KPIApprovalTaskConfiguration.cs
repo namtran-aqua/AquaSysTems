@@ -14,7 +14,7 @@ namespace AquaSolution.Data.Data.MappingConfigurations.KPI
 
             builder.HasOne<KPIRequest>()
                      .WithMany()
-                     .HasForeignKey(u => u.KPIRequestId)
+                     .HasForeignKey(u => u.SubmitId)
                      .OnDelete(DeleteBehavior.Restrict);
             builder.HasOne<User>()
                     .WithMany()

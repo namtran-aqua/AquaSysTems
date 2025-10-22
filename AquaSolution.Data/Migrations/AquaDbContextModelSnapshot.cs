@@ -343,6 +343,78 @@ namespace AquaSolution.Data.Migrations
                     b.ToTable("tbl_InventoryPeriodDetails", (string)null);
                 });
 
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPI.DealineKPISubmitManagement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Month")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("tbl_DealineKPISubmitManagement");
+                });
+
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPI.KPIActualMaster", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<int?>("HaflYear")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("KPIScore")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("KeyTaskScore")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("OMGScore")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("Quarter")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("TotaleScore")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("tbl_KPIActualMasters", (string)null);
+                });
+
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPI.KPIApprovalTask", b =>
                 {
                     b.Property<Guid>("Id")
@@ -358,9 +430,6 @@ namespace AquaSolution.Data.Migrations
                     b.Property<string>("Comment")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("KPIRequestId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<Guid?>("RejectBy")
                         .HasColumnType("uniqueidentifier");
 
@@ -375,69 +444,20 @@ namespace AquaSolution.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<Guid>("SubmitId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ApprovedBy");
-
-                    b.HasIndex("KPIRequestId");
 
                     b.HasIndex("RejectBy");
 
                     b.HasIndex("RequesterId");
 
+                    b.HasIndex("SubmitId");
+
                     b.ToTable("tbl_KPIApprovalTasks", (string)null);
-                });
-
-            modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPIActual", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETDATE()");
-
-                    b.Property<int>("HaftYear")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("KPITargetId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("KPITotalScoreId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("Month")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Quater")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("TargetValue")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<Guid>("UpdatedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("UpdatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("Year")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("KPITargetId");
-
-                    b.HasIndex("KPITotalScoreId");
-
-                    b.HasIndex("UpdatedBy");
-
-                    b.ToTable("tbl_KPIActuals", (string)null);
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPIDetailScore", b =>
@@ -500,9 +520,131 @@ namespace AquaSolution.Data.Migrations
                     b.ToTable("tbl_KPIDetailScores", (string)null);
                 });
 
-            modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPIRequest", b =>
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPIIndexWeight", b =>
                 {
                     b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("KPIIndexType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PeriodType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("PositionType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal>("Weight")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("tbl_KPIIndexWeights", (string)null);
+                });
+
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPIMonthlyActual", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal?>("ActualValue")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<Guid>("KPIMonthlyTargetId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("KPITotalScoreId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("Month")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("Year")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("KPIMonthlyTargetId");
+
+                    b.HasIndex("KPITotalScoreId");
+
+                    b.HasIndex("UpdatedBy");
+
+                    b.ToTable("tbl_KPIMonthlyActuals", (string)null);
+                });
+
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPIMonthlyTarget", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<int?>("Month")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("TargetValue")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserTaskId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UpdatedBy");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserTaskId");
+
+                    b.ToTable("tbl_KPIMonthlyTargets", (string)null);
+                });
+
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPIRequest", b =>
+                {
+                    b.Property<Guid>("SubmitId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
@@ -523,6 +665,9 @@ namespace AquaSolution.Data.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Note")
                         .HasColumnType("nvarchar(max)");
 
@@ -541,7 +686,7 @@ namespace AquaSolution.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Id");
+                    b.HasKey("SubmitId");
 
                     b.HasIndex("ApprovalBy");
 
@@ -550,55 +695,6 @@ namespace AquaSolution.Data.Migrations
                     b.HasIndex("RejectBy");
 
                     b.ToTable("tbl_KPIRequests", (string)null);
-                });
-
-            modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPITarget", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETDATE()");
-
-                    b.Property<int>("HaftYear")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Month")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Quater")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("TargetValue")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<Guid>("UpdatedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("UpdatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("UserTaskId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("Year")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UpdatedBy");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("UserTaskId");
-
-                    b.ToTable("tbl_KPITargets", (string)null);
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPITask", b =>
@@ -651,9 +747,6 @@ namespace AquaSolution.Data.Migrations
                     b.Property<Guid>("OwnerId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("QuaterCalculatedId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("TaskDescription")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -679,8 +772,6 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("OwnerId");
 
-                    b.HasIndex("QuaterCalculatedId");
-
                     b.ToTable("tbl_KPITasks", (string)null);
                 });
 
@@ -704,9 +795,6 @@ namespace AquaSolution.Data.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<Guid>("KPIRequestId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<decimal>("KPIScore")
                         .HasColumnType("decimal(18,2)");
 
@@ -722,12 +810,27 @@ namespace AquaSolution.Data.Migrations
                     b.Property<int?>("Quarter")
                         .HasColumnType("int");
 
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("SubmitId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("TotaleScore")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<int>("Year")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("KPIRequestId");
+                    b.HasIndex("SubmitId");
 
                     b.ToTable("tbl_KPITotalScores", (string)null);
                 });
@@ -1103,27 +1206,6 @@ namespace AquaSolution.Data.Migrations
                     b.ToTable("tbl_Products", (string)null);
                 });
 
-            modelBuilder.Entity("AquaSolution.Data.Data.Entities.QuaterCalculated", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Calculated")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("KPIQuarterCalculateType")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("tbl_QuaterCalculateds", (string)null);
-                });
-
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.ReportInventory", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1406,6 +1488,9 @@ namespace AquaSolution.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("HistoryFlow")
                         .HasColumnType("nvarchar(max)");
 
@@ -1557,30 +1642,6 @@ namespace AquaSolution.Data.Migrations
                     b.ToTable("tbl_UserRoles", (string)null);
                 });
 
-            modelBuilder.Entity("AquaSolution.Data.Data.Entities.UserTask", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<Guid>("KPITaskId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("KPITaskId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("tbl_UserTasks", (string)null);
-                });
-
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.WarehouseExport", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1727,6 +1788,39 @@ namespace AquaSolution.Data.Migrations
                     b.ToTable("tbl_WarehouseImportDetails", (string)null);
                 });
 
+            modelBuilder.Entity("AquaSolution.Data.KPI.Entities.UserTask", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("Index")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("KPITaskId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Weight")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("KPITaskId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("tbl_UserTasks", (string)null);
+                });
+
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.ApprovalFlow", b =>
                 {
                     b.HasOne("AquaSolution.Data.Data.Entities.Position", null)
@@ -1769,18 +1863,21 @@ namespace AquaSolution.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPI.KPIActualMaster", b =>
+                {
+                    b.HasOne("AquaSolution.Data.Data.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPI.KPIApprovalTask", b =>
                 {
                     b.HasOne("AquaSolution.Data.Data.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("ApprovedBy")
                         .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("AquaSolution.Data.Data.Entities.KPIRequest", null)
-                        .WithMany()
-                        .HasForeignKey("KPIRequestId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
 
                     b.HasOne("AquaSolution.Data.Data.Entities.User", null)
                         .WithMany()
@@ -1792,13 +1889,34 @@ namespace AquaSolution.Data.Migrations
                         .HasForeignKey("RequesterId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("AquaSolution.Data.Data.Entities.KPIRequest", null)
+                        .WithMany()
+                        .HasForeignKey("SubmitId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
-            modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPIActual", b =>
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPIDetailScore", b =>
                 {
-                    b.HasOne("AquaSolution.Data.Data.Entities.KPITarget", null)
+                    b.HasOne("AquaSolution.Data.Data.Entities.KPITask", null)
                         .WithMany()
-                        .HasForeignKey("KPITargetId")
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AquaSolution.Data.Data.Entities.KPITotalScore", null)
+                        .WithMany()
+                        .HasForeignKey("TotalScoreId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPIMonthlyActual", b =>
+                {
+                    b.HasOne("AquaSolution.Data.Data.Entities.KPIMonthlyTarget", null)
+                        .WithMany()
+                        .HasForeignKey("KPIMonthlyTargetId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -1815,17 +1933,22 @@ namespace AquaSolution.Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPIDetailScore", b =>
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPIMonthlyTarget", b =>
                 {
-                    b.HasOne("AquaSolution.Data.Data.Entities.KPITask", null)
+                    b.HasOne("AquaSolution.Data.Data.Entities.User", null)
                         .WithMany()
-                        .HasForeignKey("TaskId")
+                        .HasForeignKey("UpdatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("AquaSolution.Data.Data.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("AquaSolution.Data.Data.Entities.KPITotalScore", null)
+                    b.HasOne("AquaSolution.Data.KPI.Entities.UserTask", null)
                         .WithMany()
-                        .HasForeignKey("TotalScoreId")
+                        .HasForeignKey("UserTaskId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
@@ -1847,27 +1970,6 @@ namespace AquaSolution.Data.Migrations
                         .WithMany()
                         .HasForeignKey("RejectBy")
                         .OnDelete(DeleteBehavior.Restrict);
-                });
-
-            modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPITarget", b =>
-                {
-                    b.HasOne("AquaSolution.Data.Data.Entities.User", null)
-                        .WithMany()
-                        .HasForeignKey("UpdatedBy")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("AquaSolution.Data.Data.Entities.User", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("AquaSolution.Data.Data.Entities.UserTask", null)
-                        .WithMany()
-                        .HasForeignKey("UserTaskId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPITask", b =>
@@ -1901,19 +2003,13 @@ namespace AquaSolution.Data.Migrations
                         .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("AquaSolution.Data.Data.Entities.QuaterCalculated", null)
-                        .WithMany()
-                        .HasForeignKey("QuaterCalculatedId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPITotalScore", b =>
                 {
                     b.HasOne("AquaSolution.Data.Data.Entities.KPIRequest", null)
                         .WithMany()
-                        .HasForeignKey("KPIRequestId")
+                        .HasForeignKey("SubmitId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
@@ -2146,21 +2242,6 @@ namespace AquaSolution.Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("AquaSolution.Data.Data.Entities.UserTask", b =>
-                {
-                    b.HasOne("AquaSolution.Data.Data.Entities.KPITask", null)
-                        .WithMany()
-                        .HasForeignKey("KPITaskId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("AquaSolution.Data.Data.Entities.User", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.WarehouseExportDetail", b =>
                 {
                     b.HasOne("AquaSolution.Data.Data.Entities.Product", null)
@@ -2188,6 +2269,21 @@ namespace AquaSolution.Data.Migrations
                         .WithMany()
                         .HasForeignKey("WarehouseImportId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AquaSolution.Data.KPI.Entities.UserTask", b =>
+                {
+                    b.HasOne("AquaSolution.Data.Data.Entities.KPITask", null)
+                        .WithMany()
+                        .HasForeignKey("KPITaskId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AquaSolution.Data.Data.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 #pragma warning restore 612, 618

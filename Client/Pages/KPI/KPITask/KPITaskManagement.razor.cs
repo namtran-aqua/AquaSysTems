@@ -1,8 +1,10 @@
 ﻿using AntDesign;
 using AquaSolution.Client.Common;
 using AquaSolution.Client.Components.KPI.KPITask;
+using AquaSolution.Shared.Departments;
 using AquaSolution.Shared.Enum;
 using AquaSolution.Shared.Enum.KPIType;
+using AquaSolution.Shared.Factory;
 using AquaSolution.Shared.KPI.KPITasks;
 using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Components;
@@ -19,6 +21,7 @@ namespace AquaSolution.Client.Pages.KPI.KPITask
         #region Declaration
         [Inject] private HttpClient Http { get; set; }
         private List<KPITaskDto> DataSource = new();
+        private List<KPITaskDto> DataFilter = new();
         private Table<KPITaskDto> tableRef;
         private bool Created { get;set; }
         private bool Edit { get;set; }
@@ -34,7 +37,9 @@ namespace AquaSolution.Client.Pages.KPI.KPITask
             await GetPage();
             await CheckPermission();
             await LoadData();
-     
+            await LoadDataFilter();
+
+
         }
         private async Task LoadData()
         {
@@ -48,7 +53,7 @@ namespace AquaSolution.Client.Pages.KPI.KPITask
             {
                 DataSource = new();
             }
-
+            DataFilter = DataSource;
             StateHasChanged();
         }
         private async Task GetPage()
@@ -85,7 +90,6 @@ namespace AquaSolution.Client.Pages.KPI.KPITask
                 DataSource = kPITaskDto.DataSource ?? string.Empty,
                 OwnerId = kPITaskDto.OwnerId,
                 KPIIndexType = kPITaskDto.KPIIndexType,
-                QuaterCalculatedId = kPITaskDto.QuaterCalculatedId,
                 FormulaId = kPITaskDto.FormulaId,
                 Max = kPITaskDto.Max,
                 Bottom = kPITaskDto.Bottom,
@@ -122,11 +126,24 @@ namespace AquaSolution.Client.Pages.KPI.KPITask
         private string? TaskName { get; set; }
         private async Task Search()
         {
-          
+            if (string.IsNullOrWhiteSpace(TaskName))
+            {
+                DataFilter = DataSource;
+            }
+            else
+            {
+                var keyword = TaskName.Trim().ToLower();
+                DataFilter = DataSource
+                    .Where(x => x.TaskName != null && x.TaskName.ToLower().Contains(keyword))
+                    .ToList();
+            }
         }
         private async Task Reset()
         {
-
+            TaskName =null;
+            tableRef?.ReloadData();
+            await InvokeAsync(StateHasChanged);
+            DataFilter = DataSource;
         }   
         private async Task HandleKeyDown(KeyboardEventArgs e)
         {
@@ -145,6 +162,56 @@ namespace AquaSolution.Client.Pages.KPI.KPITask
         TableFilter<KPIIndexType>[] _kPIIndexTypeFilter = Array.Empty<TableFilter<KPIIndexType>>();
         TableFilter<string>[] _departmentFilter = Array.Empty<TableFilter<string>>();
         TableFilter<string>[] _factoryFilter = Array.Empty<TableFilter<string>>();
+        private List<DepartmentDto> _listDepartment = new();
+        private List<FactoryDto> _listFactory = new();
+        private async Task LoadDataFilter()
+        {
+            if (Http != null)
+            {
+                _listDepartment = await Http.GetFromJsonAsync<List<DepartmentDto>>("api/department/get-all") ??
+                                  new List<DepartmentDto>();
+                _departmentFilter = _listDepartment
+                    .Where(x => !string.IsNullOrWhiteSpace(x.Name)) // loại bỏ null/empty
+                    .Select(x => new TableFilter<string>
+                    {
+                        Text = x.Name,
+                        Value = x.Name,
+                        Selected = false
+                    })
+                    .ToArray();
+
+                _listFactory = await Http.GetFromJsonAsync<List<FactoryDto>>("api/factory/get-all") ??
+                               new List<FactoryDto>();
+                _factoryFilter = _listFactory
+                    .Where(x => !string.IsNullOrWhiteSpace(x.Name))
+                    .Select(x => new TableFilter<string>
+                    {
+                        Text = x.Name,
+                        Value = x.Name,
+                        Selected = false
+                    })
+                    .ToArray();
+                _kPICategoryFilter = Enum.GetValues(typeof(KPICategoryType))
+                  .Cast<KPICategoryType>()
+                  .Select(e => new TableFilter<KPICategoryType>
+                  {
+                      Text = EnumHelper.GetDisplayName(e),
+                      Value = e,
+                      Selected = false
+                  })
+                  .ToArray();
+                _kPIIndexTypeFilter = Enum.GetValues(typeof(KPIIndexType))
+                     .Cast<KPIIndexType>()
+                     .Select(e => new TableFilter<KPIIndexType>
+                     {
+                         Text = EnumHelper.GetDisplayName(e),
+                         Value = e,
+                         Selected = false
+                     })
+                     .ToArray();
+            }
+
+        }
         #endregion
     }
 }

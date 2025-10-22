@@ -23,10 +23,6 @@ namespace AquaSolution.Data.Data.MappingConfigurations.KPI
                      .WithMany()
                      .HasForeignKey(u => u.OwnerId)
                      .OnDelete(DeleteBehavior.Restrict);
-            builder.HasOne<QuaterCalculated>()
-                     .WithMany()
-                     .HasForeignKey(u => u.QuaterCalculatedId)
-                     .OnDelete(DeleteBehavior.Restrict);
             builder.HasOne<Formula>()
                      .WithMany()
                      .HasForeignKey(u => u.FormulaId)

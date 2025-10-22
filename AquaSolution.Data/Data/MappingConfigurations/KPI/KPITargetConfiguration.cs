@@ -1,14 +1,15 @@
 ﻿using AquaSolution.Data.Data.Entities;
+using AquaSolution.Data.KPI.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace AquaSolution.Data.Data.MappingConfigurations.KPI
 {
-    public class KPITargetConfiguration : IEntityTypeConfiguration<KPITarget>
+    public class KPIMonthlyTargetConfiguration : IEntityTypeConfiguration<KPIMonthlyTarget>
     {
-        public void Configure(EntityTypeBuilder<KPITarget> builder)
+        public void Configure(EntityTypeBuilder<KPIMonthlyTarget> builder)
         {
-            builder.ToTable("tbl_KPITargets");
+            builder.ToTable("tbl_KPIMonthlyTargets");
             builder.HasKey(e => e.Id);
             builder.HasOne<UserTask>()
                 .WithMany()

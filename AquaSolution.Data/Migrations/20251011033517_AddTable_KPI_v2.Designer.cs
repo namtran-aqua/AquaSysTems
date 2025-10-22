@@ -386,7 +386,7 @@ namespace AquaSolution.Data.Migrations
                     b.ToTable("tbl_KPIApprovalTasks", (string)null);
                 });
 
-            modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPIActual", b =>
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPIMonthlyActual", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -400,10 +400,8 @@ namespace AquaSolution.Data.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETDATE()");
 
-                    b.Property<int>("HaftYear")
-                        .HasColumnType("int");
 
-                    b.Property<Guid>("KPITargetId")
+                    b.Property<Guid>("KPIMonthlyTargetId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("KPITotalScoreId")
@@ -411,10 +409,6 @@ namespace AquaSolution.Data.Migrations
 
                     b.Property<int>("Month")
                         .HasColumnType("int");
-
-                    b.Property<int>("Quater")
-                        .HasColumnType("int");
-
                     b.Property<decimal>("TargetValue")
                         .HasColumnType("decimal(18,2)");
 
@@ -429,13 +423,13 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("KPITargetId");
+                    b.HasIndex("KPIMonthlyTargetId");
 
                     b.HasIndex("KPITotalScoreId");
 
                     b.HasIndex("UpdatedBy");
 
-                    b.ToTable("tbl_KPIActuals", (string)null);
+                    b.ToTable("tbl_KPIMonthlyActuals", (string)null);
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPIRequest", b =>
@@ -490,7 +484,7 @@ namespace AquaSolution.Data.Migrations
                     b.ToTable("tbl_KPIRequests", (string)null);
                 });
 
-            modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPITarget", b =>
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPIMonthlyTarget", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -501,15 +495,8 @@ namespace AquaSolution.Data.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETDATE()");
 
-                    b.Property<int>("HaftYear")
-                        .HasColumnType("int");
-
                     b.Property<int>("Month")
                         .HasColumnType("int");
-
-                    b.Property<int>("Quater")
-                        .HasColumnType("int");
-
                     b.Property<decimal>("TargetValue")
                         .HasColumnType("decimal(18,2)");
 
@@ -536,7 +523,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("UserTaskId");
 
-                    b.ToTable("tbl_KPITargets", (string)null);
+                    b.ToTable("tbl_KPIMonthlyTargets", (string)null);
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPITask", b =>
@@ -1732,11 +1719,11 @@ namespace AquaSolution.Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPIActual", b =>
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPIMonthlyActual", b =>
                 {
-                    b.HasOne("AquaSolution.Data.Data.Entities.KPITarget", null)
+                    b.HasOne("AquaSolution.Data.Data.Entities.KPIMonthlyTarget", null)
                         .WithMany()
-                        .HasForeignKey("KPITargetId")
+                        .HasForeignKey("KPIMonthlyTargetId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -1772,7 +1759,7 @@ namespace AquaSolution.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 
-            modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPITarget", b =>
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPIMonthlyTarget", b =>
                 {
                     b.HasOne("AquaSolution.Data.Data.Entities.User", null)
                         .WithMany()

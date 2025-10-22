@@ -152,7 +152,8 @@ namespace AquaSolution.Server.Services.ManageMedicalRooms.WarehouseExportService
                 var sysTemHistory = new SysTemHistory
                 {
                     Id = Guid.NewGuid(),
-                    HistoryFlow = history.ToString()
+                    HistoryFlow = history.ToString(),
+                    CreatedDate = DateTime.Now
                 };
                 await _sysTemHistory.InsertAsync(sysTemHistory);
                 await _context.SaveChangesAsync();

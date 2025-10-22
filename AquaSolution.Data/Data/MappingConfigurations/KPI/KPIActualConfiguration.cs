@@ -4,20 +4,22 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace AquaSolution.Data.Data.MappingConfigurations.KPI
 {
-    public class KPIActualConfiguration : IEntityTypeConfiguration<KPIActual>
+    public class KPIMonthlyActualConfiguration : IEntityTypeConfiguration<KPIMonthlyActual>
     {
-        public void Configure(EntityTypeBuilder<KPIActual> builder)
+        public void Configure(EntityTypeBuilder<KPIMonthlyActual> builder)
         {
-            builder.ToTable("tbl_KPIActuals");
+            builder.ToTable("tbl_KPIMonthlyActuals");
             builder.HasKey(e => e.Id);
             builder.HasOne<User>()
                 .WithMany()
                 .HasForeignKey(e => e.UpdatedBy)
                 .OnDelete(DeleteBehavior.Restrict);
-            builder.HasOne<KPITarget>()
+
+            builder.HasOne<KPIMonthlyTarget>()
                   .WithMany()
-                  .HasForeignKey(e => e.KPITargetId)
+                  .HasForeignKey(e => e.KPIMonthlyTargetId) 
                   .OnDelete(DeleteBehavior.Restrict);
+
             builder.HasOne<KPITotalScore>()
                  .WithMany()
                  .HasForeignKey(e => e.KPITotalScoreId)

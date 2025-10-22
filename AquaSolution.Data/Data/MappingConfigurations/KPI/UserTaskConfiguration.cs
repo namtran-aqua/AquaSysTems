@@ -1,4 +1,5 @@
 ﻿using AquaSolution.Data.Data.Entities;
+using AquaSolution.Data.KPI.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -9,7 +10,6 @@ namespace AquaSolution.Data.Data.MappingConfigurations.KPI
         public void Configure(EntityTypeBuilder<UserTask> builder)
         {
             builder.ToTable("tbl_UserTasks");
-            builder.HasKey(e => e.Id);
             builder.HasOne<User>()
              .WithMany()
              .HasForeignKey(u => u.UserId)

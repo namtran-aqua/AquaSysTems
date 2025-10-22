@@ -169,6 +169,7 @@ public class UserService : IUserService
                 PositionName = position?.Name,
                 IsActive = user.IsActive,
                 ManagerWorkDay = manager?.WorkDayId,
+                PositionType = position.Type
             };
 
             var userRoles = await _userRoleRepo.WhereAsync(ur => ur.UserId == user.Id);

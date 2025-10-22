@@ -5,7 +5,7 @@ namespace AquaSolution.Data.Data.Entities
     public class KPIRequest
     {
         public Guid Id { get; set; }
-
+        public Guid SubmitId { get; set; }
         public string Title { get; set; } = string.Empty;
         public string? Description { get; set; }      
         public StatusKPIRequestType RequestStatus { get; set; }
