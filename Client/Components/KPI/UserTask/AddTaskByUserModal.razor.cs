@@ -247,11 +247,9 @@ namespace AquaSolution.Client.Components.KPI.UserTask
                         builder.AddMarkupContent(seq++, "<br/>");
                     }
                 };
-
                 await Message.Error(content);
                 return false;
             }
-
             return true;
         }
         #endregion
@@ -264,7 +262,6 @@ namespace AquaSolution.Client.Components.KPI.UserTask
         {
             var validate = await ValidateWieght();
             if (!validate) return;
-
             HandleUserTaskAndTarget = new();
             foreach (var item in CreatedTarget)
             {

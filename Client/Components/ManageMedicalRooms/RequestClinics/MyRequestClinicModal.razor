@@ -25,7 +25,7 @@
     <Button Style="color:#808080" OnClick="@Close" @key="@("back")">Close</Button>
     </Template>;
 }
-<Modal @bind-Visible="IsVisible" Style="z-index: 9999;width:1050px;margin-top:-90px" Footer="@footer" Header="@null">
+<Modal @bind-Visible="IsVisible" Style="z-index: 9999;width:1050px;margin-top:-90px" Footer="@footer"  >
     <Form @ref="formRef"
           Model="@HandleMyRequestClinic"
           Layout="FormLayout.Vertical"

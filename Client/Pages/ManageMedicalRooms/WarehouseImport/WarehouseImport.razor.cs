@@ -23,9 +23,8 @@ namespace AquaSolution.Client.Pages.ManageMedicalRooms.WarehouseImport
            _listWarehouseImport = await Http.GetFromJsonAsync<List<LoadWarehouseImportDto>>("api/WarehouseImport/get-all");
             await InvokeAsync(StateHasChanged);
 
-            #endregion
-
         }
+        #endregion
         #region Action
         private async Task ImportWarehouse()
         {

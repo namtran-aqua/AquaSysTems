@@ -27,7 +27,6 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.WarehouseImports
         public async Task ShowModalAsync(LoadWarehouseImportDto loadWarehouseImport, bool isView)
         {
             createdWarehouseImportDto = new CreatedWarehouseImportDto();
-            IsVisible = true;
             LoadWarehouseImportDto = loadWarehouseImport;
             IsView = isView;
             await LoadProduct();
@@ -35,6 +34,7 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.WarehouseImports
             GetWarehouseImportType();
             var CurrenUserClass = new CurrenUser(Http, AuthStateProvider);
             CurrenUser = await CurrenUserClass.LoadCurrenUser();
+            IsVisible = true;
             await InvokeAsync(StateHasChanged);
         }
         private string GetPurposeTypeLabel(WarehouseImportType type)
