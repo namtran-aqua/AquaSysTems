@@ -232,7 +232,6 @@ namespace AquaSolution.Client.Shared
                 try
                 {
                     userDto = await Http.GetFromJsonAsync<UserDto>($"api/user/get-curernUser/{CurrentUser.UserId}");
-
                     if (CurrentUser.Roles.Contains("Admin"))
                         menu = await Http.GetFromJsonAsync<List<MenuDto>>($"api/Menu/GetAllMenu");
                     else
@@ -245,7 +244,6 @@ namespace AquaSolution.Client.Shared
                 CurrentUser = null;
             }
         }
-
         public void Dispose()
         {
             Auth.AuthenticationStateChanged -= OnAuthenticationStateChanged;
