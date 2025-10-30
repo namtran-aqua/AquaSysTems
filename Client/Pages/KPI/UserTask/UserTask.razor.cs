@@ -21,6 +21,7 @@ namespace AquaSolution.Client.Pages.KPI.UserTask
         private List<UserDto> users = new();
         private List<UserDto> userFilter = new();
         private UserTaskModal _userTaskModal = new();
+        public bool Loading { get; set; }
         #endregion
         #region Innit
         protected override async Task OnInitializedAsync()
@@ -34,9 +35,11 @@ namespace AquaSolution.Client.Pages.KPI.UserTask
         {
             try
             {
+                Loading = true;
                 users = await Http.GetFromJsonAsync<List<UserDto>>("api/user/get-all");
                 userFilter = users;
                 await Search();
+                Loading = false;
             }
             catch (Exception ex)
             {

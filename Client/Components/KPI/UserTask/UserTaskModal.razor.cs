@@ -2,6 +2,7 @@
 using AquaSolution.Shared.KPI.UserTask;
 using Microsoft.AspNetCore.Components;
 using System.Net.Http.Json;
+using System.Runtime.CompilerServices;
 
 namespace AquaSolution.Client.Components.KPI.UserTask
 {
@@ -14,6 +15,7 @@ namespace AquaSolution.Client.Components.KPI.UserTask
         private Guid UserId { get; set; }
         private AddTaskByUserModal _addTaskByUserModal = new();
         private List<UserTaskDto> UserTasks = new();
+
         #endregion
         #region Innit
         public async Task ShowModal(Guid userId)

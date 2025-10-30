@@ -30,7 +30,7 @@ namespace AquaSolution.Client.Pages.Administration
         private bool Edit { get; set; }
         private bool Delete { get; set; }
         private bool EditRole { get; set; }
-
+        public bool Loading { get; set; }
         private Guid PageId { get; set; }
         #endregion
         #region Innit
@@ -51,9 +51,11 @@ namespace AquaSolution.Client.Pages.Administration
         {
             try
             {
+                Loading = true;
                 if (Http != null) _users = await Http.GetFromJsonAsync<List<UserDto>>("api/user/get-all");
                 _userFilter = _users;
                 await Search();
+                Loading = false;
             }
             catch (Exception ex)
             {
