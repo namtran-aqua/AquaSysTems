@@ -82,23 +82,23 @@
 
 </div>
 <script>
-    window.saveAsFile = async function (filename, bytesBase64) {
-        const byteCharacters = atob(bytesBase64);
-        const byteNumbers = new Array(byteCharacters.length);
-        for (let i = 0; i < byteCharacters.length; i++) {
-            byteNumbers[i] = byteCharacters.charCodeAt(i);
-        }
-        const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], {
-            type: "application/vnd.ms-excel"
-        });
+    // window.saveAsFile = async function (filename, bytesBase64) {
+    //     const byteCharacters = atob(bytesBase64);
+    //     const byteNumbers = new Array(byteCharacters.length);
+    //     for (let i = 0; i < byteCharacters.length; i++) {
+    //         byteNumbers[i] = byteCharacters.charCodeAt(i);
+    //     }
+    //     const byteArray = new Uint8Array(byteNumbers);
+    //     const blob = new Blob([byteArray], {
+    //         type: "application/vnd.ms-excel"
+    //     });
 
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = filename;
-        link.click();
-        URL.revokeObjectURL(link.href);
-    }
+    //     const link = document.createElement('a');
+    //     link.href = URL.createObjectURL(blob);
+    //     link.download = filename;
+    //     link.click();
+    //     URL.revokeObjectURL(link.href);
+    // }
 
 </script>
 <div style="width:100%;overflow-x:scroll ;max-height:70vh; ">
