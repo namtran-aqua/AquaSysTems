@@ -37,7 +37,7 @@
                                 <Tag Color="@GetTagColor.GetTagColorCss(rowItem.EApprovalStatusType.ToString())">@rowItem.EApprovalStatusType</Tag>
                             </PropertyColumn>
                             <PropertyColumn Title="CreatedDate" Property="c => c.CreatedDate" Format="dd/MM/yyyy HH:mm:ss" Width="180" />
-                            <Column Fixed="ColumnFixPlacement.Right" TData="ViewKPIForApprovalDto" Width="50px" Context="row">
+                            <Column Fixed="ColumnFixPlacement.Right" TData="ViewKPIForApprovalDto" Width="70px" Context="row">
                                 <Template>
                                     <Popover Title="Actions" Trigger="new Trigger[] { Trigger.Click }" Placement="Placement.Bottom">
                                         <ChildContent>
