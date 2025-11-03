@@ -19,5 +19,6 @@ namespace AquaSolution.Data.Data.Entities
         public StatusKPIRequestType Status { get; set; }
         public decimal? TotaleScore { get; set; }
         public bool IsActive { get; set; }
+        public KPITotalScoreType kPITotalScoreType { get; set; }
     }
 }

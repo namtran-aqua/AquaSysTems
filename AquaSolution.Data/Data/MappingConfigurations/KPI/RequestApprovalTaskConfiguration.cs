@@ -9,7 +9,7 @@ namespace AquaSolution.Data.Data.MappingConfigurations.KPI
     {
         public void Configure(EntityTypeBuilder<RequestApprovalTask> builder)
         {
-            builder.ToTable("tbl_RequestApprovalTasks");
+            builder.ToTable("tbl_RequestApprovalTasks", schema: "KPI");
             builder.HasKey(e => e.Id);
 
             builder.HasOne<KPIRequest>()

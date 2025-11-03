@@ -42,7 +42,6 @@ namespace AquaSolution.Client.Pages.Administration
                 }
             }
         }
-
         #endregion
 
         #region Action

@@ -9,7 +9,7 @@ namespace AquaSolution.Data.Data.MappingConfigurations
     {
         public void Configure(EntityTypeBuilder<Prescription> builder)
         {
-            builder.ToTable("tbl_Prescriptions");
+            builder.ToTable("tbl_Prescriptions", schema: "Clinic");
             builder.HasKey(e => e.Id);
             builder.Property(d => d.Note)
          .HasMaxLength(4000);

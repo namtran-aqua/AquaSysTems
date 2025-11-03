@@ -13,7 +13,7 @@ namespace AquaSolution.Data.Data.MappingConfigurations
     {
         public void Configure(EntityTypeBuilder<ReportInventory> builder)
         {
-            builder.ToTable("tbl_ReportInventory");
+            builder.ToTable("tbl_ReportInventory", schema: "Clinic");
             builder.HasKey(e => e.Id);
             builder.HasOne<User>()
                   .WithMany()

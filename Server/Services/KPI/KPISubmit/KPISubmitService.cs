@@ -3,7 +3,6 @@ using AquaSolution.Data.Data.Entities;
 using AquaSolution.Data.Data.Entities.KPI;
 using AquaSolution.Data.KPI.Entities;
 using AquaSolution.Data.Repositories;
-using AquaSolution.Server.SignalR;
 using AquaSolution.Shared.Enum;
 using AquaSolution.Shared.Enum.KPIType;
 using AquaSolution.Shared.KPI.KPIActual;
@@ -451,7 +450,8 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
                     CreatedBy = dto.CreatedBy,
                     CreatedDate = DateTime.Now,
                     IsActive = true,
-                    Title = dto.HeaderTitle ?? ""
+                    Title = dto.HeaderTitle ?? "",
+                    kPITotalScoreType = KPITotalScoreType.Staff
                 };
                 await _kpiTotalScoreRepo.InsertAsync(score);
                 await _kpiTotalScoreRepo.SaveChangesAsync();
@@ -480,7 +480,8 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
                 CreatedBy = dto.CreatedBy,
                 CreatedDate = DateTime.Now,
                 IsActive = true,
-                Title = dto.Title ?? ""
+                Title = dto.Title ?? "",
+                kPITotalScoreType = KPITotalScoreType.Staff
             };
             await _kpiTotalScoreRepo.InsertAsync(score);
             await _kpiTotalScoreRepo.SaveChangesAsync();
@@ -504,7 +505,8 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
                 CreatedBy = dto.CreatedBy,
                 CreatedDate = DateTime.Now,
                 IsActive = true,
-                Title = dto.Title ?? ""
+                Title = dto.Title ?? "",
+                kPITotalScoreType = KPITotalScoreType.Staff
             };
             await _kpiTotalScoreRepo.InsertAsync(score);
             await _kpiTotalScoreRepo.SaveChangesAsync();
@@ -1164,7 +1166,8 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
                             DepartmentId =user.DepartmentId,
                             FactoryId = user.FactoryId,
                             Department =department.Name,
-                            Factory = factory.Name
+                            Factory = factory.Name,
+                            kPITotalScoreType = totalScore.kPITotalScoreType,
                         };
             var result = query.ToList();
             if(result.Count > 0)
@@ -1236,6 +1239,7 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
                 CreatedDate = DateTime.Now,
                 IsActive = true,
                 Title = dto.Title+"-(HR Calculate Point Quarter)" ?? "",
+                kPITotalScoreType = KPITotalScoreType.HR
             };
             await _kpiTotalScoreRepo.InsertAsync(score);
             await _kpiTotalScoreRepo.SaveChangesAsync();
@@ -1259,6 +1263,7 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
                 CreatedDate = DateTime.Now,
                 IsActive = true,
                 Title = dto.Title + "-(HR Calculate Point HalfYear)" ?? "",
+                kPITotalScoreType = KPITotalScoreType.HR
             };
             await _kpiTotalScoreRepo.InsertAsync(score);
             await _kpiTotalScoreRepo.SaveChangesAsync();

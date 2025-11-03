@@ -9,7 +9,7 @@ namespace AquaSolution.Data.Data.MappingConfigurations.KPI
     {
         public void Configure(EntityTypeBuilder<DealineKPISubmitManagement> builder)
         {
-            builder.ToTable("tbl_DealineKPISubmitManagements");
+            builder.ToTable("tbl_DealineKPISubmitManagements",schema:"KPI");
             builder.Property(d => d.CreatedDate)
                  .IsRequired()
                  .HasDefaultValueSql("GETDATE()");

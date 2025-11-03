@@ -8,7 +8,7 @@ namespace AquaSolution.Data.Data.MappingConfigurations
     {
         public void Configure(EntityTypeBuilder<RolePermission> builder)
         {
-            builder.ToTable("tbl_RolePermissions");
+            builder.ToTable("tbl_RolePermissions", schema: "Admin");
             builder.HasKey(e => e.Id);
 
             builder.HasOne<Role>()

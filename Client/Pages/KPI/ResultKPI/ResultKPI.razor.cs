@@ -176,7 +176,8 @@ namespace AquaSolution.Client.Pages.KPI.ResultKPI
                 ).ToList();
 
                 var data = filteredData;
-                var excelBytes = ExcelFileGenerator.GenerateExcelFile(data, null, "SubmitId");
+                string[] excludeProperties = { "SubmitId", "DepartmentId", "FactoryId", "kPITotalScoreType" };
+                var excelBytes = ExcelFileGenerator.GenerateExcelFile(data, null, excludeProperties);
                 await JS.InvokeVoidAsync("saveAsFile", $"KPIResult_{DateTime.Now:yyyyMMdd_HHmmss}.xls",
                     Convert.ToBase64String(excelBytes));
 

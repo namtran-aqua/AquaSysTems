@@ -14,6 +14,7 @@ namespace AquaSolution.Shared.KPI.Result
         public string WorkDayId { get; set; }
         public string Approver { get; set; }
         public StatusKPIRequestType Status { get; set; }
+        public KPITotalScoreType kPITotalScoreType { get; set; }
         public DateTime ApprovalDate { get; set; }
         public int? Month { get; set; }
         public int? Quarter { get; set; }

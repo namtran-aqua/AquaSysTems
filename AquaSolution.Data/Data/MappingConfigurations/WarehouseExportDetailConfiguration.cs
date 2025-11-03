@@ -8,7 +8,7 @@ namespace AquaSolution.Data.Data.MappingConfigurations
     {
         public void Configure(EntityTypeBuilder<WarehouseExportDetail> builder)
         {
-            builder.ToTable("tbl_WarehouseExportDetails");
+            builder.ToTable("tbl_WarehouseExportDetails", schema: "Clinic");
             builder.HasKey(x => x.Id);
 
             builder.Property(x => x.Quantity)

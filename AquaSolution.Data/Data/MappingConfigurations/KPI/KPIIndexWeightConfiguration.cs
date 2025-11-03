@@ -9,7 +9,7 @@ namespace AquaSolution.Data.Data.MappingConfigurations.KPI
     {
         public void Configure(EntityTypeBuilder<KPIIndexWeight> builder)
         {
-            builder.ToTable("tbl_KPIIndexWeights");
+            builder.ToTable("tbl_KPIIndexWeights", schema: "KPI");
             builder.HasKey(e => e.Id);
             builder.Property(e => e.PeriodType)
                     .HasConversion<string>()

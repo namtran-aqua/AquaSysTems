@@ -9,7 +9,7 @@ namespace AquaSolution.Data.Data.MappingConfigurations
         public void Configure(EntityTypeBuilder<MedicalSuplies> builder)
         {
             builder.HasKey(e => e.ProducId);
-            builder.ToTable("tbl_MedicalSuply");
+            builder.ToTable("tbl_MedicalSuply",schema:"Clinic");
             builder.Property(e => e.ProductType)
              .HasConversion<string>()
              .IsRequired()

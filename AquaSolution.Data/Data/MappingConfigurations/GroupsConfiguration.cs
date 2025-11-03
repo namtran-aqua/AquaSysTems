@@ -9,7 +9,7 @@ namespace AquaSolution.Data.Data.MappingConfigurations
     {
         public void Configure(EntityTypeBuilder<Groups> builder)
         {
-            builder.ToTable("tbl_Groups");
+            builder.ToTable("tbl_Groups", schema: "Admin");
 
             builder.HasKey(g => g.Id);
 

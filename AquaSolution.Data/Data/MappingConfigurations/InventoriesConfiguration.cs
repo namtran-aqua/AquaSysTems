@@ -8,7 +8,7 @@ namespace AquaSolution.Data.Data.MappingConfigurations
     {
         public void Configure(EntityTypeBuilder<Inventories> builder)
         {
-            builder.ToTable("tbl_Inventory");
+            builder.ToTable("tbl_Inventory", schema: "Clinic");
             builder.HasKey(e => e.Id);
             builder.Property(x => x.Quantity)
            .HasColumnType("decimal(18, 4)")

@@ -8,7 +8,7 @@ namespace AquaSolution.Data.Data.MappingConfigurations
     {
         public void Configure(EntityTypeBuilder<Treatment> builder)
         {
-            builder.ToTable("tbl_Treatments");
+            builder.ToTable("tbl_Treatments", schema: "Clinic");
             builder.HasKey(e => e.RequestId);
             builder.Property(d => d.CheckInTime)
                    .IsRequired()

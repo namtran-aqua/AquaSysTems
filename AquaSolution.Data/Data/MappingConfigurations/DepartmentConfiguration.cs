@@ -8,7 +8,7 @@ namespace AquaSolution.Data.Data.MappingConfigurations
     {
         public void Configure(EntityTypeBuilder<Department> builder)
         {
-            builder.ToTable("tbl_Departments");
+            builder.ToTable("tbl_Departments", schema: "Admin");
 
             // Primary Key
             builder.HasKey(d => d.Id);

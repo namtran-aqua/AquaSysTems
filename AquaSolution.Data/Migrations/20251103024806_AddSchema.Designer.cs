@@ -4,6 +4,7 @@ using AquaSolution.Data.Connection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AquaSolution.Data.Migrations
 {
     [DbContext(typeof(AquaDbContext))]
-    partial class AquaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251103024806_AddSchema")]
+    partial class AddSchema
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -59,7 +62,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("PositionId");
 
-                    b.ToTable("tbl_ApprovalFlows", "Admin");
+                    b.ToTable("tbl_ApprovalFlows", (string)null);
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.Attachment", b =>
@@ -93,7 +96,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("RequestSuportId");
 
-                    b.ToTable("tbl_Attachments", "RequestSuport");
+                    b.ToTable("tbl_Attachments", (string)null);
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.Department", b =>
@@ -132,7 +135,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("tbl_Departments", "Admin");
+                    b.ToTable("tbl_Departments", (string)null);
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.Factory", b =>
@@ -170,7 +173,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("tbl_Factorys", "Admin");
+                    b.ToTable("tbl_Factorys", (string)null);
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.Formula", b =>
@@ -230,7 +233,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("tbl_Groups", "Admin");
+                    b.ToTable("tbl_Groups", (string)null);
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.Inventories", b =>
@@ -258,7 +261,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("tbl_Inventory", "Clinic");
+                    b.ToTable("tbl_Inventory", (string)null);
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.InventoryPeriod", b =>
@@ -295,7 +298,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("tbl_InventoryPeriods", "Clinic");
+                    b.ToTable("tbl_InventoryPeriods", (string)null);
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.InventoryPeriodDetail", b =>
@@ -335,7 +338,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("tbl_InventoryPeriodDetails", "Clinic");
+                    b.ToTable("tbl_InventoryPeriodDetails", (string)null);
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPI.DealineKPISubmitManagement", b =>
@@ -884,13 +887,6 @@ namespace AquaSolution.Data.Migrations
                     b.Property<int>("Year")
                         .HasColumnType("int");
 
-                    b.Property<string>("kPITotalScoreType")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .HasDefaultValue("Staff");
-
                     b.HasKey("Id");
 
                     b.HasIndex("SubmitId");
@@ -910,7 +906,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasKey("ProducId");
 
-                    b.ToTable("tbl_MedicalSuply", "Clinic");
+                    b.ToTable("tbl_MedicalSuply", (string)null);
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.Medicine", b =>
@@ -925,7 +921,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasKey("ProducId");
 
-                    b.ToTable("tbl_Medicines", "Clinic");
+                    b.ToTable("tbl_Medicines", (string)null);
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.MedicineSupplyRequest", b =>
@@ -996,7 +992,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("UserRequestId");
 
-                    b.ToTable("tbl_MedicineSupplyRequests", "Clinic");
+                    b.ToTable("tbl_MedicineSupplyRequests", (string)null);
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.MedicineSupplyRequestDetail", b =>
@@ -1032,7 +1028,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("tbl_MedicineSupplyRequestDetails", "Clinic");
+                    b.ToTable("tbl_MedicineSupplyRequestDetails", (string)null);
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.Menu", b =>
@@ -1055,7 +1051,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("tbl_Menus", "Admin");
+                    b.ToTable("tbl_Menus", (string)null);
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.Page", b =>
@@ -1087,7 +1083,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("MenuId");
 
-                    b.ToTable("tbl_Pages", "Admin");
+                    b.ToTable("tbl_Pages", (string)null);
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.Permission", b =>
@@ -1114,7 +1110,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("tbl_Permissions", "Admin");
+                    b.ToTable("tbl_Permissions", (string)null);
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.Position", b =>
@@ -1153,7 +1149,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("tbl_Positions", "Admin");
+                    b.ToTable("tbl_Positions", (string)null);
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.Prescription", b =>
@@ -1187,7 +1183,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("RequestId");
 
-                    b.ToTable("tbl_Prescriptions", "Clinic");
+                    b.ToTable("tbl_Prescriptions", (string)null);
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.PrescriptionDetail", b =>
@@ -1215,7 +1211,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("PrescriptionId");
 
-                    b.ToTable("tbl_PrescriptionDetails", "Clinic");
+                    b.ToTable("tbl_PrescriptionDetails", (string)null);
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.Product", b =>
@@ -1266,7 +1262,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("tbl_Products", "Clinic");
+                    b.ToTable("tbl_Products", (string)null);
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.ReportInventory", b =>
@@ -1291,7 +1287,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("CreatedBy");
 
-                    b.ToTable("tbl_ReportInventory", "Clinic");
+                    b.ToTable("tbl_ReportInventory", (string)null);
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.ReportInventoryDetail", b =>
@@ -1335,7 +1331,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("ReportInventoryId");
 
-                    b.ToTable("tbl_ReportInventoryDetail", "Clinic");
+                    b.ToTable("tbl_ReportInventoryDetail", (string)null);
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.RequestClinic", b =>
@@ -1414,7 +1410,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("UserRequestId");
 
-                    b.ToTable("tbl_RequestClinics", "Clinic");
+                    b.ToTable("tbl_RequestClinics", (string)null);
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.RequestSuport", b =>
@@ -1479,7 +1475,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("TechnicianId");
 
-                    b.ToTable("tbl_RequestSuports", "RequestSuport");
+                    b.ToTable("tbl_RequestSuports", (string)null);
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.RequestSuportCategory", b =>
@@ -1505,7 +1501,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("TechnicianId");
 
-                    b.ToTable("tbl_RequestSuportCategorys", "RequestSuport");
+                    b.ToTable("tbl_RequestSuportCategorys", (string)null);
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.Role", b =>
@@ -1521,7 +1517,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("tbl_Roles", "Admin");
+                    b.ToTable("tbl_Roles", (string)null);
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.RolePermission", b =>
@@ -1542,7 +1538,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("tbl_RolePermissions", "Admin");
+                    b.ToTable("tbl_RolePermissions", (string)null);
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.SysTemHistory", b =>
@@ -1595,7 +1591,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasKey("RequestId");
 
-                    b.ToTable("tbl_Treatments", "Clinic");
+                    b.ToTable("tbl_Treatments", (string)null);
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.User", b =>
@@ -1684,7 +1680,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("PositionId");
 
-                    b.ToTable("tbl_Users", "Admin");
+                    b.ToTable("tbl_Users", (string)null);
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.UserRole", b =>
@@ -1702,7 +1698,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("tbl_UserRoles", "Admin");
+                    b.ToTable("tbl_UserRoles", (string)null);
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.WarehouseExport", b =>
@@ -1741,7 +1737,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("tbl_WarehouseExports", "Clinic");
+                    b.ToTable("tbl_WarehouseExports", (string)null);
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.WarehouseExportDetail", b =>
@@ -1775,7 +1771,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("WarehouseExportId");
 
-                    b.ToTable("tbl_WarehouseExportDetails", "Clinic");
+                    b.ToTable("tbl_WarehouseExportDetails", (string)null);
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.WarehouseImport", b =>
@@ -1814,7 +1810,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("tbl_WarehouseImports", "Clinic");
+                    b.ToTable("tbl_WarehouseImports", (string)null);
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.WarehouseImportDetail", b =>
@@ -1848,7 +1844,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("WarehouseImportId");
 
-                    b.ToTable("tbl_WarehouseImportDetails", "Clinic");
+                    b.ToTable("tbl_WarehouseImportDetails", (string)null);
                 });
 
             modelBuilder.Entity("AquaSolution.Data.KPI.Entities.UserTask", b =>

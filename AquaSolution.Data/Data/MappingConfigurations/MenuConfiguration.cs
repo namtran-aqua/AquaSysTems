@@ -8,7 +8,7 @@ namespace AquaSolution.Data.Data.MappingConfigurations
     {
         public void Configure(EntityTypeBuilder<Menu> builder)
         {
-            builder.ToTable("tbl_Menus");
+            builder.ToTable("tbl_Menus", schema: "Admin");
             builder.HasKey(e => e.Id);
             builder.Property(e => e.Name).IsRequired().HasMaxLength(100);
 

@@ -8,7 +8,7 @@ namespace AquaSolution.Data.Data.MappingConfigurations.KPI
     {
         public void Configure(EntityTypeBuilder<Formula> builder)
         {
-            builder.ToTable("tbl_Formulas");
+            builder.ToTable("tbl_Formulas", schema: "KPI");
             builder.HasKey(e => e.Id);
             builder.Property(e => e.FormulaName).IsRequired().HasMaxLength(100);
             builder.Property(e => e.KPIFormulaType)

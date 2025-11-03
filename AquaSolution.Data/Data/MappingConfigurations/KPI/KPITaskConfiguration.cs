@@ -8,7 +8,7 @@ namespace AquaSolution.Data.Data.MappingConfigurations.KPI
     {
         public void Configure(EntityTypeBuilder<KPITask> builder)
         {
-            builder.ToTable("tbl_KPITasks");
+            builder.ToTable("tbl_KPITasks", schema: "KPI");
             builder.HasKey(e => e.Id);
             builder.Property(e => e.TaskName).IsRequired().HasMaxLength(100);
             builder.Property(e => e.KPICategory)

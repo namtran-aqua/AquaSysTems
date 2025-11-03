@@ -139,16 +139,30 @@
         private static byte[] GenerateXlsFile(DataSet ds)
         {
             var workbook = new HSSFWorkbook(); // .xls
+
             foreach (DataTable table in ds.Tables)
             {
                 var sheet = workbook.CreateSheet(table.TableName);
 
+                //----------------------------Headers----------------------------
+                var headerStyle = workbook.CreateCellStyle();
+                headerStyle.FillForegroundColor = NPOI.HSSF.Util.HSSFColor.BlueGrey.Index;
+                headerStyle.FillPattern = NPOI.SS.UserModel.FillPattern.SolidForeground;
+
+                var font = workbook.CreateFont();
+                font.IsBold = true;
+                font.Color = NPOI.HSSF.Util.HSSFColor.White.Index;
+                headerStyle.SetFont(font);
+
                 var headerRow = sheet.CreateRow(0);
                 for (int col = 0; col < table.Columns.Count; col++)
                 {
-                    headerRow.CreateCell(col).SetCellValue(table.Columns[col].ColumnName);
+                    var cell = headerRow.CreateCell(col);
+                    cell.SetCellValue(table.Columns[col].ColumnName);
+                    cell.CellStyle = headerStyle; // áp dụng style
                 }
 
+                //--------------------------------Data Rows----------------------
                 for (int row = 0; row < table.Rows.Count; row++)
                 {
                     var dataRow = sheet.CreateRow(row + 1);
@@ -159,9 +173,10 @@
                     }
                 }
 
+                //--------------------------------Set Column Width----------------
                 for (int col = 0; col < table.Columns.Count; col++)
                 {
-                    sheet.SetColumnWidth(col, 20 * 256);
+                    //sheet.SetColumnWidth(col, 20 * 256); 
                 }
             }
 
@@ -169,6 +184,7 @@
             workbook.Write(ms);
             return ms.ToArray();
         }
+
 
         private static DataSet ToDataSet<T>(List<T> items, string? dateTimeFormat = null, params string[] excludeProperties)
         {

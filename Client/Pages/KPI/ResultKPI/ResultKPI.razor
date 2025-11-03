@@ -12,6 +12,7 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @inject AuthenticationStateProvider AuthStateProvider
 @inject PermissionService permissionService
+@using AquaSolution.Shared.Enum.KPIType
 @using AntDesign
 <PageTitle>Result Kpi</PageTitle>
 <div class="mb-3">
@@ -118,7 +119,9 @@
             <PropertyColumn Width="100px" Title="WorkDayId" Property="c => c.WorkDayId"></PropertyColumn>
             <PropertyColumn Width="200px" Title="Approver" Property="c => c.Approver"></PropertyColumn>
             <PropertyColumn Width="200px" Title="Description" Property="c => c.Description"></PropertyColumn>
-            <PropertyColumn Width="100px" Title="Status" Property="c => c.Status"></PropertyColumn>
+            <PropertyColumn Width="100" Title="Status" Property="c => c.Status" >
+                <Tag Color="@GetTagColor.GetTagColorCss(row.Status.ToString())">@row.Status</Tag>
+            </PropertyColumn>
             <PropertyColumn Width="160px" Title="ApprovalDate" Property="c => c.ApprovalDate" Format="dd/MM/yyyy HH:mm"></PropertyColumn>
             <PropertyColumn Title="Month" Property="c => c.Month" Filters="_monthFilter"></PropertyColumn>
             <PropertyColumn Title="Quarter" Property="c => c.Quarter" Filters="_quaterFilter"></PropertyColumn>
@@ -130,9 +133,12 @@
             <PropertyColumn Title="TotalScroe" Property="c => c.TotalScroe"></PropertyColumn>
             <Column Fixed="ColumnFixPlacement.Right" TData="ViewResultKpiDto" Width="50px" Context="row">
                 <Template>
-                    <Button Type="ButtonType.Primary" OnClick="@(async () => await ViewAsync(row))" Style="text-align: left;">
-                        <Icon Type="eye" /> Detail
-                    </Button>
+                    @if (row.kPITotalScoreType == KPITotalScoreType.Staff)
+                    {
+                        <Button Type="ButtonType.Primary" OnClick="@(async () => await ViewAsync(row))" Style="text-align: left;">
+                            <Icon Type="eye" /> Detail
+                        </Button>
+                    }
                 </Template>
             </Column>
         </ColumnDefinitions>

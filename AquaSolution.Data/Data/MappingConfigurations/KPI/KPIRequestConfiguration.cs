@@ -8,7 +8,7 @@ namespace AquaSolution.Data.Data.MappingConfigurations.KPI
     {
         public void Configure(EntityTypeBuilder<KPIRequest> builder)
         {
-            builder.ToTable("tbl_KPIRequests");
+            builder.ToTable("tbl_KPIRequests", schema: "KPI");
             builder.HasKey(e => e.Id);
  
             builder.HasKey(e => e.SubmitId);

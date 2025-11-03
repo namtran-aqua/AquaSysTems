@@ -9,7 +9,7 @@ namespace AquaSolution.Data.Data.MappingConfigurations.KPI
     {
         public void Configure(EntityTypeBuilder<KPIActualMaster> builder)
         {
-            builder.ToTable("tbl_KPIActualMasters");
+            builder.ToTable("tbl_KPIActualMasters", schema: "KPI");
             builder.HasKey(e => e.Id);
             builder.HasOne<User>()
                 .WithMany()

@@ -9,7 +9,7 @@ namespace AquaSolution.Data.Data.MappingConfigurations.KPI
     {
         public void Configure(EntityTypeBuilder<UserTask> builder)
         {
-            builder.ToTable("tbl_UserTasks");
+            builder.ToTable("tbl_UserTasks", schema: "KPI");
             builder.HasOne<User>()
              .WithMany()
              .HasForeignKey(u => u.UserId)

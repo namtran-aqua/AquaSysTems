@@ -8,7 +8,7 @@ namespace AquaSolution.Data.Data.MappingConfigurations.KPI
     {
         public void Configure(EntityTypeBuilder<KPIDetailScore> builder)
         {
-            builder.ToTable("tbl_KPIDetailScores");
+            builder.ToTable("tbl_KPIDetailScores", schema: "KPI");
             builder.HasKey(e => e.Id);
             builder.HasOne<KPITotalScore>()
              .WithMany()

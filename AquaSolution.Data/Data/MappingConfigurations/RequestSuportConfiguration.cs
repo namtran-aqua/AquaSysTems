@@ -8,7 +8,7 @@ namespace AquaSolution.Data.Data.MappingConfigurations
     {
         public void Configure(EntityTypeBuilder<RequestSuport> builder)
         {
-            builder.ToTable("tbl_RequestSuports");
+            builder.ToTable("tbl_RequestSuports", schema: "RequestSuport");
             builder.HasKey(e => e.Id);
             builder.HasOne<User>()
                    .WithMany()

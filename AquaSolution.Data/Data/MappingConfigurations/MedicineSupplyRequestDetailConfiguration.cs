@@ -8,7 +8,7 @@ namespace AquaSolution.Data.Data.MappingConfigurations
     {
         public void Configure(EntityTypeBuilder<MedicineSupplyRequestDetail> builder)
         {
-            builder.ToTable("tbl_MedicineSupplyRequestDetails");
+            builder.ToTable("tbl_MedicineSupplyRequestDetails", schema: "Clinic");
             builder.HasKey(e => e.Id);
             builder.HasOne<MedicineSupplyRequest>()
                .WithMany()

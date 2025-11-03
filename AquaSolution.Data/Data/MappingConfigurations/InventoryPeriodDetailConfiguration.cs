@@ -8,7 +8,7 @@ namespace AquaSolution.Data.Data.MappingConfigurations
     {
         public void Configure(EntityTypeBuilder<InventoryPeriodDetail> builder)
         {
-            builder.ToTable("tbl_InventoryPeriodDetails");
+            builder.ToTable("tbl_InventoryPeriodDetails", schema: "Clinic");
             builder.HasKey(e => new { e.InventoryId, e.InventoryPeriodId });
 
             builder.Property(e => e.ProductType)
