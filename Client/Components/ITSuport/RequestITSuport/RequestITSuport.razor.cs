@@ -7,6 +7,7 @@ using AquaSolution.Shared.ITSuport.RequestSuport;
 using AquaSolution.Shared.ITSuport.RequestSuportCategory;
 using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Components;
+using NPOI.SS.UserModel;
 using System.Net.Http.Json;
 
 namespace AquaSolution.Client.Components.ITSuport.RequestITSuport
@@ -18,7 +19,7 @@ namespace AquaSolution.Client.Components.ITSuport.RequestITSuport
         private bool IsModalVisible = false;
         private RequestSuportDto RequestSuport = new();
         private HandleRequestSuportDto HandleRequestSuport = new();
-
+        private bool IsSave { get; set; }
         private List<UserContributerDto> ListTechnician = new List<UserContributerDto>();
         private List<UserContributerDto> ListUser = new List<UserContributerDto>();
         private List<RequestSuportCategoryDto> RequestSuportCategories = new();
@@ -83,22 +84,27 @@ namespace AquaSolution.Client.Components.ITSuport.RequestITSuport
         #region Action
         private async Task SaveAsync()
         {
+            IsSave = true;
+            StateHasChanged();
             var data = await MappingData();
+
             if (IsEdit)
             {
                 await UpdateAsync(data);
             }
             else
             {
-                var valid =  formRef.Validate();
-                if (!valid)
+                if (string.IsNullOrEmpty(data.RequestDescription)
+                      || string.IsNullOrEmpty(data.RequestTitle))
                 {
+                    await Message.Error("Please provide enough information!");
                     return;
                 }
                 await CreatedAsync(data);
                 await ConvertDataSendEmailRequest(RequestSuport, RequestSuportStatusType.Open);
             }
             IsModalVisible = false;
+            IsSave = false;
             await OnSave.InvokeAsync();
         }
         private Task<HandleRequestSuportDto> MappingData()
@@ -239,7 +245,7 @@ namespace AquaSolution.Client.Components.ITSuport.RequestITSuport
             }
         }
         private async Task CreatedAsync(HandleRequestSuportDto handleRequestSuportDto)
-        {  
+        {
             var response = await Http.PostAsJsonAsync("api/RequestITSuport/created", handleRequestSuportDto);
 
             if (response.IsSuccessStatusCode)

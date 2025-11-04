@@ -29,7 +29,12 @@ namespace AquaSolution.Server.Controllers.Common
             if (file == null || file.Length == 0)
                 return BadRequest("File is empty.");
 
-            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+            //var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+            var originalName = Path.GetFileNameWithoutExtension(file.FileName);
+            var extension = Path.GetExtension(file.FileName);
+            var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmssfff");
+            var fileName = $"{originalName}_{timestamp}{extension}";
+
             var filePath = Path.Combine("wwwroot/uploads/support-data", fileName);
 
             using (var stream = new FileStream(filePath, FileMode.Create))

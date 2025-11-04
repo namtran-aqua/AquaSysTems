@@ -256,6 +256,23 @@ namespace AquaSolution.Client.Shared
             var basePath = NavigationManager.BaseUri.TrimEnd('/');
             return $"{basePath}{url}";
         }
+        //private string[] openKeys = Array.Empty<string>();
+
+        //private void OnOpenChange(string[] keys)
+        //{
+        //    if (keys.Length == 0)
+        //    {
+        //        openKeys = Array.Empty<string>();
+        //        return;
+        //    }
+
+        //    // Nếu menu mới mở khác với menu hiện tại thì chỉ mở menu mới
+        //    var newlyOpened = keys.Except(openKeys).LastOrDefault();
+
+        //    if (newlyOpened != null)
+        //        openKeys = new[] { newlyOpened };
+        //}
+
     }
 }
 

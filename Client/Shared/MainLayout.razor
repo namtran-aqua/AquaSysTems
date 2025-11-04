@@ -64,7 +64,20 @@
                 background-color: rgba(24, 144, 255, 0.1);
                 transform: scale(1.1);
             }
+            /* =------------ */
+        .ant-menu-item:hover {
+            background-color: rgba(39 ,69 ,99) !important;
+            color: #40a9ff !important; /* màu xanh sáng */
+            border-radius: 4px;
+            transition: all 0.2s ease-in-out;
+        }
 
+        /* Khi SubMenu đang mở */
+        .ant-menu-submenu-open > .ant-menu-submenu-title {
+            background-color: rgba(24, 144, 255, 0.15) !important;
+            color: #40a9ff !important;
+            border-radius: 4px;
+        }
     </style>
     <div class="d-flex">
         <!-- Sidebar -->
@@ -78,9 +91,14 @@
                          alt="AQUA Logo" style="width:120px;height:auto;" />
                 </span> *@
                 <Icon Class="home-icon" OnClick="Home" Type="home" />
-                <Menu Mode="MenuMode.Inline"
+        @*         <Menu Mode="MenuMode.Inline"
                       Theme="MenuTheme.Dark"
-                      Style="height: 94vh; overflow: auto;">
+                      OpenKeys="@openKeys"
+                      OnOpenChange="@OnOpenChange"
+                      Style="height: 94vh; overflow: auto;"> *@
+                    <Menu Mode="MenuMode.Inline"
+                          Theme="MenuTheme.Dark"
+                          Style="height: 94vh; overflow: auto;">
                     @foreach (var item in menu)
                     {
                         <SubMenu @key="item.Id">

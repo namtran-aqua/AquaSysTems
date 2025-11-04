@@ -46,6 +46,7 @@ namespace AquaSolution.Server.Services.ITSuport.RequestSuportCategories
             var query = from requestSuoportCategories in await _requestSuportCategoryRepo.GetQueryableAsync()
                         join user in await _userRepo.GetQueryableAsync()
                         on requestSuoportCategories.TechnicianId equals user.Id
+                        into u from user in u.DefaultIfEmpty()
                         select new RequestSuportCategoryDto
                         {
                             Id = requestSuoportCategories.Id,
