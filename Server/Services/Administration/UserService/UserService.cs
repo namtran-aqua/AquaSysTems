@@ -344,12 +344,16 @@ public class UserService : IUserService
             var users = from u in await _userRepo.GetQueryableAsync()
                         join d in await _departmentRepo.GetQueryableAsync() on u.DepartmentId equals d.Id into d1
                         from department in d1.DefaultIfEmpty()
+
                         join f in await _factoryRepo.GetQueryableAsync() on u.FactoryId equals f.Id into f1
                         from factory in f1.DefaultIfEmpty()
+
                         join p in await _positionRepo.GetQueryableAsync() on u.PositionId equals p.Id into p1
                         from position in p1.DefaultIfEmpty()
+
                         join m in await _userRepo.GetQueryableAsync() on u.ManagerId equals m.Id into m1
                         from manager in m1.DefaultIfEmpty()
+
                         orderby u.CreatedTime descending
                         select new UserDto
                         {
@@ -618,6 +622,7 @@ public class UserService : IUserService
                    on userSelected.DepartmentId equals department.Id
                    into d
                    from department in d.DefaultIfEmpty()
+
                    join factory in await _factoryRepo.GetQueryableAsync()
                    on userSelected.FactoryId equals factory.Id
                    into f

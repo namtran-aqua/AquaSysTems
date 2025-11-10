@@ -36,9 +36,29 @@ namespace AquaSolution.Client.Pages.ITSuport.RequestSuport
         #region Innit
         protected override async Task OnInitializedAsync()
         {
+           // _hubConnection = new HubConnectionBuilder()
+           //.WithUrl(Navigation.ToAbsoluteUri(Navigation.BaseUri + "signalrhub"))
+           //.Build();
+           // _hubConnection.On("LoadRequestSuport", async () =>
+           // {
+           //     await LoadData();
+           //     await Search();
+           //     StateHasChanged();
+           // });
+           // await _hubConnection.StartAsync();
+            await SignalRReload();
+            await LoadData();
+            await LoadStatusOptions();
+            await LoadTechnician();
+            await GetPage();
+            await CheckPermission();
+            _selectedChange += Search;
+        }
+        private async Task SignalRReload()
+        {
             _hubConnection = new HubConnectionBuilder()
-           .WithUrl(Navigation.ToAbsoluteUri(Navigation.BaseUri + "signalrhub"))
-           .Build();
+            .WithUrl(Navigation.ToAbsoluteUri(Navigation.BaseUri + "signalrhub"))
+            .Build();
             _hubConnection.On("LoadRequestSuport", async () =>
             {
                 await LoadData();
@@ -46,12 +66,6 @@ namespace AquaSolution.Client.Pages.ITSuport.RequestSuport
                 StateHasChanged();
             });
             await _hubConnection.StartAsync();
-            await LoadData();
-            await LoadStatusOptions();
-            await LoadTechnician();
-            await GetPage();
-            await CheckPermission();
-            _selectedChange += Search;
         }
         private async Task GetPage()
         {

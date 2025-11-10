@@ -5,6 +5,7 @@ namespace AquaSolution.Shared.Enum.KPIType
     {
         KF1,
         KF2,
-        KF3
+        KF3,
+        KF4
     }
 }

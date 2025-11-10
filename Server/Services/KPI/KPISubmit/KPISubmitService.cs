@@ -1,4 +1,4 @@
-﻿using AquaSolution.Data.Connection;
+﻿   using AquaSolution.Data.Connection;
 using AquaSolution.Data.Data.Entities;
 using AquaSolution.Data.Data.Entities.KPI;
 using AquaSolution.Data.KPI.Entities;
@@ -1047,7 +1047,7 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
 
             if (allTasks.All(x => x.StatusType == EApprovalStatusType.Approved))
             {
-                await HandleApprovedTasks(allTasks, kpiTotalList, kpiRequest);
+                await HandleApprovedTasks(allTasks, kpiTotalList, kpiRequest, approvalInfo);
             }
 
             return true;
@@ -1106,7 +1106,7 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
             }
         }
 
-        private async Task HandleApprovedTasks(List<RequestApprovalTask> allTasks, List<KPITotalScore> kpiTotalList, KPIRequest kpiRequest)
+        private async Task HandleApprovedTasks(List<RequestApprovalTask> allTasks, List<KPITotalScore> kpiTotalList, KPIRequest kpiRequest, ApprovalInfo approvalInfo)
         {
             foreach (var kpiTotal in kpiTotalList)
             {
@@ -1118,9 +1118,9 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
             {
                 kpiRequest.RequestStatus = StatusKPIRequestType.Approved;
                 kpiRequest.ApprovalDate = DateTime.Now;
-                var lastApprovedTask = allTasks.OrderByDescending(x => x.Step).FirstOrDefault();
-                if (lastApprovedTask != null)
-                    kpiRequest.ApprovalBy = lastApprovedTask.DecisionMaker;
+                //var lastApprovedTask = allTasks.OrderByDescending(x => x.Step).FirstOrDefault();
+                if (approvalInfo != null)
+                    kpiRequest.ApprovalBy = approvalInfo.DecisionMaker;
 
                 await _kpiRequestRepo.SaveChangesAsync();
             }
@@ -1138,14 +1138,18 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
 
                         join department in await _departmentRepo.GetQueryableAsync()
                         on user.DepartmentId equals department.Id
+                        into dept from department in dept.DefaultIfEmpty()
 
                         join factory in await _factoryRepo.GetQueryableAsync()
                         on user.FactoryId equals factory.Id
+                        into fact from factory in fact.DefaultIfEmpty()
 
                         join approval in await _userRepo.GetQueryableAsync()
                         on request.ApprovalBy equals approval.Id
+
                         where totalScore.Status == StatusKPIRequestType.Approved 
                         && request.RequestStatus == StatusKPIRequestType.Approved
+
                         select new ViewResultKpiDto
                         {
                             SubmitId = request.SubmitId,

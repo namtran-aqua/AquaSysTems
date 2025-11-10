@@ -11,8 +11,7 @@ namespace AquaSolution.Client.Components.KPI.KPISubmit
         [Inject] private HttpClient Http { get; set; }
         private bool IsVisibleModal { get; set; } = false;
         private bool IsView { get; set; }
-        [Parameter]
-        public EventCallback<ApprovalInfo> IsApprovalEvent { get; set; }
+        [Parameter] public EventCallback<ApprovalInfo> IsApprovalEvent { get; set; }
 
         [Parameter] public EventCallback<ApprovalInfo> IsRejectEvent { get; set; }
         private string ModalTitle { get; set; } = string.Empty;

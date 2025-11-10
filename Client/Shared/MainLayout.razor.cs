@@ -201,7 +201,9 @@ namespace AquaSolution.Client.Shared
 
         private void Home()
         {
-            NavigationManager.NavigateTo("/");
+            var baseUri = NavigationManager.BaseUri.TrimEnd('/');
+            NavigationManager.NavigateTo($"{baseUri}/");
+            //NavigationManager.NavigateTo(" ");
         }
 
         private async void OnAuthenticationStateChanged(Task<AuthenticationState> task)

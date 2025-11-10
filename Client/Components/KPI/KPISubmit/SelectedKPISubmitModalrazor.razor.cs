@@ -241,6 +241,16 @@ namespace AquaSolution.Client.Components.KPI.KPISubmit
                             achievement = 2 - (actual / target);
                         }
                         break;
+                    case KPIFormulaType.KF4:
+                        if(actual > target)
+                        {
+                            achievement = 0;
+                        }
+                        else
+                        {
+                            achievement = 1;
+                        }
+                        break;
                     default:
                         achievement = 0;
                         break;

@@ -194,7 +194,8 @@ namespace AquaSolution.Client.Pages.KPI.ResultKPI
         {
             WorkDayId = null;
             FullName = null;
-            DataFilter = DataSource;
+            //DataFilter = DataSource;
+            await LoadData();
             _tableRef?.ReloadData();
             await InvokeAsync(StateHasChanged);
         }
