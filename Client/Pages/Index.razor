@@ -5,8 +5,18 @@
 @inject IWebAssemblyHostEnvironment webHostEnvironment
 @attribute [Authorize]
 <PageTitle>Home</PageTitle>
-
-<h1>Greetings from Aqua</h1>
+<div class="container-index">
+    <h1>Greetings from Aqua</h1>
+</div>
+@* <style>
+    .container-index {
+        background-image: url('https://hrmsaquavietnam.com:6969/images/Aqua-Smart%20Home%20-%20blue.png');
+        background-size: cover; 
+        background-repeat: no-repeat; 
+        background-position: center; 
+        height: 100%;
+    }
+</style> *@
 @code {
     protected override void OnInitialized()
     {

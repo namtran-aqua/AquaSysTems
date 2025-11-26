@@ -84,7 +84,8 @@ namespace AquaSolution.Client.Components.ITSuport.RequestITSuport
         #region Action
         private async Task SaveAsync()
         {
-            IsSave = true;
+
+            IsSave = true; 
             StateHasChanged();
             var data = await MappingData();
 
@@ -97,6 +98,7 @@ namespace AquaSolution.Client.Components.ITSuport.RequestITSuport
                 if (string.IsNullOrEmpty(data.RequestDescription)
                       || string.IsNullOrEmpty(data.RequestTitle))
                 {
+                    IsSave = false;
                     await Message.Error("Please provide enough information!");
                     return;
                 }
