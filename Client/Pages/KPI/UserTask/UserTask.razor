@@ -101,11 +101,19 @@
                         </ChildContent>
                         <ContentTemplate>
                             <div style="display: flex; flex-direction: column; gap: 4px; padding: 8px;">
-                                @if ((Month == 3 || Month == 6 || Month == 9 || Month == 12) && CalculateQuarterPointsPermission)
-                                {
-                                    <Button Type="ButtonType.Text" OnClick="@(async () => await CalculateQuarterPoints(row))" Style="text-align: left;">
-                                        <Icon Type="plus" /> Calculate Quarter Points
-                                    </Button>
+                                @*       @if ((Month == 3 || Month == 6 || Month == 9 || Month == 12) && CalculateQuarterPointsPermission)
+                                { *@
+                                @*     @if (CalculateQuarterPointsPermission) *@
+                                @{
+
+                                    var disable = !(Month == 4 || Month == 7 || Month == 10 || Month == 1);
+                                    var title = disable ? "Quarter Points can only be calculated in April, July, October, and January of the following year." : "";
+                                    <Tooltip Title="@title">
+                                        <Button Disabled="disable" Type="ButtonType.Text" OnClick="@(async () => await CalculateQuarterPoints(row))" Style="text-align: left;">
+                                            <Icon Type="plus" /> Calculate Quarter Points
+                                        </Button>
+                                    </Tooltip>
+
                                 }
                                 @if (TaskManagement)
                                 {

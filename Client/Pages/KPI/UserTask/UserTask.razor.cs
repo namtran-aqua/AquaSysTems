@@ -121,10 +121,10 @@ namespace AquaSolution.Client.Pages.KPI.UserTask
             var Confirm = await MessageBox.Confirm(modal, "Are you sure you want calculate Quarter score this user?");
             if (!Confirm) return;
             await GetIndexWeight(user.PositionType);
-            if (Month == 3 || Month == 6 || Month == 9 || Month == 12)
+            if (Month == 4 || Month == 7 || Month == 10 || Month == 1)
             {
                 await CalculateQuarterScores(Month, user);
-                if (Month == 6 || Month == 12)
+                if (Month == 7 || Month == 1)
                 {
                     await CalculateHalfYearScoresFromQuarters(CalculateQuarterPoint, Month, user);
                 }
@@ -267,10 +267,10 @@ namespace AquaSolution.Client.Pages.KPI.UserTask
         }
         private List<int> GetMonthsInQuarter(int month)
         {
-            if (month == 3) return new List<int> { 1, 2, 3 };
-            if (month == 6) return new List<int> { 4, 5, 6 };
-            if (month == 9) return new List<int> { 7, 8, 9 };
-            if (month == 12) return new List<int> { 10, 11, 12 };
+            if (month == 4) return new List<int> { 1, 2, 3 };
+            if (month == 7) return new List<int> { 4, 5, 6 };
+            if (month == 10) return new List<int> { 7, 8, 9 };
+            if (month == 1) return new List<int> { 10, 11, 12 };
             return new List<int>();
         }
         private async Task CalculateQuarterScores(int month, UserDto user)
@@ -364,8 +364,8 @@ namespace AquaSolution.Client.Pages.KPI.UserTask
         {
             if (calculateQuarterPoint == null)
                 return;
-            int halfYear = (month.Value <= 6) ? 1 : 2;
-            var quarterNumbers = month == 6 ? 1 : 3;
+            int halfYear = (month.Value <= 7) ? 1 : 2;
+            var quarterNumbers = month == 7 ? 1 : 3;
             var quarterScores = new List<KPITotalScoreDto>();
 
             var result = await Http.GetFromJsonAsync<KPITotalScoreDto>(

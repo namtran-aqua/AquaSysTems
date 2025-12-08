@@ -1,4 +1,6 @@
 ﻿
+using AntDesign;
+using AquaSolution.Client.Common;
 using AquaSolution.Client.Common.ConvertNumber;
 using AquaSolution.Shared.Enum;
 using AquaSolution.Shared.Enum.KPIType;
@@ -102,7 +104,16 @@ namespace AquaSolution.Client.Components.KPI.KPISubmit
         }
         private async Task SaveAsync()
         {
+
             HandleButtonClicked = true;
+            var message = $"Are you sure you want to submit?";
+            var confirm = await MessageBox.Confirm(Modal, message);
+            if (!confirm)
+            {
+                HandleButtonClicked = false;
+                await InvokeAsync(StateHasChanged);
+                return;
+            }
             var response = await Http.PostAsJsonAsync($"api/kpisubmit/create", HandleKPISubmitDto);
             if (response.IsSuccessStatusCode)
             {
