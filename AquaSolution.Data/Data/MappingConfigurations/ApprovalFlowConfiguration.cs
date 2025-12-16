@@ -1,4 +1,5 @@
 ﻿using AquaSolution.Data.Data.Entities;
+using AquaSolution.Shared.Enum;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -15,7 +16,11 @@ namespace AquaSolution.Data.Data.MappingConfigurations
             builder.Property(e => e.ApprovalSettingType)
                     .HasConversion<string>()
                     .IsRequired();
-              builder.HasOne<Position>()
+            builder.Property(e => e.SystemType)
+                .HasDefaultValue(SystemType.KPI)
+               .HasConversion<string>()
+               .IsRequired();
+            builder.HasOne<Position>()
                    .WithMany()
                    .HasForeignKey(u => u.PositionId)
                    .OnDelete(DeleteBehavior.Restrict);

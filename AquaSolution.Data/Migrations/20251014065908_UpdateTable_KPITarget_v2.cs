@@ -21,10 +21,10 @@ namespace AquaSolution.Data.Migrations
                 table: "tbl_KPIMonthlyTargets",
                 newName: "Quater");
 
-            migrationBuilder.RenameColumn(
-                name: "HalfYear",
-                table: "tbl_KPIMonthlyTargets",
-                newName: "HaftYear");
+            //migrationBuilder.RenameColumn(
+            //    name: "HalfYear",
+            //    table: "tbl_KPIMonthlyTargets",
+            //    newName: "HaftYear");
         }
     }
 }

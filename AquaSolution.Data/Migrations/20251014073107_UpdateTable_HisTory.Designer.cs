@@ -405,8 +405,8 @@ namespace AquaSolution.Data.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETDATE()");
 
-                    b.Property<int>("HaftYear")
-                        .HasColumnType("int");
+                    //b.Property<int>("HaftYear")
+                    //    .HasColumnType("int");
 
                     b.Property<Guid>("KPIMonthlyTargetId")
                         .HasColumnType("uniqueidentifier");

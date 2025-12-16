@@ -87,15 +87,15 @@ namespace AquaSolution.Data.Migrations
                 oldType: "int",
                 oldNullable: true);
 
-            migrationBuilder.AlterColumn<int>(
-                name: "HaftYear",
-                table: "tbl_KPIMonthlyTargets",
-                type: "int",
-                nullable: false,
-                defaultValue: 0,
-                oldClrType: typeof(int),
-                oldType: "int",
-                oldNullable: true);
+            //migrationBuilder.AlterColumn<int>(
+            //    name: "HaftYear",
+            //    table: "tbl_KPIMonthlyTargets",
+            //    type: "int",
+            //    nullable: false,
+            //    defaultValue: 0,
+            //    oldClrType: typeof(int),
+            //    oldType: "int",
+            //    oldNullable: true);
         }
     }
 }

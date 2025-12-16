@@ -37,13 +37,13 @@ namespace AquaSolution.Data.Migrations
                 oldClrType: typeof(int),
                 oldType: "int");
 
-            migrationBuilder.AlterColumn<int>(
-                name: "Quater",
-                table: "tbl_KPIMonthlyActuals",
-                type: "int",
-                nullable: true,
-                oldClrType: typeof(int),
-                oldType: "int");
+            //migrationBuilder.AlterColumn<int>(
+            //    name: "Quater",
+            //    table: "tbl_KPIMonthlyActuals",
+            //    type: "int",
+            //    nullable: true,
+            //    oldClrType: typeof(int),
+            //    oldType: "int");
 
             migrationBuilder.AlterColumn<int>(
                 name: "Month",
@@ -53,13 +53,13 @@ namespace AquaSolution.Data.Migrations
                 oldClrType: typeof(int),
                 oldType: "int");
 
-            migrationBuilder.AlterColumn<int>(
-                name: "HaftYear",
-                table: "tbl_KPIMonthlyActuals",
-                type: "int",
-                nullable: true,
-                oldClrType: typeof(int),
-                oldType: "int");
+            //migrationBuilder.AlterColumn<int>(
+            //    name: "HaftYear",
+            //    table: "tbl_KPIMonthlyActuals",
+            //    type: "int",
+            //    nullable: true,
+            //    oldClrType: typeof(int),
+            //    oldType: "int");
 
             migrationBuilder.AddColumn<decimal>(
                 name: "ActualValue",
@@ -99,15 +99,15 @@ namespace AquaSolution.Data.Migrations
                 oldType: "int",
                 oldNullable: true);
 
-            migrationBuilder.AlterColumn<int>(
-                name: "Quater",
-                table: "tbl_KPIMonthlyActuals",
-                type: "int",
-                nullable: false,
-                defaultValue: 0,
-                oldClrType: typeof(int),
-                oldType: "int",
-                oldNullable: true);
+            //migrationBuilder.AlterColumn<int>(
+            //    name: "Quater",
+            //    table: "tbl_KPIMonthlyActuals",
+            //    type: "int",
+            //    nullable: false,
+            //    defaultValue: 0,
+            //    oldClrType: typeof(int),
+            //    oldType: "int",
+            //    oldNullable: true);
 
             migrationBuilder.AlterColumn<int>(
                 name: "Month",
@@ -119,15 +119,15 @@ namespace AquaSolution.Data.Migrations
                 oldType: "int",
                 oldNullable: true);
 
-            migrationBuilder.AlterColumn<int>(
-                name: "HaftYear",
-                table: "tbl_KPIMonthlyActuals",
-                type: "int",
-                nullable: false,
-                defaultValue: 0,
-                oldClrType: typeof(int),
-                oldType: "int",
-                oldNullable: true);
+            //migrationBuilder.AlterColumn<int>(
+            //    name: "HaftYear",
+            //    table: "tbl_KPIMonthlyActuals",
+            //    type: "int",
+            //    nullable: false,
+            //    defaultValue: 0,
+            //    oldClrType: typeof(int),
+            //    oldType: "int",
+            //    oldNullable: true);
 
             migrationBuilder.AddColumn<decimal>(
                 name: "TargetValue",

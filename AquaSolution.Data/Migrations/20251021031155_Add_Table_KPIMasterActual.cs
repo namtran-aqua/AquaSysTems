@@ -11,17 +11,17 @@ namespace AquaSolution.Data.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "HaftYear",
-                table: "tbl_KPIMonthlyTargets");
+            //migrationBuilder.DropColumn(
+            //    name: "HaftYear",
+            //    table: "tbl_KPIMonthlyTargets");
 
-            migrationBuilder.DropColumn(
-                name: "Quater",
-                table: "tbl_KPIMonthlyTargets");
+            //migrationBuilder.DropColumn(
+            //    name: "Quater",
+            //    table: "tbl_KPIMonthlyTargets");
 
-            migrationBuilder.DropColumn(
-                name: "HaftYear",
-                table: "tbl_KPIMonthlyActuals");
+            //migrationBuilder.DropColumn(
+            //    name: "HaftYear",
+            //    table: "tbl_KPIMonthlyActuals");
             migrationBuilder.AddColumn<decimal>(
                 name: "TotaleScore",
                 table: "tbl_KPITotalScores",
@@ -79,11 +79,11 @@ namespace AquaSolution.Data.Migrations
 
 
 
-            migrationBuilder.AddColumn<int>(
-                name: "HaftYear",
-                table: "tbl_KPIMonthlyActuals",
-                type: "int",
-                nullable: true);
+            //migrationBuilder.AddColumn<int>(
+            //    name: "HaftYear",
+            //    table: "tbl_KPIMonthlyActuals",
+            //    type: "int",
+            //    nullable: true);
 
             migrationBuilder.AddColumn<int>(
                 name: "Quater",

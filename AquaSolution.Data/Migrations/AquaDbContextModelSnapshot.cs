@@ -55,6 +55,12 @@ namespace AquaSolution.Data.Migrations
                     b.Property<Guid>("PositionId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("SystemType")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValue("KPI");
+
                     b.HasKey("Id");
 
                     b.HasIndex("PositionId");
@@ -242,7 +248,8 @@ namespace AquaSolution.Data.Migrations
                     b.Property<DateTime?>("ExpirationDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<bool>("IsActive")
+                    b.Property<bool?>("IsActive")
+                        .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
@@ -705,7 +712,7 @@ namespace AquaSolution.Data.Migrations
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPIRequest", b =>
                 {
-                    b.Property<Guid>("SubmitId")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
@@ -726,9 +733,6 @@ namespace AquaSolution.Data.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("Note")
                         .HasColumnType("nvarchar(max)");
 
@@ -743,11 +747,14 @@ namespace AquaSolution.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<Guid>("SubmitId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("SubmitId");
+                    b.HasKey("Id");
 
                     b.HasIndex("ApprovalBy");
 

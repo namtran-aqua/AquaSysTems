@@ -13,5 +13,6 @@ namespace AquaSolution.Data.Data.Entities
         public int? NextStep { get; set; }
         public ApprovalSettingType ApprovalSettingType { get; set; }
         public DateTime CreatedDate { get; set; }
+        public SystemType SystemType { get; set; }
     }
 }

@@ -28,24 +28,29 @@ namespace AquaSolution.Data.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_tbl_RequestApprovalTasks", x => x.Id);
+
+                    // ✅ FK ĐÚNG: SubmitId -> tbl_KPIRequests.Id
                     table.ForeignKey(
                         name: "FK_tbl_RequestApprovalTasks_tbl_KPIRequests_SubmitId",
                         column: x => x.SubmitId,
                         principalTable: "tbl_KPIRequests",
-                        principalColumn: "SubmitId",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+
                     table.ForeignKey(
                         name: "FK_tbl_RequestApprovalTasks_tbl_Users_ApprovedBy",
                         column: x => x.ApprovedBy,
                         principalTable: "tbl_Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+
                     table.ForeignKey(
                         name: "FK_tbl_RequestApprovalTasks_tbl_Users_RejectBy",
                         column: x => x.RejectBy,
                         principalTable: "tbl_Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+
                     table.ForeignKey(
                         name: "FK_tbl_RequestApprovalTasks_tbl_Users_RequesterId",
                         column: x => x.RequesterId,

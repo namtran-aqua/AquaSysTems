@@ -631,7 +631,7 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
             var positionId = user.PositionId.Value;
             var approvalFlows = await _approvalFlowRepo.GetAllAsync();
             var filteredFlows = approvalFlows
-                .Where(f => f.PositionId == positionId)
+                .Where(f => f.PositionId == positionId && f.SystemType ==SystemType.KPI)
                 .OrderBy(f => f.CurrentStep)
                 .ToList();
 

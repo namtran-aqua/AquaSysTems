@@ -736,7 +736,7 @@ namespace AquaSolution.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("SubmitId");
+                    //b.HasKey("SubmitId");
 
                     b.HasIndex("ApprovalBy");
 

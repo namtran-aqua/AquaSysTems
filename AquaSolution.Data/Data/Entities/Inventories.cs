@@ -15,6 +15,6 @@ namespace AquaSolution.Data.Data.Entities
         public DateTime? ExpirationDate { get; set; }
         public DateTime? ManufacturingDate { get; set; }
         public bool expired { get; set; }
-        public bool IsActive { get; set; }
+        public bool? IsActive { get; set; }
     }
 }

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AquaSolution.Data.Migrations
 {
     [DbContext(typeof(AquaDbContext))]
-    [Migration("20251024013739_Update_Table_Flow")]
-    partial class Update_Table_Flow
+    [Migration("20251216050305_Update_ApprovalFlow")]
+    partial class Update_ApprovalFlow
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -38,7 +38,7 @@ namespace AquaSolution.Data.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("CurrentStep")
+                    b.Property<int?>("CurrentStep")
                         .HasColumnType("int");
 
                     b.Property<Guid?>("DecisionMaker")
@@ -52,17 +52,23 @@ namespace AquaSolution.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int>("NextStep")
+                    b.Property<int?>("NextStep")
                         .HasColumnType("int");
 
                     b.Property<Guid>("PositionId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("SystemType")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValue("KPI");
+
                     b.HasKey("Id");
 
                     b.HasIndex("PositionId");
 
-                    b.ToTable("tbl_ApprovalFlows", (string)null);
+                    b.ToTable("tbl_ApprovalFlows", "Admin");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.Attachment", b =>
@@ -96,7 +102,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("RequestSuportId");
 
-                    b.ToTable("tbl_Attachments", (string)null);
+                    b.ToTable("tbl_Attachments", "RequestSuport");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.Department", b =>
@@ -135,7 +141,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("tbl_Departments", (string)null);
+                    b.ToTable("tbl_Departments", "Admin");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.Factory", b =>
@@ -173,7 +179,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("tbl_Factorys", (string)null);
+                    b.ToTable("tbl_Factorys", "Admin");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.Formula", b =>
@@ -198,7 +204,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("tbl_Formulas", (string)null);
+                    b.ToTable("tbl_Formulas", "KPI");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.Groups", b =>
@@ -233,7 +239,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("tbl_Groups", (string)null);
+                    b.ToTable("tbl_Groups", "Admin");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.Inventories", b =>
@@ -244,6 +250,12 @@ namespace AquaSolution.Data.Migrations
 
                     b.Property<DateTime?>("ExpirationDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<bool?>("IsActive")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<DateTime?>("ManufacturingDate")
                         .HasColumnType("datetime2");
@@ -261,7 +273,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("tbl_Inventory", (string)null);
+                    b.ToTable("tbl_Inventory", "Clinic");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.InventoryPeriod", b =>
@@ -298,7 +310,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("tbl_InventoryPeriods", (string)null);
+                    b.ToTable("tbl_InventoryPeriods", "Clinic");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.InventoryPeriodDetail", b =>
@@ -338,7 +350,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("tbl_InventoryPeriodDetails", (string)null);
+                    b.ToTable("tbl_InventoryPeriodDetails", "Clinic");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPI.DealineKPISubmitManagement", b =>
@@ -410,7 +422,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("tbl_KPIActualMasters", (string)null);
+                    b.ToTable("tbl_KPIActualMasters", "KPI");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPI.KPIApprovalTask", b =>
@@ -455,7 +467,68 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("SubmitId");
 
-                    b.ToTable("tbl_KPIApprovalTasks", (string)null);
+                    b.ToTable("tbl_KPIApprovalTasks", "KPI");
+                });
+
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPI.RequestApprovalTask", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ApprovalDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ApprovedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("DecisionMaker")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Month")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("RejectBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("RejectDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("RequesterId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("StatusType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("Step")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("SubmitId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApprovedBy");
+
+                    b.HasIndex("RejectBy");
+
+                    b.HasIndex("RequesterId");
+
+                    b.HasIndex("SubmitId");
+
+                    b.ToTable("tbl_RequestApprovalTasks", "KPI");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPIDetailScore", b =>
@@ -515,7 +588,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("TotalScoreId");
 
-                    b.ToTable("tbl_KPIDetailScores", (string)null);
+                    b.ToTable("tbl_KPIDetailScores", "KPI");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPIIndexWeight", b =>
@@ -548,7 +621,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("tbl_KPIIndexWeights", (string)null);
+                    b.ToTable("tbl_KPIIndexWeights", "KPI");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPIMonthlyActual", b =>
@@ -594,7 +667,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("UpdatedBy");
 
-                    b.ToTable("tbl_KPIMonthlyActuals", (string)null);
+                    b.ToTable("tbl_KPIMonthlyActuals", "KPI");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPIMonthlyTarget", b =>
@@ -637,7 +710,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("UserTaskId");
 
-                    b.ToTable("tbl_KPIMonthlyTargets", (string)null);
+                    b.ToTable("tbl_KPIMonthlyTargets", "KPI");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPIRequest", b =>
@@ -692,7 +765,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("RejectBy");
 
-                    b.ToTable("tbl_KPIRequests", (string)null);
+                    b.ToTable("tbl_KPIRequests", "KPI");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPITask", b =>
@@ -770,7 +843,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("OwnerId");
 
-                    b.ToTable("tbl_KPITasks", (string)null);
+                    b.ToTable("tbl_KPITasks", "KPI");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPITotalScore", b =>
@@ -826,11 +899,18 @@ namespace AquaSolution.Data.Migrations
                     b.Property<int>("Year")
                         .HasColumnType("int");
 
+                    b.Property<string>("kPITotalScoreType")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasDefaultValue("Staff");
+
                     b.HasKey("Id");
 
                     b.HasIndex("SubmitId");
 
-                    b.ToTable("tbl_KPITotalScores", (string)null);
+                    b.ToTable("tbl_KPITotalScores", "KPI");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.MedicalSuplies", b =>
@@ -845,7 +925,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasKey("ProducId");
 
-                    b.ToTable("tbl_MedicalSuply", (string)null);
+                    b.ToTable("tbl_MedicalSuply", "Clinic");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.Medicine", b =>
@@ -860,7 +940,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasKey("ProducId");
 
-                    b.ToTable("tbl_Medicines", (string)null);
+                    b.ToTable("tbl_Medicines", "Clinic");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.MedicineSupplyRequest", b =>
@@ -931,7 +1011,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("UserRequestId");
 
-                    b.ToTable("tbl_MedicineSupplyRequests", (string)null);
+                    b.ToTable("tbl_MedicineSupplyRequests", "Clinic");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.MedicineSupplyRequestDetail", b =>
@@ -967,7 +1047,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("tbl_MedicineSupplyRequestDetails", (string)null);
+                    b.ToTable("tbl_MedicineSupplyRequestDetails", "Clinic");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.Menu", b =>
@@ -990,7 +1070,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("tbl_Menus", (string)null);
+                    b.ToTable("tbl_Menus", "Admin");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.Page", b =>
@@ -1022,7 +1102,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("MenuId");
 
-                    b.ToTable("tbl_Pages", (string)null);
+                    b.ToTable("tbl_Pages", "Admin");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.Permission", b =>
@@ -1049,7 +1129,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("tbl_Permissions", (string)null);
+                    b.ToTable("tbl_Permissions", "Admin");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.Position", b =>
@@ -1088,7 +1168,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("tbl_Positions", (string)null);
+                    b.ToTable("tbl_Positions", "Admin");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.Prescription", b =>
@@ -1122,7 +1202,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("RequestId");
 
-                    b.ToTable("tbl_Prescriptions", (string)null);
+                    b.ToTable("tbl_Prescriptions", "Clinic");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.PrescriptionDetail", b =>
@@ -1150,7 +1230,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("PrescriptionId");
 
-                    b.ToTable("tbl_PrescriptionDetails", (string)null);
+                    b.ToTable("tbl_PrescriptionDetails", "Clinic");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.Product", b =>
@@ -1201,7 +1281,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("tbl_Products", (string)null);
+                    b.ToTable("tbl_Products", "Clinic");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.ReportInventory", b =>
@@ -1226,7 +1306,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("CreatedBy");
 
-                    b.ToTable("tbl_ReportInventory", (string)null);
+                    b.ToTable("tbl_ReportInventory", "Clinic");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.ReportInventoryDetail", b =>
@@ -1270,7 +1350,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("ReportInventoryId");
 
-                    b.ToTable("tbl_ReportInventoryDetail", (string)null);
+                    b.ToTable("tbl_ReportInventoryDetail", "Clinic");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.RequestClinic", b =>
@@ -1349,7 +1429,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("UserRequestId");
 
-                    b.ToTable("tbl_RequestClinics", (string)null);
+                    b.ToTable("tbl_RequestClinics", "Clinic");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.RequestSuport", b =>
@@ -1414,7 +1494,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("TechnicianId");
 
-                    b.ToTable("tbl_RequestSuports", (string)null);
+                    b.ToTable("tbl_RequestSuports", "RequestSuport");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.RequestSuportCategory", b =>
@@ -1440,7 +1520,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("TechnicianId");
 
-                    b.ToTable("tbl_RequestSuportCategorys", (string)null);
+                    b.ToTable("tbl_RequestSuportCategorys", "RequestSuport");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.Role", b =>
@@ -1456,7 +1536,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("tbl_Roles", (string)null);
+                    b.ToTable("tbl_Roles", "Admin");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.RolePermission", b =>
@@ -1477,7 +1557,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("tbl_RolePermissions", (string)null);
+                    b.ToTable("tbl_RolePermissions", "Admin");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.SysTemHistory", b =>
@@ -1530,7 +1610,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasKey("RequestId");
 
-                    b.ToTable("tbl_Treatments", (string)null);
+                    b.ToTable("tbl_Treatments", "Clinic");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.User", b =>
@@ -1619,7 +1699,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("PositionId");
 
-                    b.ToTable("tbl_Users", (string)null);
+                    b.ToTable("tbl_Users", "Admin");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.UserRole", b =>
@@ -1637,7 +1717,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("tbl_UserRoles", (string)null);
+                    b.ToTable("tbl_UserRoles", "Admin");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.WarehouseExport", b =>
@@ -1676,7 +1756,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("tbl_WarehouseExports", (string)null);
+                    b.ToTable("tbl_WarehouseExports", "Clinic");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.WarehouseExportDetail", b =>
@@ -1710,7 +1790,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("WarehouseExportId");
 
-                    b.ToTable("tbl_WarehouseExportDetails", (string)null);
+                    b.ToTable("tbl_WarehouseExportDetails", "Clinic");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.WarehouseImport", b =>
@@ -1749,7 +1829,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("tbl_WarehouseImports", (string)null);
+                    b.ToTable("tbl_WarehouseImports", "Clinic");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.WarehouseImportDetail", b =>
@@ -1783,7 +1863,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("WarehouseImportId");
 
-                    b.ToTable("tbl_WarehouseImportDetails", (string)null);
+                    b.ToTable("tbl_WarehouseImportDetails", "Clinic");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.KPI.Entities.UserTask", b =>
@@ -1816,7 +1896,7 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("tbl_UserTasks", (string)null);
+                    b.ToTable("tbl_UserTasks", "KPI");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.ApprovalFlow", b =>
@@ -1871,6 +1951,31 @@ namespace AquaSolution.Data.Migrations
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPI.KPIApprovalTask", b =>
+                {
+                    b.HasOne("AquaSolution.Data.Data.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("ApprovedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("AquaSolution.Data.Data.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("RejectBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("AquaSolution.Data.Data.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("RequesterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AquaSolution.Data.Data.Entities.KPIRequest", null)
+                        .WithMany()
+                        .HasForeignKey("SubmitId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPI.RequestApprovalTask", b =>
                 {
                     b.HasOne("AquaSolution.Data.Data.Entities.User", null)
                         .WithMany()
