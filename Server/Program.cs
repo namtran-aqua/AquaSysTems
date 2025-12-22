@@ -144,7 +144,7 @@ builder.Services.AddDbContext<AquaDbContext>(options =>
 builder.Services.AddDbContext<ePADContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("ePAD")));
 
-// JWT Auth
+// JWT Auth (không ảnh hưởng Swagger)
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -160,11 +160,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorization();
-
 builder.Services.AddAppServices();
 
-// Swagger (KHÔNG yêu cầu login)
+// ===================== SWAGGER =====================
+
 builder.Services.AddEndpointsApiExplorer();
+
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
@@ -173,7 +174,7 @@ builder.Services.AddSwaggerGen(c =>
         Version = "v1"
     });
 
-    // ❌ KHÔNG add security → Swagger không cần JWT
+    // KHÔNG cấu hình Security => Swagger không cần đăng nhập
 });
 
 // SignalR
@@ -184,23 +185,25 @@ var app = builder.Build();
 
 // ===================== MIDDLEWARE =====================
 
-// BasePath
+// BasePath (GIỮ NGUYÊN)
 app.UsePathBase("/AquaSolution");
 
-// Dev
+// Swagger PHẢI nằm NGOÀI IsDevelopment
+app.UseSwagger();
+
+app.UseSwaggerUI(c =>
+{
+    c.RoutePrefix = "swagger"; // => /AquaSolution/swagger
+    c.SwaggerEndpoint(
+        "/AquaSolution/swagger/v1/swagger.json",
+        "AquaSolution API v1"
+    );
+});
+
+// Dev tools
 if (app.Environment.IsDevelopment())
 {
     app.UseWebAssemblyDebugging();
-
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.RoutePrefix = "swagger"; // /AquaSolution/swagger
-        c.SwaggerEndpoint(
-            "/AquaSolution/swagger/v1/swagger.json",
-            "AquaSolution API v1"
-        );
-    });
 }
 else
 {
@@ -225,7 +228,8 @@ app.MapRazorPages();
 app.MapControllers();
 app.MapHub<SignalrHub>("/signalrhub");
 
-// Blazor fallback (PHẢI SAU CÙNG)
+// Blazor fallback (PHẢI CUỐI CÙNG)
 app.MapFallbackToFile("index.html");
 
 app.Run();
+
