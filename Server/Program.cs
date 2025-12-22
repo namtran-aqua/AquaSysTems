@@ -179,9 +179,7 @@ using AquaSolution.Data.Connection;
 using AquaSolution.Data.Data;
 using AquaSolution.Server;
 using AquaSolution.Server.SignalR;
-
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -254,18 +252,29 @@ using (var scope = app.Services.CreateScope())
     //db.Database.Migrate();
     //DbSeeder.SeedData(db);
 }
+// Enable middleware to serve generated Swagger as a JSON endpoint and the Swagger UI
+app.UseSwagger();
+
+app.UseSwaggerUI(c =>
+{
+    c.RoutePrefix = "swagger"; // => /swagger
+    c.SwaggerEndpoint(
+        "/swagger/v1/swagger.json",
+        "AquaSolution API v1"
+    );
+});
 
 if (app.Environment.IsDevelopment())
 {
     app.UseWebAssemblyDebugging();
-    app.UseSwagger();
-    app.UseSwaggerUI();
 }
 else
 {
     app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
+
+/**********************************************/
 
 app.UseHttpsRedirection();
 
@@ -276,13 +285,7 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
-//app.UseSwagger();
 
-//app.UseSwaggerUI(c =>
-//{
-//    c.SwaggerEndpoint("v1/swagger.json", "AquaSolution API v1");
-//    c.RoutePrefix = "swagger";
-//});
 
 app.MapRazorPages();
 app.MapControllers();
