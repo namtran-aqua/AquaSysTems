@@ -58,7 +58,15 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.WarehouseExports
         private async Task LoadProduct()
         {
             var data = await Http.GetFromJsonAsync<List<ProductExportDto>>("api/product/get-all-by-export");
-            _products = data.Where(x => x.Quantity > 0).ToList();
+            _products = data.
+                Where(x => x.Quantity > 0)
+                .GroupBy(x => new
+                {
+                    ExpirationDate = x.ExpirationDate?.Date,
+                    ManufacturingDate = x.ManufacturingDate?.Date
+                }).SelectMany(g => g)
+                .ToList();
+
             _product2 = data.ToList();
         }
         private async Task SetDataView()
@@ -162,7 +170,8 @@ namespace AquaSolution.Client.Components.ManageMedicalRooms.WarehouseExports
                     await Message.Error("Product cannot be left blank");
                     return;
                 }
-                var checkQuantity = _products.FirstOrDefault(x=>x.Id == itemDetail.ProductId);
+                var checkQuantity = _products.FirstOrDefault(x=>x.Id == itemDetail.ProductId 
+                && x.ManufacturingDate == itemDetail.DateManufacture && x.ExpirationDate ==itemDetail.ExpiryDate);
                 if (checkQuantity != null) 
                 {
                     if(checkQuantity.Quantity < itemDetail.Quantity) 
