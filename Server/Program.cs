@@ -173,7 +173,7 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
     {
-        Title = "AquaSolution API",
+        Title = "ITSM API",
         Version = "v1"
     });
 
@@ -205,7 +205,9 @@ builder.Services.AddHangfireServer();
 
 // ===================== BUILD =====================
 var app = builder.Build();
-app.UsePathBase("/AquaSolution");
+//app.UsePathBase("/AquaSolution");
+app.UsePathBase("/ITSM");
+
 // 👉 HANGFIRE DASHBOARD
 app.UseHangfireDashboard("/hangfire", new DashboardOptions
 {
@@ -232,8 +234,8 @@ app.UseSwaggerUI(c =>
 {
     c.RoutePrefix = "swagger";         
     c.SwaggerEndpoint(
-        "v1/swagger.json",             
-        "AquaSolution API v1"
+        "v1/swagger.json",
+        "ITSM API v1"
     );
 });
 
