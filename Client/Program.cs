@@ -58,7 +58,7 @@ builder.Services.AddScoped(sp =>
     return new HttpClient
     {
         // Ví dụ: http://server14/ITSM/
-        BaseAddress = new Uri($"{navigationManager.BaseUri}ITSM/")
+        BaseAddress = new Uri($"{navigationManager.BaseUri}")
     };
 });
 
