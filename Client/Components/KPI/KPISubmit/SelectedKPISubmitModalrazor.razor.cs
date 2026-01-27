@@ -362,7 +362,7 @@ namespace AquaSolution.Client.Components.KPI.KPISubmit
                 }
                 if (actuals.Count < 2)
                     return;
-
+             
 
                 decimal kpiScore = 0;
                 decimal omgscore = 0;

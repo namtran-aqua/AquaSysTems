@@ -102,6 +102,7 @@ public class KPITaskService : IKPITaskService
                         CreatedByName = createdBy.FullName,
                         CreatedDate = kpiTask.CreatedDate,
                         KPIFormulaType = formula.KPIFormulaType,
+                        
                     };
         var result = await query.ToListAsync();
         if (result == null || result.Count == 0)

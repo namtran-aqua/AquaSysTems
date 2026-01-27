@@ -222,11 +222,11 @@ app.UseHangfireDashboard("/hangfire", new DashboardOptions
 });
 
 // 👉 REGISTER JOB (sau app.Build)
-RecurringJob.AddOrUpdate<DailyJobService>(
-    "daily-job-9am",
-    job => job.RunDailyAsync(),
-    Cron.Daily(9, 0) // 9:00 sáng
-);
+//RecurringJob.AddOrUpdate<DailyJobService>(
+//    "daily-job-9am",
+//    job => job.RunDailyAsync(),
+//    Cron.Daily(9, 0) // 9:00 sáng
+//);
 
 // ===================== MIDDLEWARE =====================
 

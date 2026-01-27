@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace AquaSolution.Shared.KPI.KPIMonthlyTarget
 {
-    public class CreatedTargetDto
+    public class IndexWeightDto
     {
         public Guid TaskId { get; set; }
         public int? Month { get; set; }
@@ -24,9 +24,11 @@ namespace AquaSolution.Shared.KPI.KPIMonthlyTarget
         public decimal Bottom { get; set; }
         public decimal Weight { get; set; }
         public string Unit { get; set; }
-        public string OwnerName { get; set; }
+        public string PIC { get; set; }
         public string DataSource { get; set; }
         public string Formula { get; set; }
+        public string Calculated { get; set; }
+
         public string Factory { get; set; }
         public string Department { get; set; }
         public decimal TargetValue1 { get; set; }

@@ -292,7 +292,7 @@
 //                        Formula = item.Formula,
 //                        Department = item.Department,
 //                        Factory = item.Factory,
-//                        OwnerName = item.OwnerName,
+//                        PIC = item.PIC,
 //                        Unit = item.Unit,
 //                        UserId = User.Id,
 //                        CreatedDate = DateTime.Now
@@ -434,8 +434,8 @@ namespace AquaSolution.Client.Components.KPI.UserTask
         private IEnumerable<KPITaskDto> Selected;
         private List<KPITaskDto> DataFilter = new();
         private List<HandleUserTaskDto> HandleUserTaskDto = new();
-        private List<CreatedTargetDto> CreatedTarget = new();
-        private List<CreatedTargetDto> CreatedTargetCompare = new();
+        private List<IndexWeightDto> CreatedTarget = new();
+        private List<IndexWeightDto> CreatedTargetCompare = new();
 
         private HandleUserTaskAndTargetDto HandleUserTaskAndTarget = new();
         private UserDto User { get; set; }
@@ -461,7 +461,6 @@ namespace AquaSolution.Client.Components.KPI.UserTask
             TitleButton = "Next ⟶";
             TitleButton2 = "⟵ Back";
             HandleUserTaskDto = new();
-
             await AddTaskByUser();
             IsModalVisible = true;
             StateHasChanged();
@@ -471,7 +470,7 @@ namespace AquaSolution.Client.Components.KPI.UserTask
         #region Handle Data
         private async Task LoadTaskAndTarget()
         {
-            var monthProperties = new Dictionary<int, Action<CreatedTargetDto, decimal>>
+            var monthProperties = new Dictionary<int, Action<IndexWeightDto, decimal>>
             {
                 [1] = (d, v) => d.TargetValue1 = v,
                 [2] = (d, v) => d.TargetValue2 = v,
@@ -501,6 +500,7 @@ namespace AquaSolution.Client.Components.KPI.UserTask
                         item.Weight = first.Weight;
                     }
                     item.QuarterCalculateType = first.QuarterCalculateType;
+
                 }
 
                 foreach (var target in results.Where(x => x.Month.HasValue))
@@ -592,7 +592,7 @@ namespace AquaSolution.Client.Components.KPI.UserTask
             };
         }
         private void FillQuarterHalfYearAndYear(
-            CreatedTargetDto created,
+            IndexWeightDto created,
             List<UpdateTargetDto> calculated)
         {
             created.TargetQarter1 = calculated.FirstOrDefault(x => x.Quarter == 1)?.TargetValue ?? 0;
@@ -608,7 +608,7 @@ namespace AquaSolution.Client.Components.KPI.UserTask
                 ?.TargetValue ?? 0;
         }
 
-        public List<UpdateTargetDto> ConvertCreatedToUpdateTargets(CreatedTargetDto created)
+        public List<UpdateTargetDto> ConvertCreatedToUpdateTargets(IndexWeightDto created)
         {
             var list = new List<UpdateTargetDto>();
 
@@ -657,7 +657,7 @@ namespace AquaSolution.Client.Components.KPI.UserTask
 
                 foreach (var item in Selected)
                 {
-                    CreatedTarget.Add(new CreatedTargetDto
+                    CreatedTarget.Add(new IndexWeightDto
                     {
                         TaskId = item.Id,
                         TaskName = item.TaskName,
@@ -667,9 +667,10 @@ namespace AquaSolution.Client.Components.KPI.UserTask
                         Bottom = item.Bottom,
                         DataSource = item.DataSource,
                         Formula = item.Formula,
+                        Calculated = item.Calculated,
                         Department = item.Department,
                         Factory = item.Factory,
-                        OwnerName = item.OwnerName,
+                        PIC = item.PIC,
                         Unit = item.Unit,
                         UserId = User.Id,
                         CreatedDate = DateTime.Now,
@@ -711,9 +712,9 @@ namespace AquaSolution.Client.Components.KPI.UserTask
                 TitleButton = "NEXT ⟶";
             }
         }
-        private CreatedTargetDto CloneTarget(CreatedTargetDto x)
+        private IndexWeightDto CloneTarget(IndexWeightDto x)
         {
-            return new CreatedTargetDto
+            return new IndexWeightDto
             {
                 TaskId = x.TaskId,
                 UserId = x.UserId,
@@ -747,7 +748,7 @@ namespace AquaSolution.Client.Components.KPI.UserTask
             };
         }
 
-        private bool TargetEquals(CreatedTargetDto a, CreatedTargetDto b)
+        private bool TargetEquals(IndexWeightDto a, IndexWeightDto b)
         {
             if (a == null || b == null) return false;
 

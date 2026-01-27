@@ -80,17 +80,19 @@
                Class="customTable fix-table-header"
                DataSource="DataSource">
             <ColumnDefinitions Context="row">
+                <PropertyColumn Width="100px" Title="Index" Property="c => c.KPIIndexType" ></PropertyColumn>
                 <PropertyColumn Width="250px" Title="TaskName" Property="c => c.TaskName"></PropertyColumn>
                 <PropertyColumn Width="100px" Title="Category" Property="c => c.KPICategory" ></PropertyColumn>
-                <PropertyColumn Width="100px" Title="Index" Property="c => c.KPIIndexType" ></PropertyColumn>
+                <PropertyColumn Width="150px" Title="Formula" Property="c => c.Formula"></PropertyColumn>
+                <PropertyColumn Width="150px" Title="Calculated" Property="c => c.Calculated"></PropertyColumn>
                 <PropertyColumn Width="150px" Title="Department" Property="c => c.Department" ></PropertyColumn>
                 <PropertyColumn Width="90px" Title="Factory" Property="c => c.Factory" ></PropertyColumn>
                 <PropertyColumn Width="90px" Title="DataSource" Property="c => c.DataSource"></PropertyColumn>
-                <PropertyColumn Width="220px" Title="PIC" Property="c => c.OwnerName"></PropertyColumn>
+                <PropertyColumn Width="220px" Title="PIC" Property="c => c.PIC"></PropertyColumn>
                 <PropertyColumn Width="90px" Title="Unit" Property="c => c.Unit"></PropertyColumn>
                 <PropertyColumn Width="90px" Title="Max" Property="c => c.Max"></PropertyColumn>
                 <PropertyColumn Width="90px" Title="Bottom" Property="c => c.Bottom"></PropertyColumn>
-                <PropertyColumn Width="150px" Title="Formula" Property="c => c.Formula"></PropertyColumn>
+
                 <Column Fixed="ColumnFixPlacement.Right" TData="UserDto" Width="50px" Context="row">
                     <Template>
                         <Popover Title="Actions" Trigger="new Trigger[] { Trigger.Click }" Placement="Placement.Bottom">

@@ -109,6 +109,7 @@ public class KPIMonthlyTargetService : IKPIMonthlyTargetService
                 QuarterCalculateType = quarterCalculate != null
                     ? quarterCalculate.QuarterCalculateType
                     : QuarterCalculateType.CAL1
+                    ,
             };
 
         return await query.ToListAsync();
