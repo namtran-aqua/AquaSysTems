@@ -31,7 +31,8 @@ public partial class Login
             return;
         }
 
-        var response = await Http.PostAsJsonAsync("/api/auth/login", new LoginRequest
+
+        var response = await Http.PostAsJsonAsync("/ITSM/api/auth/login", new LoginRequest
         {
             UserName = username,
             Password = password
