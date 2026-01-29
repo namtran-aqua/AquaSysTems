@@ -210,7 +210,7 @@ builder.Services.AddHangfireServer();
 // ===================== BUILD =====================
 var app = builder.Build();
 //app.UsePathBase("/AquaSolution");
-app.UsePathBase("/ITSM");
+//app.UsePathBase("/ITSM");
 
 // 👉 HANGFIRE DASHBOARD
 app.UseHangfireDashboard("/hangfire", new DashboardOptions
