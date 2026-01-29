@@ -221,12 +221,20 @@ app.UseHangfireDashboard("/hangfire", new DashboardOptions
     }
 });
 
-// 👉 REGISTER JOB (sau app.Build)
-//RecurringJob.AddOrUpdate<DailyJobService>(
-//    "daily-job-9am",
-//    job => job.RunDailyAsync(),
-//    Cron.Daily(9, 0) // 9:00 sáng
-//);
+var lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
+
+lifetime.ApplicationStarted.Register(() =>
+{
+    RecurringJob.AddOrUpdate<DailyJobService>(
+        "daily-job-9am",
+        job => job.RunDailyAsync(),
+        Cron.Daily(9, 0),
+        new RecurringJobOptions
+        {
+            TimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")
+        }
+    );
+});
 
 // ===================== MIDDLEWARE =====================
 
