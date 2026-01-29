@@ -53,6 +53,15 @@ namespace AquaSolution.Client.Pages.Administration
                 Loading = true;
                 StateHasChanged();
                 if (Http != null) _users = await Http.GetFromJsonAsync<List<UserDto>>("api/user/get-all");
+                foreach (var user in _users)
+                {
+                    user.FullName ??= string.Empty;
+                    user.WorkDayId ??= string.Empty;
+                    user.DepartmentName ??= string.Empty;
+                    user.FactoryName ??= string.Empty;
+                    user.PositionName ??= string.Empty;
+                }
+
                 _userFilter = _users;
                 Loading = false;
             }

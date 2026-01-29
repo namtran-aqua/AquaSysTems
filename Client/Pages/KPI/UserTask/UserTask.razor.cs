@@ -14,6 +14,7 @@ using AquaSolution.Shared.Position;
 using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using NPOI.OpenXmlFormats.Spreadsheet;
 using System.Net.Http.Json;
 
 
@@ -73,8 +74,19 @@ namespace AquaSolution.Client.Pages.KPI.UserTask
             try
             {
                 Loading = true;
-                var result = await Http.GetFromJsonAsync<List<UserDto>>("api/user/get-all");
+                var data = await Http.GetFromJsonAsync<List<UserDto>>("api/user/get-all");
+                var result = data.Where(x=>x.IsActive == true).ToList();
+
+                foreach (var user in result)
+                {
+                    user.FullName ??= string.Empty;
+                    user.WorkDayId ??= string.Empty;
+                    user.DepartmentName ??= string.Empty;
+                    user.FactoryName ??= string.Empty;
+                    user.PositionName ??= string.Empty;
+                }
                 var filtered = new List<UserDto>();
+
                 if (result is not null)
                 {
                     if(CurrenUser.Roles.Any(x => x.Name == "Admin") || CurrenUser.Roles.Any(x => x.Name == "HR"))
