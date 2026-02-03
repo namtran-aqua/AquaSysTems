@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AquaSolution.Data.Migrations
 {
     [DbContext(typeof(AquaDbContext))]
-    [Migration("20260124021840_add_colunm_table")]
-    partial class add_colunm_table
+    [Migration("20260202020733_update_flowApproval")]
+    partial class update_flowApproval
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -47,6 +47,11 @@ namespace AquaSolution.Data.Migrations
                     b.Property<string>("DesCription")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("FlowApproval")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -55,9 +60,6 @@ namespace AquaSolution.Data.Migrations
                     b.Property<int?>("NextStep")
                         .HasColumnType("int");
 
-                    b.Property<Guid>("PositionId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("SystemType")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
@@ -65,8 +67,6 @@ namespace AquaSolution.Data.Migrations
                         .HasDefaultValue("KPI");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("PositionId");
 
                     b.ToTable("tbl_ApprovalFlows", "Admin");
                 });
@@ -1686,6 +1686,11 @@ namespace AquaSolution.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<int>("FlowApproval")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -1938,15 +1943,6 @@ namespace AquaSolution.Data.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("tbl_UserTasks", "KPI");
-                });
-
-            modelBuilder.Entity("AquaSolution.Data.Data.Entities.ApprovalFlow", b =>
-                {
-                    b.HasOne("AquaSolution.Data.Data.Entities.Position", null)
-                        .WithMany()
-                        .HasForeignKey("PositionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.Attachment", b =>

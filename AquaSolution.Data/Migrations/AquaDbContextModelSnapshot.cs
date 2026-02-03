@@ -44,6 +44,11 @@ namespace AquaSolution.Data.Migrations
                     b.Property<string>("DesCription")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("FlowApproval")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -52,9 +57,6 @@ namespace AquaSolution.Data.Migrations
                     b.Property<int?>("NextStep")
                         .HasColumnType("int");
 
-                    b.Property<Guid>("PositionId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("SystemType")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
@@ -62,8 +64,6 @@ namespace AquaSolution.Data.Migrations
                         .HasDefaultValue("KPI");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("PositionId");
 
                     b.ToTable("tbl_ApprovalFlows", "Admin");
                 });
@@ -1683,6 +1683,11 @@ namespace AquaSolution.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<int>("FlowApproval")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -1935,15 +1940,6 @@ namespace AquaSolution.Data.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("tbl_UserTasks", "KPI");
-                });
-
-            modelBuilder.Entity("AquaSolution.Data.Data.Entities.ApprovalFlow", b =>
-                {
-                    b.HasOne("AquaSolution.Data.Data.Entities.Position", null)
-                        .WithMany()
-                        .HasForeignKey("PositionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.Attachment", b =>

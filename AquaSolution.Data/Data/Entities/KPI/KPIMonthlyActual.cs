@@ -3,7 +3,7 @@
     public class KPIMonthlyActual
     {
         public Guid Id { get; set; }
-        public Guid KPIMonthlyTargetId { get; set; }
+        public Guid KPITargetId { get; set; }
         public Guid KPITotalScoreId { get; set; }
         public int? Month { get; set; }
         public int? Quarter { get; set; }

@@ -17,7 +17,7 @@ namespace AquaSolution.Data.Data.MappingConfigurations.KPI
 
             builder.HasOne<KPIMonthlyTarget>()
                   .WithMany()
-                  .HasForeignKey(e => e.KPIMonthlyTargetId) 
+                  .HasForeignKey(e => e.KPITargetId) 
                   .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasOne<KPITotalScore>()

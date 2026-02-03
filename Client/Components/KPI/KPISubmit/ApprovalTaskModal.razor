@@ -115,77 +115,99 @@
             </Panel>
             <Panel Class="customDocument" Header="Detail" Key="2">
                 @{
+                    var orderedScores = ViewDetailApprovalKPI.TotalScore
+                    .OrderBy(x => x.Year)
+                    .ThenBy(x =>
+                    {
 
-                    var halfYearScore = ViewDetailApprovalKPI.TotalScore?.FirstOrDefault(x => x.HalfYear != null);
-                    if (halfYearScore != null)
-                    {
-                        var title = $"{halfYearScore.Title}"
-                        + "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0"
-                        + $"KPI Score:{ConvertNumberCommon.ConvertNumber(halfYearScore.KPIScore)}"
-                        + "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0"
-                        + $"KeyTaskScore:{ConvertNumberCommon.ConvertNumber(halfYearScore.KeyTaskScore)}"
-                        + "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0"
-                        + $"OMGScore:{ConvertNumberCommon.ConvertNumber(halfYearScore.OMGScore)}"
-                        + "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0"
-                        + $"Total Score:{ConvertNumberCommon.ConvertNumber(halfYearScore.TotaleScore)}";
-                        <h7 style="margin-left:10px;display:block">@title</h7>
-                    }
-                    var quarterScore = ViewDetailApprovalKPI.TotalScore?.FirstOrDefault(x => x.Quarter != null);
-                    if (quarterScore != null)
-                    {
-                        var quarterTitle = $"{quarterScore.Title}"
-                        + "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0"
-                        + $"KPI Score:{ConvertNumberCommon.ConvertNumber(quarterScore.KPIScore)}"
-                        + "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0"
-                        + $"KeyTaskScore:{ConvertNumberCommon.ConvertNumber(quarterScore.KeyTaskScore)}"
-                        + "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0"
-                        + $"OMGScore:{ConvertNumberCommon.ConvertNumber(quarterScore.OMGScore)}"
-                        + "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0"
-                        + $"Total Score:{ConvertNumberCommon.ConvertNumber(quarterScore.TotaleScore)}";
-                        <h7 style="margin-left:10px">@quarterTitle</h7>
-                    }
-                    var month = ViewDetailApprovalKPI.TotalScore?.FirstOrDefault(x => x.Month != null);
-                    var monthTitle = string.Empty;
-                    if(month != null)
-                    {
-                        monthTitle = $"{month.Title}"
-                        + "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0"
-                        + $"KPI Score:{ConvertNumberCommon.ConvertNumber(month.KPIScore)}"
-                        + "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0"
-                        + $"KeyTaskScore:{ConvertNumberCommon.ConvertNumber(month.KeyTaskScore)}"
-                        + "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0"
-                        + $"OMGScore:{ConvertNumberCommon.ConvertNumber(month.OMGScore)}"
-                        + "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0"
-                        + $"Total Score:{ConvertNumberCommon.ConvertNumber(month.TotaleScore)}";
-                    }
-                    <Table TItem="DetailScoreDto"
-                           Size="TableSize.Small"
-                           Style="width:40vh"
-                           Title="@monthTitle"
-                           Class="customTable-score fix-table-header"
-                           Bordered
-                           HidePagination
-                           DataSource="ViewDetailApprovalKPI.DetailScore.Where(x=>x.Month !=null)">
+                        if (x.Month.HasValue)
+                            return x.Month.Value * 10;
 
-                        <ColumnDefinitions Context="rowTarget">
-                            <PropertyColumn Width="100px" Title="Index" Property="c => c.KPIIndexType"></PropertyColumn>
-                            <PropertyColumn Width="100px" Title="Category" Property="c => c.KPICategory"></PropertyColumn>
-                            <PropertyColumn Width="250px" Title="TaskName" Property="c => c.TaskName"></PropertyColumn>
-                            <PropertyColumn Width="300px" Title="Description" Property="c => c.Description"></PropertyColumn>
-                            <PropertyColumn Width="250px" Title="CalculateMethod" Property="c => c.CalculateMethod"></PropertyColumn>
-                            <PropertyColumn Width="150px" Title="Formula" Property="c => c.Formula"></PropertyColumn>
-                            <PropertyColumn Width="50px" Title="Unit" Property="c => c.Unit"></PropertyColumn>
-                            <PropertyColumn Width="90px" Title="DataSource" Property="c => c.DataSource"></PropertyColumn>
-                            <PropertyColumn Width="200px" Title="PIC" Property="c => c.PIC"></PropertyColumn>
-                            <PropertyColumn Width="100px" Title="Weight" Property="c => c.WeightString"></PropertyColumn>
-                            <PropertyColumn Width="90px" Title="Max" Property="c => c.MaxString"></PropertyColumn>
-                            <PropertyColumn Width="90px" Title="Bottom" Property="c => c.BottomString"></PropertyColumn>
-                            <PropertyColumn Width="150px" Title="TargetValue" Property="c => c.TargetValue" Format="0.00"></PropertyColumn>
-                            <PropertyColumn Width="150px" Title="ActualValue" Property="c => c.ActualValue" Format="0.00"></PropertyColumn>
-                            <PropertyColumn Width="150px" Title="Achiement" Property="c => c.AchiementString" Format="0.00"></PropertyColumn>
-                            <PropertyColumn Width="150px" Title="Score" Property="c => c.Score" Format="0.00"></PropertyColumn>
-                        </ColumnDefinitions>
-                    </Table>
+                        if (x.Quarter.HasValue)
+                            return x.Quarter.Value * 100 + 50;
+
+                        if (x.HalfYear.HasValue)
+                            return x.HalfYear.Value * 1000 + 500;
+
+                        return int.MaxValue;
+                    })
+                    .ToList();
+                    var Title = string.Empty;
+                    foreach (var item in orderedScores)
+                    {
+                        List<DetailScoreDto> details;
+                        if (item.Month.HasValue)
+                        {
+
+                            details = ViewDetailApprovalKPI.DetailScore
+                            .Where(x =>
+                            x.Month == item.Month &&
+                            x.Year == item.Year)
+                            .ToList();
+                             Title = $"{item.Title} - KpiScore:{item.KPIScore} - KeyTaskScore:{item.KeyTaskScore} - OMGScore:{item.OMGScore} - TotaleScore:{item.TotaleScore} ";
+                        }
+                        else if (item.Quarter.HasValue)
+                        {
+                            // ✅ THEO QUÝ
+                            details = ViewDetailApprovalKPI.DetailScore
+                            .Where(x =>
+                            x.Quarter == item.Quarter &&
+                            x.Year == item.Year)
+                            .ToList();
+                            Title = $"{item.Title} - KpiScore:{item.KPIScore} - KeyTaskScore:{item.KeyTaskScore} - OMGScore:{item.OMGScore} - TotaleScore:{item.TotaleScore} ";
+                        }
+                        else if (item.HalfYear.HasValue)
+                        {
+
+                            details = ViewDetailApprovalKPI.DetailScore
+                            .Where(x =>
+                            x.HalfYear == item.HalfYear &&
+                            x.Year == item.Year)
+                            .ToList();
+                             Title = $"{item.Title} - KpiScore:{item.KPIScore} - KeyTaskScore:{item.KeyTaskScore} - OMGScore:{item.OMGScore} - TotaleScore:{item.TotaleScore} ";
+                        }
+                        else
+                        {
+                            details = ViewDetailApprovalKPI.DetailScore
+                            .Where(x =>
+                            x.Year == item.Year &&
+                            x.Month == null &&
+                            x.Quarter == null &&
+                            x.HalfYear == null
+                            )
+                            .ToList();
+
+                             Title = $"{item.Title} - KpiScore:{item.KPIScore} - KeyTaskScore:{item.KeyTaskScore} - OMGScore:{item.OMGScore} - TotaleScore:{item.TotaleScore} ";
+                        }
+                        <Table TItem="DetailScoreDto"
+                               Size="TableSize.Small"
+                               Style="width:40vh"
+                               Title="@Title"
+                               Class="customTable-score fix-table-header"
+                               Bordered
+                               HidePagination
+                               DataSource="@details">
+
+                            <ColumnDefinitions Context="rowTarget">
+                                <PropertyColumn Width="100px" Title="Index" Property="c => c.KPIIndexType"></PropertyColumn>
+                                <PropertyColumn Width="100px" Title="Category" Property="c => c.KPICategory"></PropertyColumn>
+                                <PropertyColumn Width="250px" Title="TaskName" Property="c => c.TaskName"></PropertyColumn>
+                                <PropertyColumn Width="300px" Title="Description" Property="c => c.Description"></PropertyColumn>
+                                <PropertyColumn Width="250px" Title="CalculateMethod" Property="c => c.CalculateMethod"></PropertyColumn>
+                                <PropertyColumn Width="150px" Title="Formula" Property="c => c.Formula"></PropertyColumn>
+                                <PropertyColumn Width="50px" Title="Unit" Property="c => c.Unit"></PropertyColumn>
+                                <PropertyColumn Width="90px" Title="DataSource" Property="c => c.DataSource"></PropertyColumn>
+                                <PropertyColumn Width="200px" Title="PIC" Property="c => c.PIC"></PropertyColumn>
+                                <PropertyColumn Width="100px" Title="Weight" Property="c => c.WeightString"></PropertyColumn>
+                                <PropertyColumn Width="90px" Title="Max" Property="c => c.MaxString"></PropertyColumn>
+                                <PropertyColumn Width="90px" Title="Bottom" Property="c => c.BottomString"></PropertyColumn>
+                                <PropertyColumn Width="150px" Title="TargetValue" Property="c => c.TargetValue" Format="0.00"></PropertyColumn>
+                                <PropertyColumn Width="150px" Title="ActualValue" Property="c => c.ActualValue" Format="0.00"></PropertyColumn>
+                                <PropertyColumn Width="150px" Title="Achiement" Property="c => c.AchiementString" Format="0.00"></PropertyColumn>
+                                <PropertyColumn Width="150px" Title="Score" Property="c => c.Score" Format="0.00"></PropertyColumn>
+                            </ColumnDefinitions>
+                        </Table>
+                    }
                 }
             </Panel>
         </Collapse>

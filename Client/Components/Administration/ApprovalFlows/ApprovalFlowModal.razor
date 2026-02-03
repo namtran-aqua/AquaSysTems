@@ -30,30 +30,14 @@
           Context="formCtx">
 
         <Row Gutter="24">
-            <Col Span="12">
+            <Col Span="10">
             <FormItem Required="true" Label="Title">
                 <Input @bind-Value="_modal.Name" />
             </FormItem>
             </Col>
-
-            <Col Span="12">
-            <FormItem Label="Position">
-                <Select TItem="PositionDto" TItemValue="Guid"
-                        DataSource="@ListPosition"
-                        @bind-Value="@_modal.PositionId"
-                        AllowClear="true"
-                        EnableSearch
-                        AutoClearSearchValue="true"
-                        ItemValue="c => c.Id"
-                        ItemLabel="c => c.Name">
-                </Select>
-            </FormItem>
-            </Col>
-        </Row>
-        <Row Gutter="24">
-            <Col Span="12">
+            <Col Span="6">
             <FormItem Label="ApprovalSettingType">
-                <Select TItem="ApprovalSettingType" TItemValue="ApprovalSettingType"
+                <Select TItem="ApprovalSettingType" TItemValue="ApprovalSettingType ?"
                         DataSource="@ListApprovalSettingType"
                         @bind-Value="@_modal.ApprovalSettingType"
                         AllowClear="true"
@@ -64,7 +48,7 @@
                 </Select>
             </FormItem>
             </Col>
-            <Col Span="12">
+            <Col Span="8">
             <FormItem Label="DecisionMaker">
                 <Select TItem="UserContributerDto" TItemValue="Guid ?"
                         DataSource="@AllUser"
@@ -77,15 +61,21 @@
                 </Select>
             </FormItem>
             </Col>
+     
         </Row>
         <Row Gutter="24">
-            <Col Span="12">
+            <Col Span="8">
+            <FormItem Label="FlowApprovalNumber">
+                <Input @bind-Value="_modal.FlowApproval" />
+            </FormItem>
+            </Col>
+            <Col Span="8">
             <FormItem Label="CurrentStep">
                 <Input @bind-Value="_modal.CurrentStep" />
             </FormItem>
             </Col>
-
-            <Col Span="12">
+       
+            <Col Span="8">
             <FormItem Label="NextStep">
                 <Input @bind-Value="_modal.NextStep" />
             </FormItem>
@@ -94,7 +84,7 @@
         </Row>
         <Row Gutter="24">
             <Col Span="24">
-            <FormItem Label="CurrentStep">
+            <FormItem Label="DesCription">
                 <TextArea Rows="2" @bind-Value="_modal.DesCription" MaxRows="3"></TextArea>
             </FormItem>
             </Col>

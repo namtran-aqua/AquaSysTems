@@ -23,5 +23,6 @@
         public Guid? FactoryId { get; set; }
         public bool IsDeleted { get; set; }
         public bool IsActive { get; set; }
+        public int  FlowApproval { get; set; }
     }
 }

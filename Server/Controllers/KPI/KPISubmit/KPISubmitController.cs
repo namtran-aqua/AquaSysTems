@@ -27,10 +27,10 @@ namespace AquaSolution.Server.Controllers.KPI.KPISubmit
             var result = await _kPISubmitService.GetHandleKPISubmitByUserId(userId, year, month);
             return Ok(result);
         }
-        [HttpPost("create")]
-        public async Task<IActionResult> CreateAsync([FromBody] HandleKPISubmitDto submitKPIDto)
+        [HttpPost("create/{month}")]
+        public async Task<IActionResult> CreateAsync([FromBody] HandleKPISubmitDto submitKPIDto, [FromRoute] int month)
         {
-            var result = await _kPISubmitService.SubmitKPIAsync(submitKPIDto);
+            var result = await _kPISubmitService.SubmitKPIAsync(submitKPIDto,month);
             await _hubContext.Clients.All.SendAsync("ReloadKPIForUserApproval");
             return result ? Ok(true) : BadRequest("New creation failed");
         }
@@ -52,10 +52,10 @@ namespace AquaSolution.Server.Controllers.KPI.KPISubmit
             var result = await _kPISubmitService.GetIndexWeight(positionType, periodType);
             return Ok(result);
         }
-        [HttpGet("get-result-omg/{userId}/{year}/{month}")]
+        [HttpGet("get-result-detail/{userId}/{year}/{month}")]
         public async Task<IActionResult> GetOMG(Guid userId, int year, int month)
         {
-            var result = await _kPISubmitService.GetApprovedOMG(userId, year, month);
+            var result = await _kPISubmitService.GetResultDetail(userId, year, month);
             return Ok(result);
         }
         [HttpGet("get-kpi-total-score-by-userid/{userId}")]

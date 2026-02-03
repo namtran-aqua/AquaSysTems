@@ -39,8 +39,8 @@ namespace AquaSolution.Data.Data.MappingConfigurations
                    .WithMany()
                    .HasForeignKey(u => u.PositionId)
                    .OnDelete(DeleteBehavior.Restrict);
-
-
+            builder.Property(e => e.FlowApproval)
+                     .HasDefaultValue(0);
         }
     }
 }

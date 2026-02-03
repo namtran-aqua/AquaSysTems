@@ -14,6 +14,7 @@ namespace AquaSolution.Shared.KPI.KPISubmit
         public int? Index { get; set; }
         public Guid CreatedBy { get; set; }
         public string? UserName { get; set; }
+        public string? calculated { get; set; }
         public DateTime CreatedDate { get; set; }
         public string? HeaderTitle { get; set; }
         public string? TaskName { get; set; }
@@ -23,6 +24,7 @@ namespace AquaSolution.Shared.KPI.KPISubmit
         public KPICategoryType KPICategory { get; set; }
         public decimal? Max { get; set; }
         public decimal? Bottom { get; set; }
+        public QuarterCalculateType QuarterCalculateType { get; set; }
         public string MaxString
         {
             get
@@ -110,5 +112,6 @@ namespace AquaSolution.Shared.KPI.KPISubmit
         public KPIFormulaType KPIFormulaType { get; set; }
         public decimal IndexWeight { get; set; }
         public Guid TargetId { get; set; }
+
     }
 }

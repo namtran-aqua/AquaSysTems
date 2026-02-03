@@ -1,4 +1,5 @@
 ﻿@using AntDesign
+@using AquaSolution.Shared.ApprovalFlows
 @using AquaSolution.Shared.CommonDto;
 @using AquaSolution.Shared.UserManagements
 @inject IMessageService Message
@@ -49,50 +50,62 @@
                 <TextArea ShowCount MinRows="1" MaxRows="1" @bind-Value="@CreatedUserDto.PhoneNumber" AllowClear="true" />
             </FormItem>
             </Col>
-            <Col Span="8">
+            <Col Span="7">
             <FormItem  Label="Position">
-                <Select TItem="BaseDto" TItemValue="BaseDto"
+                <Select TItem="BaseDto" TItemValue="Guid?"
                         DataSource="@ListPosition"
-                        @bind-Value="@ValuePosition"
+                        @bind-Value="@CreatedUserDto.PositionId"
                         AllowClear="true"
-                        ItemValue="c => c"
+                        ItemValue="c => c.Id"
                         ItemLabel="c => c.Name">
                 </Select>
             </FormItem>
             </Col>
-            <Col Span="8">
+            <Col Span="7">
             <FormItem  Label="Factory">
-                <Select TItem="BaseDto" TItemValue="BaseDto"
+                <Select TItem="BaseDto" TItemValue="Guid?"
                         DataSource="@ListFactory"
-                        @bind-Value="@ValueFactory"
+                        @bind-Value="@CreatedUserDto.FactoryId"
                         AllowClear="true"
-                        ItemValue="c => c"
+                        ItemValue="c => c.Id"
                         ItemLabel="c => c.Name">
                 </Select>
             </FormItem>
             </Col>
+            <Col Span="4">
+            <FormItem  Label="FlowApproval">
+                <Select TItem="ApprovalFlowDto" TItemValue="int?"
+                        DataSource="@ListApprovalFlow"
+                        @bind-Value="@CreatedUserDto.FlowApproval"
+                        AllowClear="true"
+                        ItemValue="c => c.FlowApproval"
+                        ItemLabel="c => c.FlowApproval.ToString()">
+                </Select>
+            </FormItem>
+            </Col>
+
         </Row>
         <Row Gutter="16">
             <Col Span="12">
             <FormItem  Label="Department">
-                <Select TItem="BaseDto" TItemValue="BaseDto"
+                <Select TItem="BaseDto" TItemValue="Guid?"
                         DataSource="@ListDepartment"
-                        @bind-Value="@ValueDepartment"
+                        @bind-Value="@CreatedUserDto.DepartmentId"
                         AllowClear="true"
-                        ItemValue="c => c"
+                        ItemValue="c => c.Id"
                         ItemLabel="c => c.Name">
                 </Select>
             </FormItem>
             </Col>
             <Col Span="12">
             <FormItem Label="Manager">
-                <Select TItem="UserContributerDto" TItemValue="UserContributerDto"
+                <Select TItem="UserContributerDto" TItemValue="Guid?"
                         DataSource="@AllManagers"
-                        @bind-Value="@ValueManager"
+                        @bind-Value="@CreatedUserDto.ManagerId"
                         AllowClear="true"
                         EnableSearch
                         AutoClearSearchValue="true"
-                        ItemValue="c => c"
+                        ItemValue="c => c.Id"
                         ItemLabel="c => c.Name">
                 </Select>
             </FormItem>
