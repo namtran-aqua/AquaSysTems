@@ -71,11 +71,11 @@
         </div>
         <h4>Account Login</h4>
 
-        <input class="form-control" placeholder="Please input a username"
+        <input class="form-control" placeholder="WorkDay"
                @bind="username" @onkeyup="HandleKeyUp" />
 
         <div style="position: relative;">
-            <input class="form-control" placeholder="Please input a password"
+            <input class="form-control" placeholder="Password"
                    type="@(showPassword ? "text" : "password")"
                    @bind="password" @onkeyup="HandleKeyUp" />
             <span @onclick="TogglePassword"

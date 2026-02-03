@@ -1,4 +1,5 @@
 ﻿using AntDesign;
+using AquaSolution.Shared.ApprovalFlows;
 using AquaSolution.Shared.CommonDto;
 using AquaSolution.Shared.Departments;
 using AquaSolution.Shared.Factory;
@@ -23,58 +24,59 @@ namespace AquaSolution.Client.Components.Administration.Users
         private List<BaseDto> ListFactory = new List<BaseDto>();
         private List<BaseDto> ListPosition = new List<BaseDto>();
         private List<UserContributerDto> AllManagers = new();
+        private List<ApprovalFlowDto>? ListApprovalFlow = new();
         #endregion
         #region Innit
-        private BaseDto? _valuePosition;
-        private BaseDto? ValuePosition
-        {
-            get => _valuePosition;
-            set
-            {
-                if (_valuePosition != value)
-                {
-                    _valuePosition = value;
-                }
-            }
-        }
-        private BaseDto? _valueFactory;
-        private BaseDto? ValueFactory
-        {
-            get => _valueFactory;
-            set
-            {
-                if (_valueFactory != value)
-                {
-                    _valueFactory = value;
-                }
-            }
-        }
-        private BaseDto? _valueDepartment;
-        private BaseDto? ValueDepartment
-        {
-            get => _valueDepartment;
-            set
-            {
-                if (_valueDepartment != value)
-                {
-                    _valueDepartment = value;
-                }
+        //private BaseDto? _valuePosition;
+        //private BaseDto? ValuePosition
+        //{
+        //    get => _valuePosition;
+        //    set
+        //    {
+        //        if (_valuePosition != value)
+        //        {
+        //            _valuePosition = value;
+        //        }
+        //    }
+        //}
+        //private BaseDto? _valueFactory;
+        //private BaseDto? ValueFactory
+        //{
+        //    get => _valueFactory;
+        //    set
+        //    {
+        //        if (_valueFactory != value)
+        //        {
+        //            _valueFactory = value;
+        //        }
+        //    }
+        //}
+        //private BaseDto? _valueDepartment;
+        //private BaseDto? ValueDepartment
+        //{
+        //    get => _valueDepartment;
+        //    set
+        //    {
+        //        if (_valueDepartment != value)
+        //        {
+        //            _valueDepartment = value;
+        //        }
      
-            }
-        }
-        private UserContributerDto? _valueManager;
-        private UserContributerDto? ValueManager
-        {
-            get => _valueManager;
-            set
-            {
-                if (_valueManager != value)
-                {
-                    _valueManager = value;
-                }
+        //    }
+        //}
+        //private UserContributerDto? _valueManager;
+        //private UserContributerDto? ValueManager
+        //{
+        //    get => _valueManager;
+        //    set
+        //    {
+        //        if (_valueManager != value)
+        //        {
+        //            _valueManager = value;
+        //        }
 
-            }
-        }
+        //    }
+        //}
         public async Task ShowModelAsync(bool isEdit, CreatedAndUpdateUserDto createdAndUpdateUserDto, UserDto currenUser)
         {
             IsEdit = isEdit;
@@ -91,6 +93,8 @@ namespace AquaSolution.Client.Components.Administration.Users
             await LoaPosition();
             await LoadFactory();
             await LoadManager();
+            await FlowApproval();
+
             IsModalVisible = true;
             await InvokeAsync(StateHasChanged);
         }
@@ -98,7 +102,7 @@ namespace AquaSolution.Client.Components.Administration.Users
         {
             try
             {
-                ValueDepartment= null;
+                //ValueDepartment= null;
                 ListDepartment = new List<BaseDto>();
                 var data = await Http.GetFromJsonAsync<List<DepartmentDto>>("api/department/get-all");
                 if (data != null)
@@ -111,10 +115,10 @@ namespace AquaSolution.Client.Components.Administration.Users
                             Name = item.Name,
                         });
                     }
-                    if (CreatedUserDto.DepartmentId != null)
-                    {
-                        ValueDepartment = ListDepartment.FirstOrDefault(x => x.Id == CreatedUserDto.DepartmentId);
-                    }
+                    //if (CreatedUserDto.DepartmentId != null)
+                    //{
+                    //    ValueDepartment = ListDepartment.FirstOrDefault(x => x.Id == CreatedUserDto.DepartmentId);
+                    //}
 
                 }
 
@@ -128,7 +132,7 @@ namespace AquaSolution.Client.Components.Administration.Users
         private async Task LoaPosition()
         {
             ListPosition = new List<BaseDto>();
-            ValuePosition= null;
+            //ValuePosition= null;
             var data = await Http.GetFromJsonAsync<List<PositionDto>>("api/position/get-all");
             if (data != null)
             {
@@ -140,16 +144,16 @@ namespace AquaSolution.Client.Components.Administration.Users
                         Name = item.Name,
                     });
                 }
-                if (CreatedUserDto.PositionId != null)
-                {
-                    ValuePosition = ListPosition.FirstOrDefault(x => x.Id == CreatedUserDto.PositionId);
-                }
+                //if (CreatedUserDto.PositionId != null)
+                //{
+                //    ValuePosition = ListPosition.FirstOrDefault(x => x.Id == CreatedUserDto.PositionId);
+                //}
             }
         }
         private async Task LoadFactory()
         {
             ListFactory = new List<BaseDto>();
-            ValueFactory = null;
+            //ValueFactory = null;
             var data = await Http.GetFromJsonAsync<List<FactoryDto>>("api/factory/get-all");
             if (data != null)
             {
@@ -161,21 +165,32 @@ namespace AquaSolution.Client.Components.Administration.Users
                         Name = item.Name,
                     });
                 }
-                if (CreatedUserDto.FactoryId != null)
-                {
-                    ValueFactory = ListFactory.FirstOrDefault(x => x.Id == CreatedUserDto.FactoryId);
-                }
+                //if (CreatedUserDto.FactoryId != null)
+                //{
+                //    ValueFactory = ListFactory.FirstOrDefault(x => x.Id == CreatedUserDto.FactoryId);
+                //}
             }
         }
         private async Task LoadManager()
         {
-            ValueManager= null;
+            //ValueManager= null;
             AllManagers = await Http.GetFromJsonAsync<List<UserContributerDto>>("api/user/get-contributer");
-            if (CreatedUserDto.FactoryId != null)
-            {
-                ValueManager = AllManagers.FirstOrDefault(x => x.Id == CreatedUserDto.ManagerId);
-            }
+            //if (CreatedUserDto.FactoryId != null)
+            //{
+            //    ValueManager = AllManagers.FirstOrDefault(x => x.Id == CreatedUserDto.ManagerId);
+            //}
            
+        }
+        private async Task FlowApproval()
+        {
+            var data = await Http.GetFromJsonAsync<List<ApprovalFlowDto>>("api/approvalFlow/get-all");
+            if(data == null)
+            {
+                return;
+            }
+            ListApprovalFlow = data
+                .DistinctBy(x => x.FlowApproval)
+                .ToList();
         }
 
 
@@ -213,10 +228,6 @@ namespace AquaSolution.Client.Components.Administration.Users
                     return;
                 }
             }
-            CreatedUserDto.DepartmentId = ValueDepartment?.Id;
-            CreatedUserDto.FactoryId = ValueFactory?.Id;
-            CreatedUserDto.ManagerId = ValueManager?.Id;
-            CreatedUserDto.PositionId = ValuePosition?.Id;
             CreatedUserDto.FullName = $"{CreatedUserDto.LastName} {CreatedUserDto.FirstName}";
             if (IsEdit)
             {

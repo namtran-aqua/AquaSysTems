@@ -413,6 +413,7 @@ public class UserService : IUserService
                 DepartmentId = createdUserDto.DepartmentId,
                 PositionId = createdUserDto.PositionId,
                 FactoryId = createdUserDto.FactoryId,
+                FlowApproval =createdUserDto.FlowApproval ?? 1,
                 Avatar = "/uploads/avatars/default.jpg"
 
             };
@@ -458,6 +459,7 @@ public class UserService : IUserService
             user.DepartmentId = updateUserDto.DepartmentId;
             user.FactoryId = updateUserDto.FactoryId;
             user.PositionId = updateUserDto.PositionId;
+            user.FlowApproval = updateUserDto.FlowApproval ?? 1;
             await _userRepo.UpdateAsync(user);
             return true;
         }

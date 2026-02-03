@@ -81,7 +81,7 @@
                     <i class="fas fa-plus"></i>Created
                 </button>
                 <Table Style="height:40vh" TItem="IndexWeightDto"
-                    DataSource="DataSource.Where(x => x.PositionType == group).ToList()"
+                    DataSource="DataSource.OrderByDescending(x=>x.PeriodType).Where(x => x.PositionType == group).ToList()"
                     HidePagination Size="TableSize.Small">
                     <ChildContent Context="p">
                         <PropertyColumn Title="Name" Width="250" Property="c => c.Name"></PropertyColumn>

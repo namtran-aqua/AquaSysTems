@@ -74,11 +74,13 @@
                         <Table TItem="HandleActualDto"
                                Size="TableSize.Small"
                                Class="customTable fix-table-header"
-                               DataSource="HandleKPISubmitDto.HandleActual.Where(x=>x.Month !=null)">
+                               DataSource="HandleActualDto">
                             <ColumnDefinitions Context="row">
                                 <PropertyColumn Width="100px" Title="Index" Property="c => c.KPIIndexType"></PropertyColumn>
                                 <PropertyColumn Width="100px" Title="Category" Property="c => c.KPICategory"></PropertyColumn>
                                 <PropertyColumn Width="320px" Title="TaskName" Property="c => c.TaskName"></PropertyColumn>
+                                <PropertyColumn Width="320px" Title="Formula" Property="c => c.Formula"></PropertyColumn>
+                                <PropertyColumn Width="320px" Title="Quartercalculated" Property="c => c.calculated"></PropertyColumn>
                                 <PropertyColumn Width="90px" Title="Unit" Property="c => c.Unit"></PropertyColumn>
                                 <PropertyColumn Width="100px" Title="Target" Property="c => c.TargetValue" Format="0.00"></PropertyColumn>
                                 <Column Title="Actual" Width="100px" TData="HandleActualDto">
@@ -87,9 +89,96 @@
                             </ColumnDefinitions>
                         </Table>
                     </TabPane>
+
                     <TabPane Key="2">
                         <Collapse DefaultActiveKey="@(new[] { "1" })">
                             @{
+                                var orderedScores = HandleKPISubmitDto.KPITotalScore
+                                .OrderBy(x => x.Year)
+                                .ThenBy(x =>
+                                {
+                                    if (x.Month.HasValue)
+                                        return x.Month.Value * 10;
+
+                                    if (x.Quarter.HasValue)
+                                        return x.Quarter.Value * 100 + 50;
+                                    if (x.HalfYear.HasValue)
+                                        return x.HalfYear.Value * 1000 + 500;
+                                    return int.MaxValue;
+                                })
+                                .ToList();
+
+                            }
+                            @foreach (var item in orderedScores)
+                            {
+                                List<HandleActualDto> details;
+
+                                if (item.Month.HasValue)
+                                {
+      
+                                    details = HandleKPISubmitDto.HandleActual
+                                    .Where(x =>
+                                    x.Month == item.Month &&
+                                    x.Year == item.Year)
+                                    .ToList();
+                                    HeaderLine = $"EMC - {KPIPeriodSubmit.MonthString} - {CurrenUser.FullName}";
+                                }
+                                else if (item.Quarter.HasValue)
+                                {
+                                    // ✅ THEO QUÝ
+                                    details = HandleKPISubmitDto.HandleActual
+                                    .Where(x =>
+                                    x.Quarter == item.Quarter &&
+                                    x.Year == item.Year)
+                                    .ToList();
+                                    HeaderLine = $"EMC - {HandleKPISubmitDto.HandleActual.First().Year} -  Q{item.Quarter} - {CurrenUser.FullName} ";
+                                }
+                                else if (item.HalfYear.HasValue)
+                                {
+                         
+                                    details = HandleKPISubmitDto.HandleActual
+                                    .Where(x =>
+                                    x.HalfYear == item.HalfYear &&
+                                    x.Year == item.Year)
+                                    .ToList();
+                                    HeaderLine = $"EMC - {HandleKPISubmitDto.HandleActual.First().Year} - Q{item.HalfYear} - {CurrenUser.FullName} ";
+                                }
+                                else
+                                {
+                                    // ✅ THEO NĂM
+                                    details = HandleKPISubmitDto.HandleActual
+                                    .Where(x => x.Year == item.Year)
+                                    .ToList();
+                                     HeaderLine = $"EMC - {HandleKPISubmitDto.HandleActual.First().Year} - Q{item.Year} - {CurrenUser.FullName}" ;
+                                }
+                                <Panel Class="customMonthInfor" Header="@item.Title" Key="1">
+                                    <Table TItem="HandleActualDto"
+                                           Size="TableSize.Small"
+                                           Class="customTable fix-table-header"
+                                           DataSource="details">
+                                        <ColumnDefinitions Context="rowTarget">
+                                            <PropertyColumn Width="100px" Title="Index" Property="c => c.KPIIndexType"></PropertyColumn>
+                                            <PropertyColumn Width="100px" Title="Categories" Property="c => c.KPICategory"></PropertyColumn>
+                                            <PropertyColumn Width="250px" Title="TaskName" Property="c => c.TaskName"></PropertyColumn>
+                                            <PropertyColumn Width="100px" Title="Description" Property="c => c.Description"></PropertyColumn>
+                                            <PropertyColumn Width="90px" Title="CalculateMethod" Property="c => c.CalculateMethod"></PropertyColumn>
+                                            <PropertyColumn Width="150px" Title="Formula" Property="c => c.Formula"></PropertyColumn>
+                                            <PropertyColumn Width="150px" Title="Quartercalculated" Property="c => c.calculated"></PropertyColumn>
+                                            <PropertyColumn Width="90px" Title="Unit" Property="c => c.Unit"></PropertyColumn>
+                                            <PropertyColumn Width="90px" Title="DataSource" Property="c => c.DataSource"></PropertyColumn>
+                                            <PropertyColumn Width="200px" Title="PIC" Property="c => c.PIC"></PropertyColumn>
+                                            <PropertyColumn Width="100px" Title="Weight" Property="c => c.WeightString" Format="0.00"></PropertyColumn>
+                                            <PropertyColumn Width="90px" Title="Max" Property="c => c.MaxString" Format="0.00"></PropertyColumn>
+                                            <PropertyColumn Width="90px" Title="Bottom" Property="c => c.BottomString" Format="0.00"></PropertyColumn>
+                                            <PropertyColumn Width="150px" Title="TargetValue" Property="c => c.TargetValue" Format="0.00"></PropertyColumn>
+                                            <PropertyColumn Width="150px" Title="ActualValue" Property="c => c.ActualValue" Format="0.00"></PropertyColumn>
+                                            <PropertyColumn Width="150px" Title="Achiement" Property="c => c.AchiementString" Format="0.00"></PropertyColumn>
+                                            <PropertyColumn Width="150px" Title="Score" Property="c => c.Score" Format="0.00"></PropertyColumn>
+                                        </ColumnDefinitions>
+                                    </Table>
+                                </Panel>
+                            }
+                            @*  @{
                                 var halfYearScore = HandleKPISubmitDto.KPITotalScore?.FirstOrDefault(x => x.HalfYear != null);
                                 if (halfYearScore != null)
                                 {
@@ -124,8 +213,7 @@
                                 <Table TItem="HandleActualDto"
                                        Size="TableSize.Small"
                                        Class="customTable fix-table-header"
-                                       DataSource="HandleKPISubmitDto.HandleActual.Where(x=>x.Month !=null)">
-
+                                       DataSource="HandleKPISubmitDto.HandleActual">
                                     <ColumnDefinitions Context="rowTarget">
                                         <PropertyColumn Width="100px" Title="Index" Property="c => c.KPIIndexType"></PropertyColumn>
                                         <PropertyColumn Width="100px" Title="Categories" Property="c => c.KPICategory"></PropertyColumn>
@@ -145,7 +233,7 @@
                                         <PropertyColumn Width="150px" Title="Score" Property="c => c.Score" Format="0.00"></PropertyColumn>
                                     </ColumnDefinitions>
                                 </Table>
-                            </Panel>
+                            </Panel> *@
                         </Collapse>
                     </TabPane>
                 </Tabs>

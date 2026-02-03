@@ -1,9 +1,12 @@
 ﻿using AquaSolution.Client.Common;
-using AquaSolution.Shared.CommonDto;
-using Microsoft.AspNetCore.Components;
-using System.Net.Http.Json;
-using AquaSolution.Shared.ApprovalFlows;
 using AquaSolution.Client.Components.Administration.ApprovalFlows;
+using AquaSolution.Shared.ApprovalFlows;
+using AquaSolution.Shared.CommonDto;
+using AquaSolution.Shared.Enum;
+using AquaSolution.Shared.UserManagements;
+using Microsoft.AspNetCore.Components;
+using NPOI.SS.Formula.Functions;
+using System.Net.Http.Json;
 
 namespace AquaSolution.Client.Pages.Administration
 {
@@ -26,16 +29,24 @@ namespace AquaSolution.Client.Pages.Administration
         {
             if (Http != null)
             {
-                _listApprovalFlow = await Http.GetFromJsonAsync<List<ApprovalFlowDto>>("api/ApprovalFlow/get-all");
+                try
+                {
+
+                    _listApprovalFlow = await Http.GetFromJsonAsync<List<ApprovalFlowDto>>("api/approvalFlow/get-all");
+
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
+                }
 
                 if (_listApprovalFlow != null)
                 {
                     _groupedList = _listApprovalFlow
-                        .GroupBy(x => new { x.PositionId, x.PositionName })
+                        .GroupBy(x => new { x.FlowApproval })
                         .Select(g => new ApprovalFlowGroupDto
                         {
-                            PositionId = g.Key.PositionId,
-                            PositionName = g.Key.PositionName,
+
                             Items = g.OrderBy(x => x.CurrentStep).ToList()
                         })
                         .ToList();
@@ -47,7 +58,7 @@ namespace AquaSolution.Client.Pages.Administration
         #region Action
         private async Task CreatedApprovalFlow()
         {
-             await approvalFlowModal.Showmodal(new ApprovalFlowDto(), false);
+            await approvalFlowModal.Showmodal(new ApprovalFlowDto(), false);
         }
         private async Task EditApprovalFlow(ApprovalFlowDto approvalFlowDto)
         {

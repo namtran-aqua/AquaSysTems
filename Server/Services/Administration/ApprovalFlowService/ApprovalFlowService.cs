@@ -1,6 +1,7 @@
 ﻿using AquaSolution.Data.Data.Entities;
 using AquaSolution.Data.Repositories;
 using AquaSolution.Shared.ApprovalFlows;
+using AquaSolution.Shared.Enum;
 
 namespace AquaSolution.Server.Services.Administration.ApprovalFlowService
 {
@@ -26,11 +27,11 @@ namespace AquaSolution.Server.Services.Administration.ApprovalFlowService
                 Id = Guid.NewGuid(),
                 Name = approvalFlowDto.Name,
                 DecisionMaker = approvalFlowDto.DecisionMaker,
-                PositionId = approvalFlowDto.PositionId,
+                FlowApproval = approvalFlowDto.FlowApproval?? 1,
                 DesCription = approvalFlowDto.DesCription,
                 CurrentStep = approvalFlowDto.CurrentStep,
                 NextStep = approvalFlowDto.NextStep,
-                ApprovalSettingType = approvalFlowDto.ApprovalSettingType,
+                ApprovalSettingType = approvalFlowDto.ApprovalSettingType ?? ApprovalSettingType.DirectManagement,
                 CreatedDate = DateTime.Now,
             };
             await _approvalFlowRepo.InsertAsync(approvalFlow);
@@ -50,27 +51,27 @@ namespace AquaSolution.Server.Services.Administration.ApprovalFlowService
         {
             var approvalFlowData = from approvalFlow in await _approvalFlowRepo.GetQueryableAsync()
 
-                                   join position in await _positionRepo.GetQueryableAsync()
-                                   on approvalFlow.PositionId equals position.Id
+                                   //join position in await _positionRepo.GetQueryableAsync()
+                                   //on approvalFlow.PositionId equals position.Id
 
                                    join user in await _userRepo.GetQueryableAsync()
                                    on approvalFlow.DecisionMaker equals user.Id
-                                   into u1 from user in u1.DefaultIfEmpty()
-                              select new ApprovalFlowDto
-                              {
-                                  Id = approvalFlow.Id,
-                                  Name = approvalFlow.Name,
-                                  DecisionMaker = approvalFlow.DecisionMaker,
-                                  PositionId = approvalFlow.PositionId,
-                                  DesCription = approvalFlow.DesCription,
-                                  CurrentStep = approvalFlow.CurrentStep,
-                                  NextStep = approvalFlow.NextStep,
-                                  ApprovalSettingType = approvalFlow.ApprovalSettingType,
-                                  CreatedDate = approvalFlow.CreatedDate,
-                                  PositionName =position.Name,
-                                  DecisionMakerName = user.FullName
-                              };
-            var dataReturn =  approvalFlowData.ToList();
+                                   into u1
+                                   from user in u1.DefaultIfEmpty()
+                                   select new ApprovalFlowDto
+                                   {
+                                       Id = approvalFlow.Id,
+                                       Name = approvalFlow.Name,
+                                       DecisionMaker = approvalFlow.DecisionMaker,
+                                       FlowApproval = approvalFlow.FlowApproval,
+                                       DesCription = approvalFlow.DesCription,
+                                       CurrentStep = approvalFlow.CurrentStep,
+                                       NextStep = approvalFlow.NextStep,
+                                       ApprovalSettingType = approvalFlow.ApprovalSettingType,
+                                       CreatedDate = approvalFlow.CreatedDate,
+                                       DecisionMakerName = user.FullName
+                                   };
+            var dataReturn = approvalFlowData.ToList();
             if (dataReturn.Count > 0)
             {
                 return dataReturn;
@@ -86,18 +87,18 @@ namespace AquaSolution.Server.Services.Administration.ApprovalFlowService
                 if (approvalFlow == null) return false;
                 approvalFlow.Name = approvalFlowDto.Name;
                 approvalFlow.DecisionMaker = approvalFlowDto.DecisionMaker;
-                approvalFlow.PositionId = approvalFlowDto.PositionId;
+                approvalFlow.FlowApproval = approvalFlowDto.FlowApproval ??1;
                 approvalFlow.DesCription = approvalFlowDto.DesCription;
                 approvalFlow.NextStep = approvalFlowDto.NextStep;
                 approvalFlow.CurrentStep = approvalFlowDto.CurrentStep;
-                approvalFlow.ApprovalSettingType = approvalFlowDto.ApprovalSettingType;
+                approvalFlow.ApprovalSettingType = approvalFlowDto.ApprovalSettingType ?? ApprovalSettingType.DirectManagement;
                 return await _approvalFlowRepo.UpdateAsync(approvalFlow);
             }
             catch (Exception ex)
             {
                 throw;
             }
-           
+
         }
     }
 }

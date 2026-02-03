@@ -24,11 +24,11 @@
         <Collapse>
             @foreach (var group in _groupedList)
             {
-                <Panel Header="@($"{group.PositionName}({group.Items.Count})")">
+                <Panel Header="@($"{group.FlowApproval}({group.Items.Count})")">
                     <Table PaginationPosition="false" DataSource="@group.Items">
                         <ColumnDefinitions Context="rowItem">
                             <PropertyColumn Title="Name" Width="150" Property="c => c.Name"></PropertyColumn>
-                            <PropertyColumn Title="Position" Width="auto" Property="c => c.PositionName"></PropertyColumn>
+                            @* <PropertyColumn Title="Position" Width="auto" Property="c => c.PositionName"></PropertyColumn> *@
                             <PropertyColumn Title="User Approve" Width="auto" Property="c => c.DecisionMakerName"></PropertyColumn>
                             <PropertyColumn Title="Approval Type" Width="auto" Property="c => c.ApprovalSettingType"></PropertyColumn>
                             <PropertyColumn Title="Current Step" Width="150" Property="c => c.CurrentStep"></PropertyColumn>

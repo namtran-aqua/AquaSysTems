@@ -171,6 +171,8 @@ namespace AquaSolution.Client.Pages.ITSuport.RequestSuport
         #region Filter
         private Func<Task>? _selectedChange;
         private string? RequesterName { get; set; }
+        private string? Requesteremail { get; set; }
+
 
         private async Task HandleKeyDown(KeyboardEventArgs e)
         {
@@ -184,6 +186,11 @@ namespace AquaSolution.Client.Pages.ITSuport.RequestSuport
         {
             RequesterName = e.Value?.ToString();
         }
+        private void RequesteremailInputChanged(ChangeEventArgs e)
+        {
+            Requesteremail = e.Value?.ToString();
+        }
+
         TableFilter<RequestSuportStatusType>[] _statusFilter = Array.Empty<TableFilter<RequestSuportStatusType>>();
         private async Task LoadTechnician()
         {
@@ -217,29 +224,56 @@ namespace AquaSolution.Client.Pages.ITSuport.RequestSuport
                .ToArray();
             return Task.CompletedTask;
         }
+        //private Task Search()
+        //{
+        //    var name = StringHelper.NormalizeText(RequesterName?.Trim());
+        //    var email = StringHelper.NormalizeText(Requesteremail?.Trim());
+
+        //    var filtered = _requestSuport
+        //        .Where(x =>
+        //            (string.IsNullOrWhiteSpace(name) ||
+        //                (!string.IsNullOrWhiteSpace(x.RequestByName) &&
+        //                 StringHelper.NormalizeText(x.RequestByName).Contains(name)))
+        //        )
+        //        .ToList();
+
+        //    if (string.IsNullOrWhiteSpace(name))
+        //    {
+        //        filtered = _requestSuport;
+        //    }
+        //    _requestSuportFillter = filtered;
+        //    return Task.CompletedTask;
+        //}
         private Task Search()
         {
             var name = StringHelper.NormalizeText(RequesterName?.Trim());
+            var email = StringHelper.NormalizeText(Requesteremail?.Trim());
 
-            var filtered = _requestSuport
-                .Where(x =>
-                    (string.IsNullOrWhiteSpace(name) ||
-                        (!string.IsNullOrWhiteSpace(x.RequestByName) &&
-                         StringHelper.NormalizeText(x.RequestByName).Contains(name)))
-                )
-                .ToList();
+            var query = _requestSuport.AsEnumerable();
 
-            if (string.IsNullOrWhiteSpace(name))
+            if (!string.IsNullOrWhiteSpace(name))
             {
-                filtered = _requestSuport;
+                query = query.Where(x =>
+                    !string.IsNullOrWhiteSpace(x.RequestByName) &&
+                    StringHelper.NormalizeText(x.RequestByName).Contains(name));
             }
-            _requestSuportFillter = filtered;
+
+            if (!string.IsNullOrWhiteSpace(email))
+            {
+                query = query.Where(x =>
+                    !string.IsNullOrWhiteSpace(x.RequestByEmail) &&
+                    StringHelper.NormalizeText(x.RequestByEmail).Contains(email));
+            }
+
+            _requestSuportFillter = query.ToList();
             return Task.CompletedTask;
         }
+
         private Table<RequestSuportDto>? _tableRef;
         private async Task Reset()
         {
             RequesterName = null;
+            Requesteremail= null;
             _requestSuportFillter = _requestSuport;
             _tableRef?.ReloadData();
             await InvokeAsync(StateHasChanged);

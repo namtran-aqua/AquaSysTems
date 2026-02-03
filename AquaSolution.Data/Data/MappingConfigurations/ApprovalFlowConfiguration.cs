@@ -20,10 +20,10 @@ namespace AquaSolution.Data.Data.MappingConfigurations
                 .HasDefaultValue(SystemType.KPI)
                .HasConversion<string>()
                .IsRequired();
-            builder.HasOne<Position>()
-                   .WithMany()
-                   .HasForeignKey(u => u.PositionId)
-                   .OnDelete(DeleteBehavior.Restrict);
+            builder.Property(e => e.FlowApproval)
+                   .IsRequired()
+                   .HasDefaultValue(0);
+
         }
     }
 }

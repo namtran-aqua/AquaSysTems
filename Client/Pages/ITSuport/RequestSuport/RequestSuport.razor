@@ -52,11 +52,19 @@
             <Icon Type="plus" />Created
         </button>
         <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;margin-left:5px">
-            <Input Placeholder="Tên người yêu cầu"
+            <Input Placeholder="requester name"
                    Value="@RequesterName"
                    style="width:170px;font-size:12px"
                    @onkeydown="HandleKeyDown"
                    @oninput="RequesterNameInputChanged" />
+
+            <Input Placeholder="requester email"
+                   Value="@Requesteremail"
+                   style="width:170px;font-size:12px"
+                   @onkeydown="HandleKeyDown"
+                   @oninput="RequesteremailInputChanged" />
+
+
             <button @onclick="Search" style="border-color:#fff">
                 <Icon Type="search" />Search
             </button>
