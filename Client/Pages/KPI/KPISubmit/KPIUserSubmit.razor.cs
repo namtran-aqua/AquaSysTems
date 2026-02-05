@@ -46,7 +46,7 @@ namespace AquaSolution.Client.Pages.KPI.KPISubmit
         }
         private async Task GetPage()
         {
-            var url = "task-user-management";
+            var url = "kpi-submit";
             if (Http != null) PageId = await Http.GetFromJsonAsync<Guid>($"api/Page/GetPageIdByUrl/{url}");
         }
         private async Task CheckLock()
