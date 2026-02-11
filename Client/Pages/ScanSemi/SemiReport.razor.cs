@@ -3,30 +3,42 @@ using AntDesign;
 using AquaSolution.Client.Common;
 using AquaSolution.Client.Common.ExcelHelper;
 using AquaSolution.Client.Components.Administration.Users;
+using AquaSolution.Client.Pages.ITSuport.RequestSuport;
 using AquaSolution.Shared.CommonDto;
 using AquaSolution.Shared.Departments;
 using AquaSolution.Shared.Enum;
 using AquaSolution.Shared.Factory;
+using AquaSolution.Shared.ITSuport.RequestSuport;
 using AquaSolution.Shared.Position;
 using AquaSolution.Shared.SemiReport;
 using AquaSolution.Shared.UserManagements;
 using ICSharpCode.SharpZipLib.Core;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using System.Net.Http.Json;
+using static Org.BouncyCastle.Math.EC.ECCurve;
 
 namespace AquaSolution.Client.Pages.ScanSemi
 {
-    public partial class SemiReport
+    public partial class SemiReport: IAsyncDisposable
     {
 
         #region Declaration
         [Inject] private HttpClient? Http { get; set; }
         private List<SemiReportDto>? _semi = new();
         private List<SemiReportDto>? _semiFilter = new();
-
+        private HubConnection? _hubConnection;
+        public class SemiResponse
+        {
+            public List<SemiReportDto> Data { get; set; } = new();
+            public bool IsInner4Hour { get; set; }
+        }
+        [Inject] NavigationManager NavigationManager { get; set; }
         private bool _isLoading = true;
+        private bool _isInitialized;
+        private bool _isInner4Hour;
         //private RoleManagerDialog? _roleManagerDialog;
         //private UserModal? _userModal;
         //private UserDto? CurrenUser { get; set; }
@@ -36,44 +48,95 @@ namespace AquaSolution.Client.Pages.ScanSemi
         #region Innit
         protected override async Task OnInitializedAsync()
         {
-            //await GetPage();
-            //await CheckPermission();
+            if (_isInitialized) return;
+            _isInitialized = true;
             await LoadData();
-            await LoadDataFilterAsync();
+            await SignalRReload();
         }
+
+        private async Task SignalRReload()
+        {
+            if (_hubConnection == null)
+            {
+                _hubConnection = new HubConnectionBuilder()
+                    .WithUrl(NavigationManager.ToAbsoluteUri("signalrhub"))
+                    .WithAutomaticReconnect()
+                    .Build();
+
+                await _hubConnection.StartAsync();
+            }
+
+            _hubConnection.Remove("LoadSemiReport");
+
+            _hubConnection.On("LoadSemiReport", async () =>
+            {
+                await LoadData();
+                await Search();
+                await InvokeAsync(StateHasChanged);
+            });
+        }
+        public async ValueTask DisposeAsync()
+        {
+            if (_hubConnection != null)
+            {
+                await _hubConnection.StopAsync();
+                await _hubConnection.DisposeAsync();
+                _hubConnection = null;
+            }
+        }
+
         private async Task GetPage()
         {
             var url = "/report-scan";
             if (Http != null) PageId = await Http.GetFromJsonAsync<Guid>($"api/Page/GetPageIdByUrl/{url}");
         }
+        //private async Task LoadData()
+        //{
+        //    _semi = new();
+        //    if (Http != null)
+        //    {
+        //        var data = await Http.GetFromJsonAsync<List<SemiReportDto>>("api/semi/get-all-semi-data");
+        //        if (data != null) _semi = data.ToList();
+        //    }
+        //    _semiFilter = _semi.ToList();
+        //}
+
         private async Task LoadData()
         {
+            _isLoading = true;
             try
             {
-                //Loading = true;
-                StateHasChanged();
-                if (Http != null) _semi = await Http.GetFromJsonAsync<List<SemiReportDto>>("api/semi/get-all-semi-data");
-                _semiFilter = _semi;
-                //Loading = false;
+                var response = await Http.GetFromJsonAsync<SemiResponse>("api/semi/get-all-semi-data");
+
+                if (response != null)
+                {
+                    _semi = response.Data;
+                    _semiFilter = _semi.ToList();
+                    _isInner4Hour = response.IsInner4Hour; 
+                }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error loading semi: {ex.Message}");
+                Console.WriteLine($"Error loading data: {ex.Message}");
+            }
+            finally
+            {
+                _isLoading = false;
             }
         }
-        private async Task CheckPermission()
-        {
-            //if (Http != null)
-            //{
-            //    var currenUserClass = new CurrenUser(Http, AuthStateProvider);
-            //    CurrenUser = await currenUserClass.LoadCurrenUser();
-            //}
+        //private async Task CheckPermission()
+        //{
+        //if (Http != null)
+        //{
+        //    var currenUserClass = new CurrenUser(Http, AuthStateProvider);
+        //    CurrenUser = await currenUserClass.LoadCurrenUser();
+        //}
 
-            //EditRole = await permissionService.HasPermissionAsync(PageId, PermissionActionType.EditRole);
-            //Created = await permissionService.HasPermissionAsync(PageId, PermissionActionType.Add);
-            //Edit = await permissionService.HasPermissionAsync(PageId, PermissionActionType.Edit);
-            //Delete = await permissionService.HasPermissionAsync(PageId, PermissionActionType.Delete);
-        }
+        //EditRole = await permissionService.HasPermissionAsync(PageId, PermissionActionType.EditRole);
+        //Created = await permissionService.HasPermissionAsync(PageId, PermissionActionType.Add);
+        //Edit = await permissionService.HasPermissionAsync(PageId, PermissionActionType.Edit);
+        //Delete = await permissionService.HasPermissionAsync(PageId, PermissionActionType.Delete);
+        //}
         #endregion
 
         #region Search
@@ -227,5 +290,26 @@ namespace AquaSolution.Client.Pages.ScanSemi
         }
         #endregion
 
+        private async Task OnSwitchChanged(bool args)
+        {
+            _isInner4Hour = args;
+            try
+            {
+                // Gọi API cập nhật database
+                var response = await Http.PostAsJsonAsync("api/semi/update-active-status", args);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _isInner4Hour = !args;
+                    Console.WriteLine("Lỗi: Không thể lưu vào database.");
+                }
+            }
+            catch (Exception ex)
+            {
+                _isInner4Hour = !args;
+                Console.WriteLine($"Network Error: {ex.Message}");
+            }
+
+        }
     }
 }

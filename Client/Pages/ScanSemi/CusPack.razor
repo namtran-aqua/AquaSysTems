@@ -1,0 +1,84 @@
+@page "/cuspack-management"
+@using AquaSolution.Client.Components.SemiReport.CusPack
+@using AquaSolution.Shared.SemiReport;
+@using AntDesign
+@inject ModalService modal
+@inject NavigationManager Navigation
+@inject IMessageService Message
+@inject IJSRuntime JS
+<PageTitle>CusPack Management</PageTitle>
+<div class="mb-3">
+    <style>
+        .custom-button-type {
+            height: 30px;
+            font-size: 12px;
+        }
+
+        .fix-table-header table {
+            border-collapse: collapse;
+        }
+
+            .fix-table-header table thead th {
+                position: sticky !important;
+                z-index: 8 !important;
+                top: 0;
+                background-color: #fff;
+            }
+
+        .ant-table-content {
+            min-height: 65vh !important;
+        }
+
+        .ant-table-pagination {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            z-index: 999;
+            background: white;
+            padding: 8px;
+            text-align: center;
+            box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.1);
+            background: transparent !important;
+        }
+
+    </style>
+    <div style="display: flex;  align-items: center; margin-bottom: 10px;">
+        <button @onclick="CreatedAsync" class="btn btn-primary custom-button-type">
+            <Icon Type="plus" />Created
+        </button>
+    </div>
+</div>
+<div style="width:100%;overflow-x:scroll ;max-height:70vh; ">
+    <Table TItem="CusPackNoDto"
+           Size="TableSize.Small"
+           Class="customTable fix-table-header"
+           DataSource="_cusPackNo">
+        <ColumnDefinitions Context="row">
+            <PropertyColumn Fixed="ColumnFixPlacement.Left" Title="CusPackNo" Property="c => c.CusPackNo"></PropertyColumn>
+            <PropertyColumn Title="Model Code" Property="c => c.ModelCode"></PropertyColumn>
+            <Column Fixed="ColumnFixPlacement.Right" TData="CusPackNoDto" Width="50px" Context="row">
+                <Template>
+                    <Popover Title="Actions" Trigger="new Trigger[] { Trigger.Click }" Placement="Placement.Bottom">
+                        <ChildContent>
+                            <Button Icon="menu" />
+                        </ChildContent>
+                        <ContentTemplate>
+                            <div style="display: flex; flex-direction: column; gap: 4px; padding: 8px;">
+                                
+                                <Button Type="ButtonType.Text" OnClick="@(async () => await EditAsync(row))" Style="text-align: left;">
+                                    <Icon Type="edit" /> Edit
+                                </Button>
+
+                                <Button Type="ButtonType.Text" OnClick="@(async () => await DeleteAsync(row.Id))" Style="text-align: left;">
+                                    <Icon Type="delete" /> Delete
+                                </Button>
+
+                            </div>
+                        </ContentTemplate>
+                    </Popover>
+                </Template>
+            </Column>
+        </ColumnDefinitions>
+    </Table>
+</div>
+<CusPackModal OnSave="LoadData" @ref="@cusPackModal" />

@@ -1,11 +1,11 @@
-﻿@page "/report-scan"
+﻿@page "/report-roll"
 @using AntDesign
 @inject IJSRuntime JS
 @inject ModalService modal
 @inject NavigationManager Navigation
 @inject IMessageService Message
 @using AquaSolution.Shared.SemiReport
-<PageTitle>SemiReport</PageTitle>
+<PageTitle>RollReport</PageTitle>
 <div class="mb-3">
     <style>
         .custom-button-type {
@@ -57,23 +57,18 @@
             }
     </style>
     <div style="display: flex;  align-items: center; margin-bottom: 10px;">
-        
+
         <!-- #region Search -->
-        <Input Placeholder="InnerBarcode" Value="@InnerBarcode" style="margin-left:2px;width:190px;font-size:12px" @onkeydown="HandleKeyDown" @oninput="InnerBarcodeInputChanged" />
-        <Input Placeholder="OuterBarcode" Value="@OuterBarcode" style="margin-left:2px;width:190px;font-size:12px" @onkeydown="HandleKeyDown" @oninput="OuterBarcodeInputChanged" />
-        @* <Input Placeholder="MotorBarcode" Value="@MotorBarcode" style="margin-left:2px;width:190px;font-size:12px" @onkeydown="HandleKeyDown" @oninput="MotorBarcodeInputChanged" /> *@
-        <Input Placeholder="ScrapDescription" Value="@ScrapDescription" style="margin-left:2px;width:190px;font-size:12px" @onkeydown="HandleKeyDown" @oninput="ScrapInputChanged" />
+        <Input Placeholder="PackNo" Value="@PackNo" style="margin-left:2px;width:190px;font-size:12px" @onkeydown="HandleKeyDown" @oninput="PackNoInputChanged" />
         <button @onclick="Search" style="margin-left:5px;border-color:#fff"><Icon Type="search" /> Search</button>
         <button @onclick="Reset" style="margin-left:5px;border-color:#fff"><Icon Type="undo" /> Reset</button>
         <button @onclick="ExportExcel" style="margin-left:5px;border-color:#fff"><Icon Type="file-excel" /> Export Excel</button>
-        <p style="margin-left:5px; padding-top: 12px"> Inner4Hour</p>
-        <Switch style="margin-left:5px " @bind-Checked="_isInner4Hour" OnChange="OnSwitchChanged" />
     </div>
     <!-- #endregion -->
 
 </div>
 <script>
-    window.saveAsFileSemi = async function (filename, bytesBase64) {
+    window.saveAsFileRoll = async function (filename, bytesBase64) {
         const byteCharacters = atob(bytesBase64);
         const byteNumbers = new Array(byteCharacters.length);
         for (let i = 0; i < byteCharacters.length; i++) {
@@ -93,22 +88,18 @@
 
 </script>
 <div style="width:100%;overflow-x:scroll ;max-height:70vh; ">
-    <Table TItem="SemiReportDto"
+    <Table TItem="RollReportDto"
            @ref="_tableRef"
            Size="TableSize.Small"
            Bordered
            Class="customTable fix-table-header"
-           DataSource="@_semiFilter">
+           DataSource="@_rollFilter">
         <ColumnDefinitions Context="row">
-            <PropertyColumn Width="250px" HeaderStyle="text-align: center;" Title="InnerBarcode" Property="c => c.InnerBarcode"></PropertyColumn>
-            <PropertyColumn Width="150px" HeaderStyle="text-align: center;" Sortable Title="ScanTimeInner" Format="yyyy/MM/dd HH:mm:ss" Property="c => c.ScanTimeInner"></PropertyColumn>
-            <PropertyColumn Width="200px" HeaderStyle="text-align: center;" Title="OuterBarcode" Property="c => c.OuterBarcode"></PropertyColumn>
-            <PropertyColumn Width="150px" HeaderStyle="text-align: center;"Sortable Title="ScanTimeOuter" Format="yyyy/MM/dd HH:mm:ss" Property="c => c.ScanTimeOuter"></PropertyColumn>
-            <PropertyColumn Width="200px" HeaderStyle="text-align: center;" Title="MotorBarcode" Property="c => c.MotorBarcode"></PropertyColumn>
-            <PropertyColumn Width="150px" HeaderStyle="text-align: center;" Sortable Title="ScanTimeMotor" Format="yyyy/MM/dd HH:mm:ss" Property="c => c.ScanTimeMotor"></PropertyColumn>
-            <PropertyColumn Width="100px" HeaderStyle="text-align: center;" Title="ScrapBarcode" Property="c => c.ScrapBarcode"></PropertyColumn>
-            <PropertyColumn Width="100px" HeaderStyle="text-align: center;" Title="ScrapDescription" Property="c => c.ScrapDescription"></PropertyColumn>
-            <PropertyColumn Width="150px" HeaderStyle="text-align: center;" Sortable Title="ScanTimeScrap" Format="yyyy/MM/dd HH:mm:ss" Property="c => c.ScanTimeScrap"></PropertyColumn>
+            <PropertyColumn Width="250px" HeaderStyle="text-align: center;" Title="PackNo" Property="c => c.PackNo"></PropertyColumn>
+            <PropertyColumn Width="100px" HeaderStyle="text-align: center;" Style="text-align: center;" Title="Result" Property="c => c.ResultText"></PropertyColumn>
+            <PropertyColumn Width="150px" HeaderStyle="text-align: center;" Sortable Title="ScanTime" Format="yyyy/MM/dd HH:mm:ss" Property="c => c.ScanTime"></PropertyColumn>
+            <PropertyColumn Width="150px" HeaderStyle="text-align: center;" Title="CusPackno" Property="c => c.CusPackno"></PropertyColumn>
+            <PropertyColumn Width="150px" HeaderStyle="text-align: center;" Title="ModelCode" Property="c => c.ModelCode"></PropertyColumn>
         </ColumnDefinitions>
     </Table>
 </div> 

@@ -1,13 +1,14 @@
-﻿using AquaSolution.Data.Connection;
+﻿using AntDesign;
+using AquaSolution.Data.Connection;
 using AquaSolution.Shared.HRMSLOCAL;
 using AquaSolution.Shared.SemiReport;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Globalization;
-using static AquaSolution.Server.Services.SemiReport.SemiService;
+using static AquaSolution.Server.Services.SemiReport.SemiReportService.SemiService;
 
-namespace AquaSolution.Server.Services.SemiReport
+namespace AquaSolution.Server.Services.SemiReport.SemiReportService
 {
     public class SemiService : ISemiService
     {
@@ -73,6 +74,59 @@ namespace AquaSolution.Server.Services.SemiReport
                 throw ex;
             }
 
+        }
+        public async Task<bool> GetInner4HourStatusAsync()
+        {
+            var result = false; 
+            var connStr = _config.GetConnectionString("SemiConnection");
+
+            const string sql = @"
+                SELECT IsActive
+                FROM tbl_Logic
+                WHERE LogicName = 'Inner4Hour'
+            ";
+
+            await using var con = new SqlConnection(connStr);
+            await using var cmd = new SqlCommand(sql, con);
+
+            await con.OpenAsync();
+            await using var reader = await cmd.ExecuteReaderAsync();
+
+            if (await reader.ReadAsync())
+            {
+                result = !reader.IsDBNull(0) && reader.GetBoolean(0);
+            }
+
+            return result;
+        }
+        public async Task<bool> UpdateInner4HourStatusAsync(bool isActive)
+        {
+            var connStr = _config.GetConnectionString("SemiConnection");
+
+            const string sql = @"
+                UPDATE tbl_Logic
+                SET IsActive = @IsActive
+                WHERE LogicName = 'Inner4Hour'
+            ";
+
+            try
+            {
+                await using var con = new SqlConnection(connStr);
+                await using var cmd = new SqlCommand(sql, con);
+
+                cmd.Parameters.AddWithValue("@IsActive", isActive);
+
+                await con.OpenAsync();
+
+                int rowsAffected = await cmd.ExecuteNonQueryAsync();
+
+                return rowsAffected > 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Database Error: {ex.Message}");
+                return false;
+            }
         }
     }
 

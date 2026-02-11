@@ -1,0 +1,42 @@
+﻿@using AntDesign
+@using AquaSolution.Shared.CommonDto
+@using AquaSolution.Shared.Enum
+@inject HttpClient httpClient
+@inject IMessageService Message
+@{
+    RenderFragment footer = @<Template>
+
+        <Button OnClick="@SaveAsync" @key="@( "submit" )"
+                Type="ButtonType.Primary">
+            Save
+        </Button>
+
+        <Button Style="color:#808080" OnClick="@Close" @key="@("back")">Close</Button>
+
+    </Template>;
+}
+<Modal @bind-Visible="IsModalVisible" Style="z-index: 9999;width:700px" Footer="@footer">
+    <Form @ref="@formRef"
+      Model="@CusPackNoDto"
+      Layout="FormLayout.Vertical"
+      OnFinish="SaveAsync"
+      ValidateMode="FormValidateMode.Complex"
+      ValidateOnChange="true">
+          <Row Gutter="24">
+              <Col Span="12">
+              <FormItem Label="CusPackNo" Required="true">
+                  <TextArea MinRows="1" MaxRows="2"
+                            @bind-Value="@CusPackNoDto.CusPackNo"
+                            AllowClear="true" />
+              </FormItem>
+              </Col>
+              <Col Span="12">
+              <FormItem Label="ModelCode" Required="true">
+                  <TextArea MinRows="1" MaxRows="2"
+                            @bind-Value="@CusPackNoDto.ModelCode"
+                            AllowClear="true" />
+              </FormItem>
+            </Col>
+          </Row>
+    </Form>
+</Modal>

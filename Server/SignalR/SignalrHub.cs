@@ -59,5 +59,17 @@ namespace AquaSolution.Server.SignalR
             await Clients.All.SendAsync("ReloadKPIForUserApproval");
         }
         #endregion
+        #region ScanReport
+        public async Task LoadScanReport()
+        {
+            await Clients.All.SendAsync("LoadScanReport");
+        }
+        #endregion
+        #region RollReport
+        public async Task LoadRollReport()
+        {
+            await Clients.All.SendAsync("LoadRollReport");
+        }
+        #endregion
     }
 }
