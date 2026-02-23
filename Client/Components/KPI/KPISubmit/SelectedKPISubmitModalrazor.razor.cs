@@ -719,7 +719,10 @@ namespace AquaSolution.Client.Components.KPI.KPISubmit
                 KPIFormulaType.KF4 => actual > target ? 0 : 1,
                 _ => 0
             };
-
+            if (target == 0)
+            {
+                achievement = item.Max.HasValue ? item.Max.Value*100 :0;
+            }
             if (item.Bottom.HasValue && achievement < item.Bottom) achievement = 0;
             if (item.Max.HasValue && achievement > item.Max) achievement = item.Max.Value;
 

@@ -361,24 +361,24 @@ namespace AquaSolution.Client.Pages.KPI.KPITask
                             Max = decimal.TryParse(
                                 sheet.Cells[row, 7].Text,
                                 out var max)
-                                ? max
+                                ? max / 100
                                 : 0,
 
                             Bottom = decimal.TryParse(
                                 sheet.Cells[row, 8].Text,
                                 out var bottom)
-                                ? bottom
+                                ? bottom / 100
                                 : 0,
 
                             TaskDescription = sheet.Cells[row, 9].Text.Trim(),
                             CalculatedMdethod = sheet.Cells[row, 10].Text.Trim(),
                             DataSource = sheet.Cells[row, 11].Text.Trim(),
                             PIC = sheet.Cells[row, 12].Text.Trim(),
-                            DepartmentId =new Guid("BE60D2C2-8F4D-4FFB-B529-8E95F71397D3"),
+                            DepartmentId =new Guid("36AD907A-5948-417E-8FF8-813E7EED9496"),
                             FactoryId = new Guid("3C6F5EE1-1C4A-42E9-8033-ED16CEA2C327"),
                             CreatedById  =new Guid("B3A87D42-4CD2-4882-A1EE-EAEDE1707AC6"),
                             CreatedDate = DateTime.Now,
-                            Unit ="UNIT"
+                            Unit = sheet.Cells[row, 13].Text.Trim()
                         };
                     });
                 var list = new List<HandleTaskDto>();
