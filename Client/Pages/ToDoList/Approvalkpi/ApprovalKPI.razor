@@ -28,7 +28,8 @@
             {
                 <Panel Header="@($"{group.StatusName} ({group.Items.Count})")">
                     <Table TItem="ViewKPIForApprovalDto" @ref="_tableRef"
-                           Bordered PaginationPosition="false"
+                           Bordered
+                           HidePagination
                            DataSource="@group.Items">
                         <ColumnDefinitions Context="rowItem">
                             <PropertyColumn Title="Step" Property="c => c.Step" Width="50" />
