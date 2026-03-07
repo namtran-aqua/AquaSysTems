@@ -76,7 +76,23 @@
                    Class="customTable fix-table-header"
                    DataSource="DataSource">
                 <ColumnDefinitions Context="row">
-                    <PropertyColumn HeaderStyle="text-align: center;" Fixed="ColumnFixPlacement.Left" Width="300px" Title="Title" Property="c => c.Title"></PropertyColumn>
+                    <Column Fixed="ColumnFixPlacement.Left" TData="ViewKPITotalScoreDto" Width="50px" Context="row">
+                        <Template>
+                            <Popover Title="Actions" Trigger="new Trigger[] { Trigger.Click }" Placement="Placement.Bottom">
+                                <ChildContent>
+                                    <Button Icon="menu" />
+                                </ChildContent>
+                                <ContentTemplate>
+                                    <div style="display: flex; flex-direction: column; gap: 4px; padding: 8px;">
+                                          <Button  OnClick="@(async () => await ViewAsync(row))" Style="text-align: left;">
+                                            <Icon Type="eye" /> Detail
+                                        </Button>
+                                    </div>
+                                </ContentTemplate>
+                            </Popover>
+                        </Template>
+                    </Column>
+                    <PropertyColumn HeaderStyle="text-align: center;"  Width="300px" Title="Title" Property="c => c.Title"></PropertyColumn>
                     <PropertyColumn HeaderStyle="text-align: center;" Width="100px" Title="Status" Property="c => c.Status">
                         <Tag Color="@GetTagColor.GetTagColorCss(row.Status.ToString())">@row.Status</Tag>
                     </PropertyColumn>
@@ -87,16 +103,7 @@
                     <PropertyColumn HeaderStyle="text-align: center;" Width="100px" Title="OMGScore" Property="c => c.OMGScore"></PropertyColumn>
                     <PropertyColumn HeaderStyle="text-align: center;" Width="100px" Title="TotaleScore" Property="c => c.TotaleScore"></PropertyColumn>
                     <PropertyColumn HeaderStyle="text-align: center;" Width="50px" Title="Year" Property="c => c.Year"></PropertyColumn>
-                    <Column Fixed="ColumnFixPlacement.Right" TData="ViewKPITotalScoreDto" Title="Acction" Width="50px" Context="row">
-                        @if (row.Month != null)
-                        {
-                            <Template>
-                                <Button Type="ButtonType.Primary" OnClick="@(async () => await ViewAsync(row))" Style="text-align: left;">
-                                    <Icon Type="eye" /> Detail
-                                </Button>
-                            </Template>
-                        }
-                    </Column>
+                  
                 </ColumnDefinitions>
             </Table>
         }

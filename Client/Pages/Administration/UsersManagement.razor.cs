@@ -105,7 +105,8 @@ namespace AquaSolution.Client.Pages.Administration
                 DepartmentId = user.DepartmentId,
                 FactoryId = user.FactoryId,
                 PositionId = user.PositionId,
-                IsActive = user.IsActive
+                IsActive = user.IsActive,
+                FlowApproval = user.FlowApproval
             };
             if (CurrenUser != null) await _userModal?.ShowModelAsync(true, updateDto, CurrenUser)!;
         }

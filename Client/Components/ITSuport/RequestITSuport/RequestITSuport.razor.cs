@@ -269,7 +269,7 @@ namespace AquaSolution.Client.Components.ITSuport.RequestITSuport
             }
         }
         #endregion
-        #region Handle Img
+        #region Handle File
         private async Task Deleted(AttachmentDto file)
         {
             Attachment.Remove(file);

@@ -374,7 +374,7 @@ namespace AquaSolution.Client.Pages.KPI.KPITask
                             CalculatedMdethod = sheet.Cells[row, 10].Text.Trim(),
                             DataSource = sheet.Cells[row, 11].Text.Trim(),
                             PIC = sheet.Cells[row, 12].Text.Trim(),
-                            DepartmentId =new Guid("52FCD811-C07E-4A47-A236-313E313C3D76"),
+                            DepartmentId =new Guid("D581D7A2-2959-4295-8E0F-B778C66B4F88"),
                             FactoryId = new Guid("95F940E3-BE59-476A-AD27-F651479CE235"),
                             CreatedById  =new Guid("B3A87D42-4CD2-4882-A1EE-EAEDE1707AC6"),
                             CreatedDate = DateTime.Now,

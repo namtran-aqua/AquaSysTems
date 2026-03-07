@@ -126,7 +126,7 @@ namespace AquaSolution.Client.Pages.KPI.UserTask
                     {
                         filtered = result;
                     }
-                    else if (CurrenUser.Roles.Any(x => x.Name == "DepartmentViewer"))
+                    else if (CurrenUser.Roles.Any(x => x.Name == "KPIUSER_DepartmentViewer"))
                     {
                         filtered = result
                             .Where(x => x.DepartmentId == CurrenUser.DepartmentId)

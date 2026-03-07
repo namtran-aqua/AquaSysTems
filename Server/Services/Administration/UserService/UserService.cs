@@ -297,6 +297,7 @@ public class UserService : IUserService
                             IsActive = u.IsActive,
                             ManagerWorkDay = manager.WorkDayId,
                             PositionType = position.Type,
+                            FlowApproval = u.FlowApproval,
                             Roles = new List<RoleDto>()
                         };
 

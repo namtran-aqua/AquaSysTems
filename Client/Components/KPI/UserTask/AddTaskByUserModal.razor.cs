@@ -45,7 +45,7 @@ namespace AquaSolution.Client.Components.KPI.UserTask
             CreatedTargetCompare.Clear();
             HandleUserTaskDto.Clear();
             User = user;
-            if(User.Roles.Any(x => x.Name == "DepartmentViewer"))
+            if(User.Roles.Any(x => x.Name == "KPIUSER_DepartmentViewer"))
             {
                 DataSource = kPITaskDtos
                               .Where(x => x.DepartmentId == user.DepartmentId)

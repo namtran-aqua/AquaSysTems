@@ -12,22 +12,6 @@
     RenderFragment footer = @<Template>
     @if (IsInputActual)
     {
-        // @if (activeTabKey == "1")
-        // {
-        //     <Button OnClick="@ActionTab" @key="@( "action" )" Style="color:#f0f0f0"
-        //             Type="ButtonType.Primary">
-        //        Next
-        //     </Button>
-        // }
-        // else if (activeTabKey == "2")
-        // {
-        //         <Button Disabled="@HandleButtonClicked" OnClick="@SaveAsync" @key="@( "submit" )"
-        //                 Type="ButtonType.Primary">
-        //             Submit
-        //         </Button>
-        // }
-
-
             <Button OnClick="@ActionTab" @key="@( "action" )" Style="color:#f0f0f0"
                     Type="ButtonType.Primary">
                 @TitleButton
@@ -182,65 +166,7 @@
                                         </Table>
                                     </Panel>
                                 }
-
-                               
                             }
-                            @*  @{
-                                var halfYearScore = HandleKPISubmitDto.KPITotalScore?.FirstOrDefault(x => x.HalfYear != null);
-                                if (halfYearScore != null)
-                                {
-                                    var title = $"{halfYearScore.Title}"
-                                    + "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0"
-                                    + $"KPI Score:{ConvertNumberCommon.ConvertNumber(halfYearScore.KPIScore)}"
-                                    + "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0"
-                                    + $"KeyTaskScore:{ConvertNumberCommon.ConvertNumber(halfYearScore.KeyTaskScore)}"
-                                    + "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0"
-                                    + $"OMGScore:{ConvertNumberCommon.ConvertNumber(halfYearScore.OMGScore)}"
-                                    + "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0"
-                                    + $"Total Score:{ConvertNumberCommon.ConvertNumber(halfYearScore.TotaleScore)}";
-                                    <h7 style="margin-left:10px;display:block">@title</h7>
-                                }
-
-                                var quarterScore = HandleKPISubmitDto.KPITotalScore?.FirstOrDefault(x => x.Quarter != null);
-                                if (quarterScore != null)
-                                {
-                                    var quarterTitle = $"{quarterScore.Title}"
-                                    + "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0"
-                                    + $"KPI Score:{ConvertNumberCommon.ConvertNumber(quarterScore.KPIScore)}"
-                                    + "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0"
-                                    + $"KeyTaskScore:{ConvertNumberCommon.ConvertNumber(quarterScore.KeyTaskScore)}"
-                                    + "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0"
-                                    + $"OMGScore:{ConvertNumberCommon.ConvertNumber(quarterScore.OMGScore)}"
-                                    + "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0"
-                                    + $"Total Score:{ConvertNumberCommon.ConvertNumber(quarterScore.TotaleScore)}";
-                                    <h7 style="margin-left:10px">@quarterTitle</h7>
-                                }
-                            }
-                            <Panel Class="customMonthInfor" Header="@HeaderLine" Key="1">
-                                <Table TItem="HandleActualDto"
-                                       Size="TableSize.Small"
-                                       Class="customTable fix-table-header"
-                                       DataSource="HandleKPISubmitDto.HandleActual">
-                                    <ColumnDefinitions Context="rowTarget">
-                                        <PropertyColumn Width="100px" Title="Index" Property="c => c.KPIIndexType"></PropertyColumn>
-                                        <PropertyColumn Width="100px" Title="Categories" Property="c => c.KPICategory"></PropertyColumn>
-                                        <PropertyColumn Width="250px" Title="TaskName" Property="c => c.TaskName"></PropertyColumn>
-                                        <PropertyColumn Width="100px" Title="Description" Property="c => c.Description"></PropertyColumn>
-                                        <PropertyColumn Width="90px" Title="CalculateMethod" Property="c => c.CalculateMethod"></PropertyColumn>
-                                        <PropertyColumn Width="150px" Title="Formula" Property="c => c.Formula"></PropertyColumn>
-                                        <PropertyColumn Width="90px" Title="Unit" Property="c => c.Unit"></PropertyColumn>
-                                        <PropertyColumn Width="90px" Title="DataSource" Property="c => c.DataSource"></PropertyColumn>
-                                        <PropertyColumn Width="200px" Title="PIC" Property="c => c.PIC"></PropertyColumn>
-                                        <PropertyColumn Width="100px" Title="Weight" Property="c => c.WeightString" Format="0.0000"></PropertyColumn>
-                                        <PropertyColumn Width="90px" Title="Max" Property="c => c.MaxString" Format="0.0000"></PropertyColumn>
-                                        <PropertyColumn Width="90px" Title="Bottom" Property="c => c.BottomString" Format="0.0000"></PropertyColumn>
-                                        <PropertyColumn Width="150px" Title="TargetValue" Property="c => c.TargetValue" Format="0.0000"></PropertyColumn>
-                                        <PropertyColumn Width="150px" Title="ActualValue" Property="c => c.ActualValue" Format="0.0000"></PropertyColumn>
-                                        <PropertyColumn Width="150px" Title="Achiement" Property="c => c.AchiementString" Format="0.0000"></PropertyColumn>
-                                        <PropertyColumn Width="150px" Title="Score" Property="c => c.Score" Format="0.0000"></PropertyColumn>
-                                    </ColumnDefinitions>
-                                </Table>
-                            </Panel> *@
                         </Collapse>
                     </TabPane>
                 </Tabs>
