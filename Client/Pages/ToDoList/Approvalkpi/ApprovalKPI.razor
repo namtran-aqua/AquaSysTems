@@ -66,9 +66,8 @@
                                     </a>
                                 </Template>
                             </PropertyColumn>
-           @*                  <PropertyColumn HeaderStyle="text-align: center;" Title="Title" Property="c => c.Title" /> *@
-                            <PropertyColumn HeaderStyle="text-align: center;" Width="60" Title="Month" Property="c => c.Month" />
-                            <PropertyColumn HeaderStyle="text-align: center;" Title="Requester" Property="c => c.CreatedByName" Width="120" />
+                            <PropertyColumn Filters="_monthFilter" HeaderStyle="text-align: center;" Width="60" Title="Month" Property="c => c.Month" />
+                            <PropertyColumn  Filterable  HeaderStyle="text-align: center;" Title="Requester" Property="c => c.CreatedByName" Width="120" />
                             <PropertyColumn  HeaderStyle="text-align: center;" Width="60" Title="Status" Property="c => c.EApprovalStatusType">
                                 <Tag Color="@GetTagColor.GetTagColorCss(rowItem.EApprovalStatusType.ToString())">@rowItem.EApprovalStatusType</Tag>
                             </PropertyColumn>

@@ -423,6 +423,7 @@ namespace AquaSolution.Client.Components.KPI.UserTask
                 if(item.Weight <=0)
                 {
                      await Message.Error("Weight must be greater than zero");
+                     return false;
                 }
             }
             if (invalidGroups.Any())

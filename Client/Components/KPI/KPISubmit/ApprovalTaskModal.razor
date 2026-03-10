@@ -39,7 +39,7 @@
     }
 </style>
 <Modal @bind-Visible="IsVisibleModal"
-       Style="z-index: 9999;width:1600px;margin-top:-90px"
+       Style="z-index:9999;width:1600px;margin-top:-90px"
        Draggable="true"
        Footer="@footer" Title="@ModalTitle">
     <div style="max-height:70vh;overflow-y:auto">
@@ -144,7 +144,7 @@
                             x.Month == item.Month &&
                             x.Year == item.Year).OrderBy(x => x.Index)
                             .ToList();
-                             Title = $"{item.Title} - KpiScore:{item.KPIScore} - KeyTaskScore:{item.KeyTaskScore} - OMGScore:{item.OMGScore} - TotaleScore:{item.TotaleScore} ";
+                             Title = $"{item.Title} - KpiScore:{item.KPIScore: 0.###} - KeyTaskScore:{item.KeyTaskScore: 0.###} - OMGScore:{item.OMGScore: 0.###} - TotaleScore:{item.TotaleScore: 0.###}";
                         }
                         else if (item.Quarter.HasValue)
                         {
@@ -154,7 +154,7 @@
                             x.Quarter == item.Quarter &&
                             x.Year == item.Year).OrderBy(x => x.Index)
                             .ToList();
-                            Title = $"{item.Title} - KpiScore:{item.KPIScore} - KeyTaskScore:{item.KeyTaskScore} - OMGScore:{item.OMGScore} - TotaleScore:{item.TotaleScore} ";
+                             Title = $"{item.Title} - KpiScore:{item.KPIScore: 0.###} - KeyTaskScore:{item.KeyTaskScore: 0.###} - OMGScore:{item.OMGScore: 0.###} - TotaleScore:{item.TotaleScore: 0.###}";
                         }
                         else if (item.HalfYear.HasValue)
                         {
@@ -164,7 +164,7 @@
                             x.HalfYear == item.HalfYear &&
                             x.Year == item.Year).OrderBy(x => x.Index)
                             .ToList();
-                             Title = $"{item.Title} - KpiScore:{item.KPIScore} - KeyTaskScore:{item.KeyTaskScore} - OMGScore:{item.OMGScore} - TotaleScore:{item.TotaleScore} ";
+                              Title = $"{item.Title} - KpiScore:{item.KPIScore: 0.###} - KeyTaskScore:{item.KeyTaskScore: 0.###} - OMGScore:{item.OMGScore: 0.###} - TotaleScore:{item.TotaleScore: 0.###}";
                         }
                         else
                         {
@@ -177,7 +177,7 @@
                             ).OrderBy(x => x.Index)
                             .ToList();
 
-                             Title = $"{item.Title} - KpiScore:{item.KPIScore} - KeyTaskScore:{item.KeyTaskScore} - OMGScore:{item.OMGScore} - TotaleScore:{item.TotaleScore} ";
+                              Title = $"{item.Title} - KpiScore:{item.KPIScore: 0.###} - KeyTaskScore:{item.KeyTaskScore: 0.###} - OMGScore:{item.OMGScore: 0.###} - TotaleScore:{item.TotaleScore: 0.###}";
                         }
                         <Table TItem="DetailScoreDto"
                                Size="TableSize.Small"
@@ -201,10 +201,10 @@
                                 <PropertyColumn Width="100px" Title="Weight" Property="c => c.WeightString"></PropertyColumn>
                                 <PropertyColumn Width="90px" Title="Max" Property="c => c.MaxString"></PropertyColumn>
                                 <PropertyColumn Width="90px" Title="Bottom" Property="c => c.BottomString"></PropertyColumn>
-                                <PropertyColumn Width="150px" Title="TargetValue" Property="c => c.TargetValue" Format="0.0000"></PropertyColumn>
-                                <PropertyColumn Width="150px" Title="ActualValue" Property="c => c.ActualValue" Format="0.0000"></PropertyColumn>
-                                <PropertyColumn Width="150px" Title="Achiement" Property="c => c.AchiementString" Format="0.0000"></PropertyColumn>
-                                <PropertyColumn Width="150px" Title="Score" Property="c => c.Score" Format="0.0000"></PropertyColumn>
+                                <PropertyColumn Width="150px" Title="TargetValue" Property="c => c.TargetValue" Format="0.####"></PropertyColumn>
+                                <PropertyColumn Width="150px" Title="ActualValue" Property="c => c.ActualValue" Format="0.####"></PropertyColumn>
+                                <PropertyColumn Width="150px" Title="Achiement" Property="c => c.AchiementString" Format="0.####"></PropertyColumn>
+                                <PropertyColumn Width="150px" Title="Score" Property="c => c.Score" Format="0.####"></PropertyColumn>
                             </ColumnDefinitions>
                         </Table>
                     }

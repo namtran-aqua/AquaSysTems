@@ -93,7 +93,6 @@
         const blob = new Blob([byteArray], {
             type: "application/vnd.ms-excel"
         });
-
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
         link.download = filename;
@@ -106,9 +105,29 @@
     <Table TItem="ViewResultKpiDto"
            Size="TableSize.Small"
            @ref="@_tableRef"
+           Bordered
            Class="customTable fix-table-header"
            DataSource="DataFilter">
         <ColumnDefinitions Context="row">
+     
+                <Column Fixed="ColumnFixPlacement.Left" TData="ViewResultKpiDto" Width="50px" Context="row">
+                    <Template>
+                        <Popover OverlayStyle="z-index:1000" Title="Actions" Trigger="new Trigger[] { Trigger.Click }"
+                                 Placement="Placement.Bottom">
+                            <ChildContent>
+                                <Button Icon="menu" />
+                            </ChildContent>
+                            <ContentTemplate>
+                                <div style="display: flex; flex-direction: column; gap: 4px; padding: 8px;">
+                                    <Button OnClick="@(async () => await ViewAsync(row))" Style="text-align: left;">
+                                        <Icon Type="eye" /> Detail
+                                    </Button>
+                                </div>
+                            </ContentTemplate>
+                        </Popover>
+                    </Template>
+                </Column>
+    
             <PropertyColumn Width="250px" Title="Name" Property="c => c.UserName">
                 <Template>
                     <a href="javascript:void(0);" @onclick="() => ViewAsync(row)">
@@ -119,7 +138,7 @@
             <PropertyColumn HeaderStyle="text-align: center;" Width="100px" Title="WorkDayId" Property="c => c.WorkDayId"></PropertyColumn>
             <PropertyColumn HeaderStyle="text-align: center;" Width="200px" Title="Approver" Property="c => c.Approver"></PropertyColumn>
             <PropertyColumn HeaderStyle="text-align: center;" Width="200px" Title="Description" Property="c => c.Description"></PropertyColumn>
-            <PropertyColumn HeaderStyle="text-align: center;" Width="100" Title="Status" Property="c => c.Status" >
+            <PropertyColumn HeaderStyle="text-align: center;" Width="100" Title="Status" Property="c => c.Status">
                 <Tag Color="@GetTagColor.GetTagColorCss(row.Status.ToString())">@row.Status</Tag>
             </PropertyColumn>
             <PropertyColumn HeaderStyle="text-align: center;" Width="160px" Title="ApprovalDate" Property="c => c.ApprovalDate" Format="dd/MM/yyyy HH:mm"></PropertyColumn>
@@ -127,20 +146,11 @@
             <PropertyColumn HeaderStyle="text-align: center;" Title="Quarter" Property="c => c.Quarter" Filters="_quaterFilter"></PropertyColumn>
             <PropertyColumn HeaderStyle="text-align: center;" Title="HalfYear" Property="c => c.HalfYear" Filters="_halfYearFilter"></PropertyColumn>
             <PropertyColumn HeaderStyle="text-align: center;" Title="Year" Property="c => c.Year" Filters="_yearFilter"></PropertyColumn>
-            <PropertyColumn HeaderStyle="text-align: center;" Title="KPIScore" Property="c => c.KPIScore"></PropertyColumn>
-            <PropertyColumn HeaderStyle="text-align: center;" Title="KeyTaskScore" Property="c => c.KeyTaskScore"></PropertyColumn>
-            <PropertyColumn HeaderStyle="text-align: center;" Title="OMGScore" Property="c => c.OMGScore"></PropertyColumn>
-            <PropertyColumn HeaderStyle="text-align: center;" Title="TotalScroe" Property="c => c.TotalScroe"></PropertyColumn>
-            <Column Fixed="ColumnFixPlacement.Right" TData="ViewResultKpiDto" Width="50px" Context="row">
-                <Template>
-                    @if (row.kPITotalScoreType == KPITotalScoreType.Staff)
-                    {
-                        <Button Type="ButtonType.Primary" OnClick="@(async () => await ViewAsync(row))" Style="text-align: left;">
-                            <Icon Type="eye" /> Detail
-                        </Button>
-                    }
-                </Template>
-            </Column>
+            <PropertyColumn HeaderStyle="text-align: center;" Format="0.####" Title="KPIScore" Property="c => c.KPIScore"></PropertyColumn>
+            <PropertyColumn HeaderStyle="text-align: center;" Format="0.####" Title="KeyTaskScore" Property="c => c.KeyTaskScore"></PropertyColumn>
+            <PropertyColumn HeaderStyle="text-align: center;" Format="0.####" Title="OMGScore" Property="c => c.OMGScore"></PropertyColumn>
+            <PropertyColumn HeaderStyle="text-align: center;" Format="0.####" Title="TotalScroe" Property="c => c.TotalScroe"></PropertyColumn>
+
         </ColumnDefinitions>
     </Table>
 </div>

@@ -5,6 +5,7 @@ using AquaSolution.Shared.Enum.KPIType;
 using AquaSolution.Shared.ITSuport.RequestSuport;
 using AquaSolution.Shared.KPI.KPISubmit;
 using AquaSolution.Shared.UserManagements;
+using ICSharpCode.SharpZipLib.Core;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using OneOf.Types;
@@ -17,13 +18,13 @@ namespace AquaSolution.Client.Pages.ToDoList.Approvalkpi
         #region Declaration
         private UserDto? CurrenUser { get; set; }
         [Inject] private HttpClient? Http { get; set; }
-        private List<ViewKPIForApprovalDto> DataSource { get; set; } = new();
         private List<GroupViewKPIForApproval> _groupedList { get; set; } = new();
         Table<ViewKPITotalScoreDto>? TableRef;
         private ApprovalTaskModal ApprovalTaskModalRef = new();
         private HubConnection? _hubConnection;
         private HandleApprovalTask HandleApproval = new();
         private Table<ViewKPIForApprovalDto>? _tableRef;
+        TableFilter<int?>[] _monthFilter = Array.Empty<TableFilter<int?>>();
         #endregion
         #region Init
         protected override async Task OnInitializedAsync()
@@ -84,7 +85,7 @@ namespace AquaSolution.Client.Pages.ToDoList.Approvalkpi
                     new GroupViewKPIForApproval { ApprovalStatusType = EApprovalStatusType.Approved, StatusName = "Approved" },
                     new GroupViewKPIForApproval { ApprovalStatusType = EApprovalStatusType.Rejected, StatusName = "Rejected" }
                 });
-
+     
                 foreach (var group in _groupedList)
                 {
                     group.Items = data
@@ -92,6 +93,17 @@ namespace AquaSolution.Client.Pages.ToDoList.Approvalkpi
                         .OrderByDescending(x => x.Month)
                         .ThenBy(x => x.Step)
                         .ToList();
+                    _monthFilter = group.Items
+                         .Where(x => x.Month !=0)
+                         .Select(x => new TableFilter<int?>
+                         {
+                             Text = $"Month {x.Month}",
+                             Value = x.Month,
+                             Selected = false
+                         })
+                         .GroupBy(f => f.Value)
+                         .Select(g => g.First())
+                         .ToArray();
                 }
             }
             catch (Exception ex)
