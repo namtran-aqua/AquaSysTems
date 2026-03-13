@@ -15,5 +15,7 @@ namespace AquaSolution.Shared.KPI.KPISubmit
         public Guid PositionId { get; set; }
         public Guid? DecisionMaker { get; set; }
         public int Month { get; set; }
+        public DateTime? ApprovalDate { get; set; }
+        public DateTime? RejectDate { get; set; }
     }
 }

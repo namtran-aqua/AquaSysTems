@@ -14,11 +14,13 @@ namespace AquaSolution.Client.Components.Administration.Users
         private bool _visible;
         private ResetPassword _model = new();
         private Form<ResetPassword> formRef;
+        private string Title { get;set; }
         [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
         private UserDto User { get; set; }
         public async Task ShowModal(UserDto user)
         {
             User = user;
+            Title = $"Reset Password for {User.FullName}";
             _visible = true;
             StateHasChanged();
         }

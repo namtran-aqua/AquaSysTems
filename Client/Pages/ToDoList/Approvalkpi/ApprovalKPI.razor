@@ -32,12 +32,12 @@
                            HidePagination
                            DataSource="@group.Items">
                         <ColumnDefinitions Context="rowItem">
-                            <Column Title="No" Width="40" TData="ViewKPIForApprovalDto" Context="row">
+                            <Column Title="No" Width="30" TData="ViewKPIForApprovalDto" Context="row">
                                 <Template>
                                     @(group.Items.IndexOf(rowItem) + 1)
                                 </Template>
                             </Column>
-                            <Column Width="50" Fixed="ColumnFixPlacement.Right" TData="ViewKPIForApprovalDto" Context="row">
+                            <Column Width="40" Fixed="ColumnFixPlacement.Right" TData="ViewKPIForApprovalDto" Context="row">
                                 <Template>
                                     <Popover Title="Actions" Trigger="new Trigger[] { Trigger.Click }" Placement="Placement.Bottom">
                                         <ChildContent>
@@ -62,23 +62,34 @@
                                     </Popover>
                                 </Template>
                             </Column>
-                            <PropertyColumn HeaderStyle="text-align: center;" Title="Step" Property="c => c.Step" Width="30" />
-                            <PropertyColumn HeaderStyle="text-align: center;" Title="Position" Property="c => c.Position" Width="50" />
-                            <PropertyColumn HeaderStyle="text-align: center;" Width="250px" Title="Title" Property="c => c.Title">
+                            <PropertyColumn HeaderStyle="text-align: center;" Title="Step" Property="c => c.Step" Width="20" />
+                            <PropertyColumn HeaderStyle="text-align: center;" Title="Position" Property="c => c.Position" Width="40" />
+                            <PropertyColumn HeaderStyle="text-align: center;" Width="280px" Title="Title" Property="c => c.Title">
                                 <Template>
                                     <a href="javascript:void(0);" @onclick="() => ViewDetail(rowItem)">
                                         @rowItem.Title
                                     </a>
                                 </Template>
                             </PropertyColumn>
-                            <PropertyColumn Filters="_monthFilter" HeaderStyle="text-align: center;" Width="60" Title="Month" Property="c => c.Month" />
-                            <PropertyColumn Filterable HeaderStyle="text-align: center;" Title="Requester" Property="c => c.CreatedByName" Width="140" />
+                            <PropertyColumn Filters="_monthFilter" HeaderStyle="text-align: center;" Width="40" Title="Month" Property="c => c.Month" />
+                            <PropertyColumn Filterable HeaderStyle="text-align: center;" Title="Requester" Property="c => c.CreatedByName" Width="160" />
                             <PropertyColumn HeaderStyle="text-align: center;" Width="60" Title="Status" Property="c => c.EApprovalStatusType">
                                 <Tag Color="@GetTagColor.GetTagColorCss(rowItem.EApprovalStatusType.ToString())">@rowItem.EApprovalStatusType</Tag>
                             </PropertyColumn>
-                            <PropertyColumn Sortable Title="CreatedDate" Property="c => c.CreatedDate" Format="dd/MM/yyyy HH:mm:ss" Width="150" />
+                            @if (group.ApprovalStatusType == EApprovalStatusType.InReview)
+                            {
+                                <PropertyColumn Sortable Title="CreatedDate" Property="c => c.CreatedDate" Format="dd/MM/yyyy HH:mm:ss" Width="150" />
 
-
+                            }
+                            else if (group.ApprovalStatusType == EApprovalStatusType.Approved)
+                            {
+                                <PropertyColumn Sortable Title="ApprovedDate" Property="c => c.ApprovalDate" Format="dd/MM/yyyy HH:mm:ss" Width="150" />
+                            }
+                            else if (group.ApprovalStatusType == EApprovalStatusType.Rejected)
+                            {
+                                <PropertyColumn Sortable Title="RejectedDate" Property="c => c.RejectDate" Format="dd/MM/yyyy HH:mm:ss" Width="150" />
+                            }
+                    
                         </ColumnDefinitions>
                     </Table>
                 </Panel>

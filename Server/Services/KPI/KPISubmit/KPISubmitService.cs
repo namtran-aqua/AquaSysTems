@@ -885,6 +885,8 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
                     PositionId = positionId ?? Guid.Empty,
                     DecisionMaker = decisionMaker,
                     Month = req.Month,
+                    ApprovalDate = req.ApprovalDate,
+                    RejectDate = req.RejectDate
                 };
 
                 result.Add(dto);
