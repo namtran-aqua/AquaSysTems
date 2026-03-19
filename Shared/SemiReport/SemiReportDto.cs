@@ -17,5 +17,6 @@ namespace AquaSolution.Shared.SemiReport
         public DateTime? ScanTimeOuter { get; set; }
         public string? MotorBarcode { get; set; }
         public DateTime? ScanTimeMotor { get; set; }
+        public string? Model { get; set; }
     }
 }

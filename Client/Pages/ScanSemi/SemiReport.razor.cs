@@ -143,6 +143,7 @@ namespace AquaSolution.Client.Pages.ScanSemi
         private string? InnerBarcode { get; set; }
         private string? OuterBarcode { get; set; }
         private string? MotorBarcode { get; set; }
+        private string? Model { get; set; }
         private string? ScrapDescription { get; set; }
         private async Task HandleKeyDown(KeyboardEventArgs e)
         {
@@ -159,6 +160,10 @@ namespace AquaSolution.Client.Pages.ScanSemi
         {
             OuterBarcode = e.Value?.ToString();
         }
+        private void ModelInputChanged(ChangeEventArgs e)
+        {
+            Model = e.Value?.ToString();
+        }
         private void MotorBarcodeInputChanged(ChangeEventArgs e)
         {
             MotorBarcode = e.Value?.ToString();
@@ -173,6 +178,7 @@ namespace AquaSolution.Client.Pages.ScanSemi
             {
                 var innerBarcode = StringHelper.NormalizeText(InnerBarcode?.Trim());
                 var outerBarcode = StringHelper.NormalizeText(OuterBarcode?.Trim());
+                var model = StringHelper.NormalizeText(Model?.Trim());
                 var motorBarcode = StringHelper.NormalizeText(MotorBarcode?.Trim());
                 var scrap = StringHelper.NormalizeText(ScrapDescription?.Trim());
 
@@ -182,6 +188,7 @@ namespace AquaSolution.Client.Pages.ScanSemi
                         .Where(x =>
                             (string.IsNullOrWhiteSpace(innerBarcode) || (!string.IsNullOrEmpty(x.InnerBarcode) && StringHelper.NormalizeText(x.InnerBarcode).Contains(innerBarcode))) &&
                             (string.IsNullOrWhiteSpace(outerBarcode) || (!string.IsNullOrEmpty(x.OuterBarcode) && StringHelper.NormalizeText(x.OuterBarcode).Contains(outerBarcode))) &&
+                            (string.IsNullOrWhiteSpace(model) || (!string.IsNullOrEmpty(x.Model) && StringHelper.NormalizeText(x.Model).Contains(model))) &&
                             (string.IsNullOrWhiteSpace(motorBarcode) || (!string.IsNullOrEmpty(x.MotorBarcode) && StringHelper.NormalizeText(x.MotorBarcode).Contains(motorBarcode))) &&
                             (string.IsNullOrWhiteSpace(scrap) || (!string.IsNullOrEmpty(x.ScrapDescription) && StringHelper.NormalizeText(x.ScrapDescription).Contains(scrap)))
                         )
@@ -189,6 +196,7 @@ namespace AquaSolution.Client.Pages.ScanSemi
 
                     if (string.IsNullOrWhiteSpace(innerBarcode) &&
                         string.IsNullOrWhiteSpace(outerBarcode) &&
+                        string.IsNullOrWhiteSpace(model) &&
                         string.IsNullOrWhiteSpace(motorBarcode) &&
                         string.IsNullOrWhiteSpace(scrap))
                     {
@@ -209,6 +217,7 @@ namespace AquaSolution.Client.Pages.ScanSemi
         {
             InnerBarcode = null;
             OuterBarcode = null;
+            Model = null;
             MotorBarcode = null;
             ScrapDescription = null;
             _semiFilter = _semi;

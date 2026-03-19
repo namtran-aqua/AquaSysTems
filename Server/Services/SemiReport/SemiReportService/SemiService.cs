@@ -38,7 +38,8 @@ namespace AquaSolution.Server.Services.SemiReport.SemiReportService
                         a.ScanOuterTime,
                         a.MotoBarcode,
                         a.ScanMotoTime,
-                        b.Description
+                        b.Description,
+                        a.Model
                     FROM dbo.tbl_ScanSemi a
                     LEFT JOIN dbo.tbl_Defect b
                         ON a.ScrapBarcode = b.ScrapBarcode
@@ -64,6 +65,7 @@ namespace AquaSolution.Server.Services.SemiReport.SemiReportService
                         MotorBarcode = reader.IsDBNull(6) ? null : reader.GetString(6),
                         ScanTimeMotor = reader.IsDBNull(7) ? null : reader.GetDateTime(7),
                         ScrapDescription = reader.IsDBNull(8) ? null : reader.GetString(8),
+                        Model = reader.IsDBNull(9) ? null : reader.GetString(9)
                     });
                 }
 

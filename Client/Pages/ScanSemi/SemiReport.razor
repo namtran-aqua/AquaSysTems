@@ -60,7 +60,8 @@
         
         <!-- #region Search -->
         <Input Placeholder="InnerBarcode" Value="@InnerBarcode" style="margin-left:2px;width:190px;font-size:12px" @onkeydown="HandleKeyDown" @oninput="InnerBarcodeInputChanged" />
-        <Input Placeholder="OuterBarcode" Value="@OuterBarcode" style="margin-left:2px;width:190px;font-size:12px" @onkeydown="HandleKeyDown" @oninput="OuterBarcodeInputChanged" />
+        <Input Placeholder="OuterBarcode" Value="@OuterBarcode" style="margin-left:2px;width:150px;font-size:12px" @onkeydown="HandleKeyDown" @oninput="OuterBarcodeInputChanged" />
+        <Input Placeholder="Model" Value="@Model" style="margin-left:2px;width:150px;font-size:12px" @onkeydown="HandleKeyDown" @oninput="ModelInputChanged" />
         @* <Input Placeholder="MotorBarcode" Value="@MotorBarcode" style="margin-left:2px;width:190px;font-size:12px" @onkeydown="HandleKeyDown" @oninput="MotorBarcodeInputChanged" /> *@
         <Input Placeholder="ScrapDescription" Value="@ScrapDescription" style="margin-left:2px;width:190px;font-size:12px" @onkeydown="HandleKeyDown" @oninput="ScrapInputChanged" />
         <button @onclick="Search" style="margin-left:5px;border-color:#fff"><Icon Type="search" /> Search</button>
@@ -102,6 +103,7 @@
         <ColumnDefinitions Context="row">
             <PropertyColumn Width="250px" HeaderStyle="text-align: center;" Title="InnerBarcode" Property="c => c.InnerBarcode"></PropertyColumn>
             <PropertyColumn Width="150px" HeaderStyle="text-align: center;" Sortable Title="ScanTimeInner" Format="yyyy/MM/dd HH:mm:ss" Property="c => c.ScanTimeInner"></PropertyColumn>
+            <PropertyColumn Width="200px" HeaderStyle="text-align: center;" Sortable Title="Model" Property="c => c.Model"></PropertyColumn>
             <PropertyColumn Width="200px" HeaderStyle="text-align: center;" Title="OuterBarcode" Property="c => c.OuterBarcode"></PropertyColumn>
             <PropertyColumn Width="150px" HeaderStyle="text-align: center;"Sortable Title="ScanTimeOuter" Format="yyyy/MM/dd HH:mm:ss" Property="c => c.ScanTimeOuter"></PropertyColumn>
             <PropertyColumn Width="200px" HeaderStyle="text-align: center;" Title="MotorBarcode" Property="c => c.MotorBarcode"></PropertyColumn>
@@ -109,6 +111,7 @@
             <PropertyColumn Width="100px" HeaderStyle="text-align: center;" Title="ScrapBarcode" Property="c => c.ScrapBarcode"></PropertyColumn>
             <PropertyColumn Width="100px" HeaderStyle="text-align: center;" Title="ScrapDescription" Property="c => c.ScrapDescription"></PropertyColumn>
             <PropertyColumn Width="150px" HeaderStyle="text-align: center;" Sortable Title="ScanTimeScrap" Format="yyyy/MM/dd HH:mm:ss" Property="c => c.ScanTimeScrap"></PropertyColumn>
+
         </ColumnDefinitions>
     </Table>
 </div> 
