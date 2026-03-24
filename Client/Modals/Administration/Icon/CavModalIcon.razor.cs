@@ -1,0 +1,44 @@
+﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
+
+namespace AquaSolution.Client.Modals.Administration.Icon
+{
+    public partial class CavModalIcon
+    {
+
+        [Parameter]
+        public bool Visible { get; set; }
+        [Parameter]
+        public EventCallback<bool> VisibleChanged { get; set; }
+
+        [Parameter]
+        public string IconValue { get; set; }
+        [Parameter]
+        public EventCallback<string> IconValueChanged { get; set; }
+
+
+
+        private async void HandleOk(MouseEventArgs e)
+        {
+            Visible = false;
+            if (IconValueChanged.HasDelegate)
+            {
+                await IconValueChanged.InvokeAsync(IconValue);
+            }
+            if (VisibleChanged.HasDelegate)
+            {
+                await VisibleChanged.InvokeAsync(Visible);
+            }
+            StateHasChanged();
+        }
+
+        private async void HandleCancel(MouseEventArgs e)
+        {
+            Visible = false;
+            if (VisibleChanged.HasDelegate)
+            {
+                await VisibleChanged.InvokeAsync(Visible);
+            }
+        }
+    }
+}

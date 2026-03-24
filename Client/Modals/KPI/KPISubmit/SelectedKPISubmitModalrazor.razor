@@ -1,0 +1,163 @@
+﻿@using AntDesign
+@using AntDesign.ProLayout
+@using AquaSolution.Client.Common
+@using AquaSolution.Client.Common.ConvertNumber
+@using AquaSolution.Client.Components.KPI.KPISubmit
+@using AquaSolution.Shared.KPI.KPISubmit;
+@using AquaSolution.Shared.KPI.DealineManagement
+@inject ModalService Modal
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+@inject IMessageService Message
+@{
+    RenderFragment footer = @<Template>
+    @if (IsInputActual)
+    {
+            <Button OnClick="@ActionTab" @key="@( "action" )" Style="color:#f0f0f0"
+                    Type="ButtonType.Primary">
+                @TitleButton
+            </Button>
+        if (activeTabKey == "2")
+        {
+                <Button Disabled="@HandleButtonClicked" OnClick="@SaveAsync" @key="@( "submit" )"
+                        Type="ButtonType.Primary">
+                    Submit
+                </Button>
+        }
+
+    }
+        <Button Style="color:red" OnClick="@CloseModal" @key="@("back")">Cancel</Button>
+
+    </Template>;
+}
+<style>
+    .customMonthInfor {
+        width: fit-content !important;
+    }
+
+    .customH {
+        color: red;
+        margin-left: 10px;
+    }
+</style>
+<Modal @bind-Visible="IsModalVisible" Style="z-index: 9999;width:1600px ;height:78vh !important ;top:3px" Draggable="true" Footer="@footer">
+    <Select TItem="DealineManagementDto"
+            TItemValue="DealineManagementDto"
+            DataSource="@DealineManagement"
+            @bind-Value="@KPIPeriodSubmit"
+            LabelName="@nameof(DealineManagementDto.MonthString)"
+            Placeholder="@PlaceholderSelected"
+            OnSelectedItemChanged="SelectedChange"
+            EnableSearch>
+    </Select>
+    @if (IsInputActual)
+    {
+        <GridContent>
+            <div style="width:100%;overflow-x:scroll ;height:65vh; ">
+                <Tabs @bind-ActiveKey="activeTabKey" Centered>
+                    <TabPane Key="1">
+                        <Table TItem="HandleActualDto"
+                               Size="TableSize.Small"
+                               Bordered
+                               HidePagination
+                               Class="customTable fix-table-header"
+                               DataSource="HandleActualDto">
+                            <ColumnDefinitions Context="row">
+                                <PropertyColumn Width="100px" Title="Index" Property="c => c.KPIIndexType"></PropertyColumn>
+                                <PropertyColumn Width="100px" Title="Category" Property="c => c.KPICategory"></PropertyColumn>
+                                <PropertyColumn Width="320px" Title="TaskName" Property="c => c.TaskName"></PropertyColumn>
+                                <PropertyColumn Width="220px" Title="Formula" Property="c => c.Formula"></PropertyColumn>
+                                <PropertyColumn Width="220px" Title="Quartercalculated" Property="c => c.calculated"></PropertyColumn>
+                                <PropertyColumn Width="220px" Title="Weight" Property="c => c.Weight"></PropertyColumn>
+                                <PropertyColumn Width="90px" Title="Unit" Property="c => c.Unit"></PropertyColumn>
+                                <PropertyColumn Width="100px" Title="Target" Property="c => c.TargetValue" Format="0.####"></PropertyColumn>
+                                <Column Title="Actual" Width="100px" TData="HandleActualDto">
+                                    <AntDesign.InputNumber @bind-Value="row.ActualValue" DefaultValue="0" Format="0.####" />
+                                </Column>
+                            </ColumnDefinitions>
+                        </Table>
+                    </TabPane>
+
+                    <TabPane Key="2">
+                        @if (!isCalculating)
+                        {
+                            <Collapse DefaultActiveKey="@(new[] { "1" })">
+                                @{
+                                    var orderedScores = HandleKPISubmitDto.KPITotalScore
+                                            .OrderBy(x => x.Year)
+                                            .ThenBy(x =>
+                                            {
+                                                if (x.Month.HasValue)
+                                                    return x.Month.Value * 10;
+
+                                                if (x.Quarter.HasValue)
+                                                    return x.Quarter.Value * 100 + 50;
+                                                if (x.HalfYear.HasValue)
+                                                    return x.HalfYear.Value * 1000 + 500;
+                                                return int.MaxValue;
+                                            })
+                                            .ToList();
+                                    var Title = string.Empty;
+
+                                    foreach (var item in orderedScores)
+                                    {
+                                        if (item.Month.HasValue && item.Month == KPIPeriodSubmit.Month)
+                                        {
+                                           var details = HandleKPISubmitDto.HandleActual
+                                            .Where(x =>
+                                            x.Month == item.Month && x.Quarter == null && x.HalfYear == null&&
+                                            x.Year == item.Year).OrderBy(x => x.Index)
+                                            .ToList();
+                                            var a = details;
+                                            Title = $"{item.Title} - KpiScore:{item.KPIScore: 0.###} - KeyTaskScore:{item.KeyTaskScore: 0.###} - OMGScore:{item.OMGScore: 0.###} - TotaleScore:{item.TotaleScore: 0.###}";
+                                            <RenderKPISubmitComponent HandleActual="details" Title="@Title"></RenderKPISubmitComponent>
+                                        }
+                                        else if (item.Quarter.HasValue && item.Quarter == QuarterValue)
+                                        {
+                                            // ✅ THEO QUÝ
+                                          var  details = HandleKPISubmitDto.HandleActual
+                                            .Where(x =>
+                                            x.Quarter == item.Quarter && x.Month == null && x.HalfYear == null &&
+                                            x.Year == item.Year).OrderBy(x => x.Index)
+                                            .ToList();
+                                            Title = $"{item.Title} - KpiScore:{item.KPIScore: 0.###} - KeyTaskScore:{item.KeyTaskScore: 0.###} - OMGScore:{item.OMGScore: 0.###} - TotaleScore:{item.TotaleScore: 0.###}";
+                                            var a = details;
+                                            <RenderKPISubmitComponent HandleActual="details" Title="@Title"></RenderKPISubmitComponent>
+                                        }
+                                        else if (item.HalfYear.HasValue)
+                                        {
+
+                                            var details = HandleKPISubmitDto.HandleActual
+                                            .Where(x =>
+                                            x.HalfYear == item.HalfYear && x.Month == null && x.HalfYear == null &&
+                                            x.Year == item.Year).OrderBy(x => x.Index)
+                                            .ToList();
+                                            Title = $"{item.Title} - KpiScore:{item.KPIScore: 0.###} - KeyTaskScore:{item.KeyTaskScore: 0.###} - OMGScore:{item.OMGScore: 0.###} - TotaleScore:{item.TotaleScore: 0.###}";
+                                            <RenderKPISubmitComponent HandleActual="details" Title="@Title"></RenderKPISubmitComponent>
+                                        }
+                                        else
+                                        {
+                                            // ✅ THEO NĂM
+                                            var details = HandleKPISubmitDto.HandleActual
+                                            .Where(x => x.Year == item.Year).OrderBy(x => x.Index)
+                                            .ToList();
+                                            Title = $"{item.Title} - KpiScore:{item.KPIScore: 0.###} - KeyTaskScore:{item.KeyTaskScore: 0.###} - OMGScore:{item.OMGScore: 0.###} - TotaleScore:{item.TotaleScore: 0.###}";
+                                            <RenderKPISubmitComponent HandleActual="details" Title="@Title"></RenderKPISubmitComponent>
+                                        }
+
+                                    }
+
+                                }
+                            </Collapse>
+                        }
+                    </TabPane>
+                </Tabs>
+            </div>
+        </GridContent>
+    }
+    @if (!DealineManagement.Any())
+    {
+        <h7 class="customH">Currently, there is no KPI available for input, or the previous month's submission is still pending approval. Please try again later!</h7>
+    }
+
+</Modal>

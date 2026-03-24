@@ -1,5 +1,5 @@
 ﻿using AquaSolution.Client.Common;
-using AquaSolution.Client.Components.Administration.ApprovalFlows;
+using AquaSolution.Client.Modals.Administration.ApprovalFlows;
 using AquaSolution.Shared.ApprovalFlows;
 using AquaSolution.Shared.CommonDto;
 using AquaSolution.Shared.Enum;

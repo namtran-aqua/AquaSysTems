@@ -1,7 +1,7 @@
 ﻿using AntDesign;
 using AquaSolution.Client.Common;
-using AquaSolution.Client.Components.KPI.KPISubmit;
-using AquaSolution.Client.Components.KPI.Target;
+using AquaSolution.Client.Modals.KPI.KPISubmit;
+using AquaSolution.Client.Modals.KPI.Target;
 using AquaSolution.Shared.KPI.KPISubmit;
 using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Components;

@@ -1,6 +1,6 @@
 ﻿namespace AquaSolution.Server.Services.Administration.RoleService
 {
-    using AquaSolution.Data.Data.Entities;
+    using AquaSolution.Data.Data.Entities.Admin;
     using AquaSolution.Shared.Roles;
     using AquaSolution.Shared.UserManagements;
     using System;

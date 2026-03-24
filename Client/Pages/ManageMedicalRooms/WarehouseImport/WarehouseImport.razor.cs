@@ -1,4 +1,4 @@
-﻿using AquaSolution.Client.Components.ManageMedicalRooms.WarehouseImports;
+﻿using AquaSolution.Client.Modals.ManageMedicalRooms.WarehouseImports;
 using AquaSolution.Shared.ManageMedicalRooms.WarehouseImports;
 using Microsoft.AspNetCore.Components;
 using System.Net.Http.Json;

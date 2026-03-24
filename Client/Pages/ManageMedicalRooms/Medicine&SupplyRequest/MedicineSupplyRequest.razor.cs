@@ -1,5 +1,5 @@
 ﻿using AquaSolution.Client.Common;
-using AquaSolution.Client.Components.ManageMedicalRooms.MedicineSupplyRequest;
+using AquaSolution.Client.Modals.ManageMedicalRooms.MedicineSupplyRequest;
 using AquaSolution.Shared.ManageMedicalRooms.MedicineSupplyRequest;
 using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Components;

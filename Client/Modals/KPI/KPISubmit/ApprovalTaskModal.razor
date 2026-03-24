@@ -1,0 +1,215 @@
+﻿@using AntDesign
+@using AquaSolution.Client.Common
+@using AquaSolution.Shared.KPI.KPISubmit
+@using AquaSolution.Client.Common.ConvertNumber
+@using AquaSolution.Shared.CommonDto
+@using AquaSolution.Shared.Enum
+@using AquaSolution.Shared.Enum.KPIType
+@using AquaSolution.Shared.ITSuport.RequestSuport
+@inject HttpClient httpClient
+@using AquaSolution.Shared.ITSuport.RequestSuportCategory
+@using AquaSolution.Shared.UserManagements
+@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IMessageService Message
+@{
+    RenderFragment footer = @<Template>
+    @if (!IsView)
+    {
+            <Button OnClick="@ApprovalAsync" @key="@( "submit" )"
+                    Type="ButtonType.Primary">
+                Approval
+            </Button>
+
+            <Button OnClick="@RejectedAsync" @key="@( "rejected" )"
+                    Style="color:red">
+                Rejected
+            </Button>
+    }
+    <Button Style="color:#808080" OnClick="@CloseModal" @key="@("back")">Close</Button>
+    </Template>;
+    //--------------------
+
+}
+<style>
+    .customTable-score {
+        width:100% !important;
+        overflow-x:auto;
+    }
+</style>
+<Modal @bind-Visible="IsVisibleModal"
+       Style="z-index:9999;width:1600px;margin-top:-90px"
+       Draggable="true"
+       Footer="@footer" Title="@ModalTitle">
+    <div style="max-height:70vh;overflow-y:auto">
+        <Collapse DefaultActiveKey="@(new[] { "1" })">
+            <Panel Class="customInfo" Header="Process Approval" Key="1">
+
+                <div>
+                    @{
+                        int FinishStep = ProcessApprovalList
+                        .Where(x => x.ApprovalStatusType == EApprovalStatusType.Approved
+                        || x.ApprovalStatusType == EApprovalStatusType.Rejected)
+                        .OrderByDescending(x => x.StepNumber)
+                        .Select(x => x.StepNumber)
+                        .FirstOrDefault();
+
+                        <Steps  Direction="StepsDirection.Vertical" Size="StepsSize.Default" Current="@FinishStep">
+                            @foreach (var step in ProcessApprovalList.OrderBy(x => x.StepNumber))
+                            {
+
+                                RenderFragment description = __builder =>
+                                {
+                                    int seq = 0;
+
+                                    if (step.ApprovalStatusType == EApprovalStatusType.Approved || step.ApprovalStatusType == EApprovalStatusType.InReview)
+                                    {
+                                        __builder.AddContent(seq++, $"Approval: {step.ApprovalName}");
+                                        __builder.AddMarkupContent(seq++, "<br/>");
+                                        __builder.AddContent(seq++, $"Email: {step.ApprovalEmail}");
+                                        __builder.AddMarkupContent(seq++, "<br/>");
+                                        __builder.AddContent(seq++, $"Comment: {step.Comment}");
+                                        __builder.AddMarkupContent(seq++, "<br/>");
+                                        __builder.AddContent(seq++, $"Approval Date: {step.ApprovalDate?.ToString("yyyy-MM-dd HH:mm") ?? "Waiting"}");
+                                    }
+                                    else if (step.ApprovalStatusType == EApprovalStatusType.Rejected)
+                                    {
+                                        __builder.AddContent(seq++, $"Rejected: {step.RejectedName}");
+                                        __builder.AddMarkupContent(seq++, "<br/>");
+                                        __builder.AddContent(seq++, $"Email: {step.RejectedEmail}");
+                                        __builder.AddMarkupContent(seq++, "<br/>");
+                                        __builder.AddContent(seq++, $"Comment: {step.Comment}");
+                                        __builder.AddMarkupContent(seq++, "<br/>");
+                                        __builder.AddContent(seq++, $"Rejected Date: {step.RejectedDate?.ToString("yyyy-MM-dd HH:mm") ?? "Waiting"}");
+                                    }
+                                    else if (step.ApprovalStatusType == EApprovalStatusType.Pending)
+                                    {
+                                        __builder.AddContent(seq++, $"Approval: {step.PendingEmail}");
+                                        __builder.AddMarkupContent(seq++, "<br/>");
+                                        __builder.AddContent(seq++, $"Email: {step.PendingName}");
+                                        __builder.AddMarkupContent(seq++, "<br/>");
+                                    }
+                                    else
+                                    {
+                                        __builder.AddContent(seq++, $"Status: Waiting");
+                                    }
+                                };
+
+                                <Step Class="custom-step"  >
+                                    <TitleTemplate>
+                                        <span style="color:@GetTagColor.GetTagColorCss(step.ApprovalStatusType.ToString())">
+                                            @($"Level {step.StepNumber} : {step.ApprovalStatusType}")
+                                        </span>
+                                    </TitleTemplate>
+                                    <DescriptionTemplate>
+                                        @description
+                                    </DescriptionTemplate>
+                                </Step>
+                            }
+                        </Steps>
+
+                    }
+                </div>
+
+            </Panel>
+            <Panel Class="customDocument" Header="Detail" Key="2">
+                @{
+                    var orderedScores = ViewDetailApprovalKPI.TotalScore
+                    .OrderBy(x => x.Year)
+                    .ThenBy(x =>
+                    {
+
+                        if (x.Month.HasValue)
+                            return x.Month.Value * 10;
+
+                        if (x.Quarter.HasValue)
+                            return x.Quarter.Value * 100 + 50;
+
+                        if (x.HalfYear.HasValue)
+                            return x.HalfYear.Value * 1000 + 500;
+
+                        return int.MaxValue;
+                    })
+                    .ToList();
+                    var Title = string.Empty;
+                    foreach (var item in orderedScores)
+                    {
+                        List<DetailScoreDto> details;
+                        if (item.Month.HasValue)
+                        {
+
+                            details = ViewDetailApprovalKPI.DetailScore
+                            .Where(x =>
+                            x.Month == item.Month && x.Quarter == null && x.HalfYear == null &&
+                            x.Year == item.Year).OrderBy(x => x.Index)
+                            .ToList();
+                             Title = $"{item.Title} - KpiScore:{item.KPIScore: 0.###} - KeyTaskScore:{item.KeyTaskScore: 0.###} - OMGScore:{item.OMGScore: 0.###} - TotaleScore:{item.TotaleScore: 0.###}";
+                        }
+                        else if (item.Quarter.HasValue)
+                        {
+                            // ✅ THEO QUÝ
+                            details = ViewDetailApprovalKPI.DetailScore
+                            .Where(x =>
+                            x.Quarter == item.Quarter && x.Month == null && x.HalfYear == null &&
+                            x.Year == item.Year).OrderBy(x => x.Index)
+                            .ToList();
+                             Title = $"{item.Title} - KpiScore:{item.KPIScore: 0.###} - KeyTaskScore:{item.KeyTaskScore: 0.###} - OMGScore:{item.OMGScore: 0.###} - TotaleScore:{item.TotaleScore: 0.###}";
+                        }
+                        else if (item.HalfYear.HasValue)
+                        {
+
+                            details = ViewDetailApprovalKPI.DetailScore
+                            .Where(x =>
+                            x.HalfYear == item.HalfYear && x.Month == null && x.HalfYear == null &&
+                            x.Year == item.Year).OrderBy(x => x.Index)
+                            .ToList();
+                              Title = $"{item.Title} - KpiScore:{item.KPIScore: 0.###} - KeyTaskScore:{item.KeyTaskScore: 0.###} - OMGScore:{item.OMGScore: 0.###} - TotaleScore:{item.TotaleScore: 0.###}";
+                        }
+                        else
+                        {
+                            details = ViewDetailApprovalKPI.DetailScore
+                            .Where(x =>
+                            x.Year == item.Year &&
+                            x.Month == null &&
+                            x.Quarter == null &&
+                            x.HalfYear == null
+                            ).OrderBy(x => x.Index)
+                            .ToList();
+
+                              Title = $"{item.Title} - KpiScore:{item.KPIScore: 0.###} - KeyTaskScore:{item.KeyTaskScore: 0.###} - OMGScore:{item.OMGScore: 0.###} - TotaleScore:{item.TotaleScore: 0.###}";
+                        }
+                        <Table TItem="DetailScoreDto"
+                               Size="TableSize.Small"
+                               Style="width:40vh"
+                               Title="@Title"
+                               Class="customTable-score fix-table-header"
+                               Bordered
+                               HidePagination
+                               DataSource="@details">
+
+                            <ColumnDefinitions Context="rowTarget">
+                                <PropertyColumn Width="100px" Title="Index" Property="c => c.KPIIndexType"></PropertyColumn>
+                                <PropertyColumn Width="100px" Title="Category" Property="c => c.KPICategory"></PropertyColumn>
+                                <PropertyColumn Width="250px" Title="TaskName" Property="c => c.TaskName"></PropertyColumn>
+                                <PropertyColumn Width="300px" Title="Description" Property="c => c.Description"></PropertyColumn>
+                                <PropertyColumn Width="250px" Title="CalculateMethod" Property="c => c.CalculateMethod"></PropertyColumn>
+                                <PropertyColumn Width="150px" Title="Formula" Property="c => c.Formula"></PropertyColumn>
+                                <PropertyColumn Width="50px" Title="Unit" Property="c => c.Unit"></PropertyColumn>
+                                <PropertyColumn Width="90px" Title="DataSource" Property="c => c.DataSource"></PropertyColumn>
+                                <PropertyColumn Width="100" Title="PIC" Property="c => c.PIC"></PropertyColumn>
+                                <PropertyColumn Width="100px" Title="Weight" Property="c => c.WeightString"></PropertyColumn>
+                                <PropertyColumn Width="90px" Title="Max" Property="c => c.MaxString"></PropertyColumn>
+                                <PropertyColumn Width="90px" Title="Bottom" Property="c => c.BottomString"></PropertyColumn>
+                                <PropertyColumn Width="150px" Title="TargetValue" Property="c => c.TargetValue" Format="0.####"></PropertyColumn>
+                                <PropertyColumn Width="150px" Title="ActualValue" Property="c => c.ActualValue" Format="0.####"></PropertyColumn>
+                                <PropertyColumn Width="150px" Title="Achiement" Property="c => c.AchiementString" Format="0.####"></PropertyColumn>
+                                <PropertyColumn Width="150px" Title="Score" Property="c => c.Score" Format="0.####"></PropertyColumn>
+                            </ColumnDefinitions>
+                        </Table>
+                    }
+                }
+            </Panel>
+        </Collapse>
+    </div>
+</Modal>

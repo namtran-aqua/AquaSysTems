@@ -1,7 +1,7 @@
 ﻿
 using AntDesign;
 using AquaSolution.Client.Common;
-using AquaSolution.Client.Components.ITSuport.RequestITSuport;
+using AquaSolution.Client.Modals.ITSuport.RequestITSuport;
 using AquaSolution.Shared.Enum;
 using AquaSolution.Shared.ITSuport.Attachments;
 using AquaSolution.Shared.ITSuport.RequestSuport;

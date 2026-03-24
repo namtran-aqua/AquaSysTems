@@ -1,6 +1,6 @@
 ﻿using AntDesign;
 using AquaSolution.Client.Common;
-using AquaSolution.Client.Components.KPI.KPITask;
+using AquaSolution.Client.Modals.KPI.KPITask;
 using AquaSolution.Shared.Departments;
 using AquaSolution.Shared.Enum;
 using AquaSolution.Shared.Enum.KPIType;

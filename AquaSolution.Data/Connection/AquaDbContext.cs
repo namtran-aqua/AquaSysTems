@@ -1,8 +1,12 @@
 ﻿using AquaSolution.Data.Data.Entities;
 using AquaSolution.Data.Data.Entities.Admin;
+using AquaSolution.Data.Data.Entities.Clinic;
 using AquaSolution.Data.Data.Entities.KPI;
-using AquaSolution.Data.Data.MappingConfigurations;
+using AquaSolution.Data.Data.Entities.RequestITSuports;
+using AquaSolution.Data.Data.MappingConfigurations.Admin;
+using AquaSolution.Data.Data.MappingConfigurations.Clinic;
 using AquaSolution.Data.Data.MappingConfigurations.KPI;
+using AquaSolution.Data.Data.MappingConfigurations.RequestITSuport;
 using AquaSolution.Data.KPI.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -75,6 +79,8 @@ namespace AquaSolution.Data.Connection
         public DbSet<RequestApprovalTask> tbl_RequestApprovalTasks { get; set; }
         public DbSet<QuarterCalculate> tbl_QuarterCalculates { get; set; }
 
+        public DbSet<CeilingLevel> tbl_CeilingLevels { get; set; }
+
 
         #endregion
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -91,7 +97,6 @@ namespace AquaSolution.Data.Connection
             modelBuilder.ApplyConfiguration(new FactoryConfiguration());
             modelBuilder.ApplyConfiguration(new PositionConfiguration());
             modelBuilder.ApplyConfiguration(new ApprovalFlowConfiguration());
-             
             modelBuilder.ApplyConfiguration(new SystemLockConfiguration());
              
 
@@ -139,6 +144,7 @@ namespace AquaSolution.Data.Connection
             modelBuilder.ApplyConfiguration(new KPIActualMasterConfiguration());
             modelBuilder.ApplyConfiguration(new RequestApprovalTaskConfiguration());
             modelBuilder.ApplyConfiguration(new QuarterCalculateConfiguration());
+            modelBuilder.ApplyConfiguration(new CeilingLevelConfiguration());
 
             #endregion
 

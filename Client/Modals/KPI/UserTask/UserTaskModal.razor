@@ -1,0 +1,116 @@
+﻿@using AntDesign
+@using AquaSolution.Shared.CommonDto;
+@using AquaSolution.Shared.UserManagements
+@inject IJSRuntime JS
+@inject ModalService modal
+@inject NavigationManager Navigation
+@inject IMessageService Message
+@using AquaSolution.Client.Modals.KPI.KPITask
+@using AquaSolution.Shared.KPI.KPITasks
+@inject IMessageService Message
+@{
+    RenderFragment footer = @<Template>
+
+        <Button Style="color:#808080" OnClick="@Close" @key="@("back")">Close</Button>
+
+    </Template>;
+}
+<Modal Title="@TitleModal" @bind-Visible="IsModalVisible" Style="z-index: 9999;width:1600px ;height:78vh !important ;top:3px" Draggable="true" Footer="@footer">
+    <div class="mb-3">
+        <style>
+            .custom-button-type {
+                height: 30px;
+                font-size: 12px;
+            }
+
+            .fix-table-header table {
+                border-collapse: collapse;
+            }
+
+                .fix-table-header table thead th {
+                    position: sticky !important;
+                    z-index: 8 !important;
+                    top: 0;
+                    background-color: #fff;
+                }
+
+            .ant-table-content {
+                min-height: 65vh !important;
+            }
+
+            .ant-table-pagination {
+                position: fixed;
+                bottom: 0;
+                width: 100%;
+                z-index: 999;
+                background: white;
+                padding: 8px;
+                text-align: center;
+                box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.1);
+                background: transparent !important;
+            }
+
+
+
+            .custom-label {
+                background-color: #007bff;
+                color: white;
+                padding: 8px 15px;
+                border-radius: 5px;
+                cursor: pointer;
+                display: inline-block;
+            }
+
+                .custom-label:hover {
+                    background-color: #0056b3;
+                }
+        </style>
+        <div style="display: flex;  align-items: center; margin-bottom: 10px;">
+
+            <button @onclick="UpdateUserTask" class="btn btn-primary custom-button-type">
+                <Icon Type="plus" />Update User Task
+            </button>
+        </div>
+    </div>
+    <div style="width:100%;overflow-x:scroll ;max-height:70vh; ">
+        <Table TItem="KPITaskDto"
+               Size="TableSize.Small"
+               Bordered
+               HidePagination
+               Class="customTable fix-table-header"
+               DataSource="DataSource">
+            <ColumnDefinitions Context="row">
+                <PropertyColumn Width="100px" Title="Index" Property="c => c.KPIIndexType" ></PropertyColumn>
+                <PropertyColumn Width="250px" Title="TaskName" Property="c => c.TaskName"></PropertyColumn>
+                <PropertyColumn Width="100px" Title="Category" Property="c => c.KPICategory" ></PropertyColumn>
+                <PropertyColumn Width="150px" Title="Formula" Property="c => c.Formula"></PropertyColumn>
+                <PropertyColumn Width="150px" Title="Calculated" Property="c => c.Calculated"></PropertyColumn>
+                <PropertyColumn Width="150px" Title="Department" Property="c => c.Department" ></PropertyColumn>
+                <PropertyColumn Width="90px" Title="Factory" Property="c => c.Factory" ></PropertyColumn>
+                <PropertyColumn Width="90px" Title="DataSource" Property="c => c.DataSource"></PropertyColumn>
+                <PropertyColumn Width="100px" Title="PIC" Property="c => c.PIC"></PropertyColumn>
+                <PropertyColumn Width="90px" Title="Unit" Property="c => c.Unit"></PropertyColumn>
+                <PropertyColumn Width="90px" Title="Max" Property="c => c.Max"></PropertyColumn>
+                <PropertyColumn Width="90px" Title="Bottom" Property="c => c.Bottom"></PropertyColumn>
+
+                <Column Fixed="ColumnFixPlacement.Right" TData="UserDto" Width="50px" Context="row">
+                    <Template>
+                        <Popover Title="Actions" Trigger="new Trigger[] { Trigger.Click }" Placement="Placement.Bottom">
+                            <ChildContent>
+                                <Button Icon="menu" />
+                            </ChildContent>
+                            <ContentTemplate>
+                                <div style="display: flex; flex-direction: column; gap: 4px; padding: 8px;">
+                                    <Button Type="ButtonType.Text" OnClick="@(async () => await ViewAsync(row))" Style="text-align: left;">
+                                        <Icon Type="plus" />Detail
+                                    </Button>
+                                </div>
+                            </ContentTemplate>
+                        </Popover>
+                    </Template>
+                </Column>
+            </ColumnDefinitions> 
+        </Table>
+    </div>
+</Modal>
+<AddTaskByUserModal OnSave="LoadData" @ref="_addTaskByUserModal"></AddTaskByUserModal>

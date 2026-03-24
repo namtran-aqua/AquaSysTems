@@ -1,4 +1,4 @@
-﻿using AquaSolution.Data.Data.Entities;
+﻿using AquaSolution.Data.Data.Entities.Admin;
 using AquaSolution.Data.Repositories;
 using AquaSolution.Shared.Roles;
 

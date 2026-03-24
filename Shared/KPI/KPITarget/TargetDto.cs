@@ -20,8 +20,62 @@ namespace AquaSolution.Shared.KPI.KPITarget
         public KPIIndexType KPIIndexType { get; set; }
         public KPICategoryType KPICategory { get; set; }
         public decimal Max { get; set; }
+        public string MaxString
+        {
+            get
+            {
+                if (Max >0)
+                {
+                    return $"{Max * 100:0.##}%";
+                }
+                return string.Empty;
+            }
+            set
+            {
+                if (Max >0)
+                {
+                    value = $"{Max * 100:0.##}%";
+                }
+            }
+        }
         public decimal Bottom { get; set; }
+        public string? BottomString
+        {
+            get
+            {
+                if (Bottom >0)
+                {
+                    return $"{Bottom * 100:0.##}%";
+                }
+                return string.Empty;
+            }
+            set
+            {
+                if (Bottom >0)
+                {
+                    value = $"{Bottom * 100:0.##}%";
+                }
+            }
+        }
         public decimal Weight { get; set; }
+        public string? WeightString
+        {
+            get
+            {
+                if (Weight>0)
+                {
+                    return $"{Weight * 100:0.##}%";
+                }
+                return string.Empty;
+            }
+            set
+            {
+                if (Weight>0)
+                {
+                    value = $"{Weight * 100:0.##}%";
+                }
+            }
+        }
         public string Unit { get; set; }
         public string PIC { get; set; }
         public string DataSource { get; set; }

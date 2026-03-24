@@ -1,7 +1,7 @@
 ﻿
 using AntDesign;
 using AquaSolution.Client.Common;
-using AquaSolution.Client.Components.Administration.Users;
+using AquaSolution.Client.Modals.Administration.Users;
 using AquaSolution.Shared.CommonDto;
 using AquaSolution.Shared.Departments;
 using AquaSolution.Shared.Enum;

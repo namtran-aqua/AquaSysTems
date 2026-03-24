@@ -1,9 +1,9 @@
-﻿using AquaSolution.Data.Data.Entities;
+﻿using AquaSolution.Data.Data.Entities.Admin;
+using AquaSolution.Data.Data.Entities.RequestITSuports;
 using AquaSolution.Data.Repositories;
 using AquaSolution.Shared.Enum;
 using AquaSolution.Shared.ITSuport.Attachments;
 using AquaSolution.Shared.ITSuport.RequestSuport;
-using AquaSolution.Shared.ITSuport.RequestSuportCategory;
 
 namespace AquaSolution.Server.Services.ITSuport.RequestSuportCategories
 {

@@ -1,0 +1,234 @@
+﻿@using AntDesign
+@using AquaSolution.Shared.KPI.KPIMonthlyTarget
+@using AquaSolution.Shared.UserManagements
+@inject IJSRuntime JS
+@inject ModalService modal
+
+@inject NavigationManager Navigation
+@using AquaSolution.Client.Modals.KPI.KPITask
+@using AquaSolution.Shared.KPI.KPITasks
+@inject IMessageService Message
+@{
+    RenderFragment footer = @<Template>
+    @if (activeTabKey == "2")
+    {
+            <Button OnClick="@ActionTab2" @key="@( "action2" )" Style="color:#f0f0f0"
+                    Type="ButtonType.Primary">
+                @TitleButton2
+            </Button>
+    }
+        <Button OnClick="@ActionTab" @key="@( "action" )" Style="color:#f0f0f0"
+                Type="ButtonType.Primary">
+            @TitleButton
+        </Button>
+    @if (activeTabKey == "3")
+    {
+            <Button OnClick="@SaveAsync" @key="@( "submit" )"
+                    Type="ButtonType.Primary">
+                Save
+            </Button>
+    }
+
+
+        <Button Style="color:#808080" OnClick="@Close" @key="@("back")">Close</Button>
+
+    </Template>;
+}
+<Modal @bind-Visible="IsModalVisible" Draggable="true" Style="z-index: 9999;width:1600px ;height:78vh !important ;top:3px" Footer="@footer">
+    <div class="mb-3">
+        <style>
+            .custom-button-type {
+                height: 30px;
+                font-size: 12px;
+            }
+
+            .fix-table-header table {
+                border-collapse: collapse;
+            }
+
+                .fix-table-header table thead th {
+                    position: sticky !important;
+                    z-index: 8 !important;
+                    top: 0;
+                    background-color: #fff;
+                }
+
+            .ant-table-content {
+                min-height: 65vh !important;
+            }
+
+            .ant-table-pagination {
+                position: fixed;
+                bottom: 0;
+                width: 100%;
+                z-index: 999;
+                background: white;
+                padding: 8px;
+                text-align: center;
+                box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.1);
+                background: transparent !important;
+            }
+
+            .custom-label {
+                background-color: #007bff;
+                color: white;
+                padding: 8px 15px;
+                border-radius: 5px;
+                cursor: pointer;
+                display: inline-block;
+            }
+
+                .custom-label:hover {
+                    background-color: #0056b3;
+                }
+        </style>
+        @if (activeTabKey == "1")
+        {
+            <div style="display: flex;  align-items: center; margin-bottom: 10px;">
+                <!-- #region Search -->
+                <Input Placeholder="Task Name" Value="@TaskName" style="margin-left:2px;width:190px;font-size:12px" @onkeydown="HandleKeyDown" @oninput="TaskNameInputChanged" />
+                <button @onclick="Search" style="margin-left:5px;border-color:#fff"><Icon Type="search" />Search</button>
+                <button @onclick="Reset" style="margin-left:5px;border-color:#fff"><Icon Type="undo" />Reset</button>
+                <!-- #endregion -->
+            </div>
+        }
+    </div>
+    <div style="width:100%;overflow-x:scroll ;max-height:65vh; ">
+        <Tabs @bind-ActiveKey="activeTabKey" Centered>
+            <TabPane Key="1">
+                <Table TItem="KPITaskDto"
+                       @ref="tableRef"
+                       Bordered
+                       HidePagination
+                       Size="TableSize.Small"
+                       @bind-SelectedRows="Selected"
+                       Class="customTable fix-table-header"
+                       DataSource="DataFilter">
+                    <ColumnDefinitions Context="row">
+                        <Selection></Selection>
+                        <PropertyColumn Width="100px" Title="Index" Property="c => c.KPIIndexType" Filters="_kPIIndexTypeFilter"></PropertyColumn>
+                        <PropertyColumn Width="250px" Title="TaskName" Property="c => c.TaskName"></PropertyColumn>
+                        <PropertyColumn Width="100px" Title="Category" Property="c => c.KPICategory" Filters="_kPICategoryFilter"></PropertyColumn>
+                        <PropertyColumn Width="150px" Title="Department" Property="c => c.Department" Filters="_departmentFilter"></PropertyColumn>
+                        <PropertyColumn Width="250px" Title="TaskDescription" Property="c => c.TaskDescription"></PropertyColumn>
+                        <PropertyColumn Width="250px" Title="CalculatedMdethod" Property="c => c.CalculatedMdethod"></PropertyColumn>
+                        <PropertyColumn Width="150px" Title="Formula" Property="c => c.Formula"></PropertyColumn>
+                        <PropertyColumn Width="150px" Title="Calculated" Property="c => c.Calculated"></PropertyColumn>
+                        <PropertyColumn Width="90px"  Title="Unit" Property="c => c.Unit"></PropertyColumn>
+                        <PropertyColumn Width="90px"  Title="DataSource" Property="c => c.DataSource"></PropertyColumn>
+                        <PropertyColumn Width="100px" Title="PIC" Property="c => c.PIC"></PropertyColumn>
+                        <PropertyColumn Width="90px"  Title="Max" Property="c => c.Max" Format="0.####"></PropertyColumn>
+                        <PropertyColumn Width="90px"  Title="Bottom" Property="c => c.Bottom" Format="0.####"></PropertyColumn>
+                    </ColumnDefinitions>
+                </Table>
+            </TabPane>
+            <TabPane Key="2">
+                <Table TItem="CreatedTargetDto"
+                       Size="TableSize.Small"
+                       Bordered
+                       HidePagination
+                       Class="customTable fix-table-header"
+                       DataSource="CreatedTarget">
+                    <ColumnDefinitions Context="rowTarget">
+                        <PropertyColumn Width="250px" Title="TaskName" Property="c => c.TaskName"></PropertyColumn>
+                        <PropertyColumn Width="100px" Title="Index" Property="c => c.KPIIndexType" Filters="_kPIIndexTypeFilter"></PropertyColumn>
+                        <PropertyColumn Width="100px" Title="Category" Property="c => c.KPICategory" Filters="_kPICategoryFilter"></PropertyColumn>
+                        <PropertyColumn Width="150px" Title="Department" Property="c => c.Department" Filters="_departmentFilter"></PropertyColumn>
+                        <PropertyColumn Width="150px" Title="CalculateType" Property="c => c.Formula"></PropertyColumn>
+                        <PropertyColumn Width="150px" Title="Calculated" Property="c => c.Calculated"></PropertyColumn>
+                        <PropertyColumn Width="90px" Title="Factory" Property="c => c.Factory" Filters="_factoryFilter"></PropertyColumn>
+                        <PropertyColumn Width="90px" Title="DataSource" Property="c => c.DataSource"></PropertyColumn>
+                        <PropertyColumn Width="100px" Title="PIC" Property="c => c.PIC"></PropertyColumn>
+                        <PropertyColumn Width="90px" Title="Unit" Property="c => c.Unit" Format="0.####"></PropertyColumn>
+                        <PropertyColumn Width="90px" Title="Max" Property="c => c.Max" Format="0.####"></PropertyColumn>
+                        <PropertyColumn Width="90px" Title="Bottom" Property="c => c.Bottom" Format="0.####"></PropertyColumn>
+                        <Column Title="Weight" TData="UpdateTargetDto">
+                            <AntDesign.InputNumber @bind-Value="rowTarget.Weight" Format="0.####" DefaultValue="0" />
+                        </Column>
+                        <Column Title="Index" TData="UpdateTargetDto">
+                            <AntDesign.InputNumber @bind-Value="rowTarget.Index" DefaultValue="0" />
+                        </Column>
+                        <Column Title="Month 1" TData="UpdateTargetDto">
+                            <AntDesign.InputNumber @bind-Value="rowTarget.TargetValue1" Format="0.####" DefaultValue="0" />
+                        </Column>
+                        <Column Title="Month 2" TData="UpdateTargetDto">
+                            <AntDesign.InputNumber @bind-Value="rowTarget.TargetValue2" Format="0.####" DefaultValue="0" />
+                        </Column>
+                        <Column Title="Month 3" TData="UpdateTargetDto">
+                            <AntDesign.InputNumber @bind-Value="rowTarget.TargetValue3" Format="0.####" DefaultValue="0" />
+                        </Column>
+                        <Column Title="Month 4" TData="UpdateTargetDto">
+                            <AntDesign.InputNumber @bind-Value="rowTarget.TargetValue4" Format="0.####" DefaultValue="0" />
+                        </Column>
+                        <Column Title="Month 5" TData="UpdateTargetDto">
+                            <AntDesign.InputNumber @bind-Value="rowTarget.TargetValue5" Format="0.####" DefaultValue="0" />
+                        </Column>
+                        <Column Title="Month 6" TData="UpdateTargetDto">
+                            <AntDesign.InputNumber @bind-Value="rowTarget.TargetValue6" Format="0.####" DefaultValue="0" />
+                        </Column>
+                        <Column Title="Month 7" TData="UpdateTargetDto">
+                            <AntDesign.InputNumber @bind-Value="rowTarget.TargetValue7" Format="0.####" DefaultValue="0" />
+                        </Column>
+                        <Column Title="Month 8" TData="UpdateTargetDto">
+                            <AntDesign.InputNumber @bind-Value="rowTarget.TargetValue8" Format="0.####" DefaultValue="0" />
+                        </Column>
+                        <Column Title="Month 9" TData="UpdateTargetDto">
+                            <AntDesign.InputNumber @bind-Value="rowTarget.TargetValue9" Format="0.####" DefaultValue="0" />
+                        </Column>
+                        <Column Title="Month 10" TData="UpdateTargetDto">
+                            <AntDesign.InputNumber @bind-Value="rowTarget.TargetValue10" Format="0.####" DefaultValue="0" />
+                        </Column>
+                        <Column Title="Month 11" TData="UpdateTargetDto">
+                            <AntDesign.InputNumber @bind-Value="rowTarget.TargetValue11" Format="0.####" DefaultValue="0" />
+                        </Column>
+                        <Column Title="Month 12" TData="UpdateTargetDto">
+                            <AntDesign.InputNumber @bind-Value="rowTarget.TargetValue12" Format="0.####" DefaultValue="0" />
+                        </Column>
+                    </ColumnDefinitions>
+                </Table>
+            </TabPane>
+            <TabPane Key="3">
+                <Table TItem="CreatedTargetDto"
+                       Size="TableSize.Small"
+                       Bordered
+                       HidePagination
+                       Class="customTable fix-table-header"
+                       DataSource="CreatedTarget">
+                    <ColumnDefinitions Context="rowTarget">
+                        <PropertyColumn Width="100px" Title="Category" Property="c => c.KPICategory" Filters="_kPICategoryFilter"></PropertyColumn>
+                        <PropertyColumn Width="100px" Title="Index" Property="c => c.KPIIndexType" Filters="_kPIIndexTypeFilter"></PropertyColumn>
+                        <PropertyColumn Width="250px" Title="TaskName" Property="c => c.TaskName"></PropertyColumn>
+                        <PropertyColumn Width="150px" Title="Department" Property="c => c.Department" Filters="_departmentFilter"></PropertyColumn>
+                        <PropertyColumn Width="150px" Title="CalculateType" Property="c => c.Formula"></PropertyColumn>
+                        <PropertyColumn Width="90px" Title="Factory" Property="c => c.Factory" Filters="_factoryFilter"></PropertyColumn>
+                        <PropertyColumn Width="90px" Title="DataSource" Property="c => c.DataSource"></PropertyColumn>
+                        <PropertyColumn Width="100px" Title="PIC" Property="c => c.PIC"></PropertyColumn>
+                        <PropertyColumn Width="90px" Title="Unit" Property="c => c.Unit"></PropertyColumn>
+                        <PropertyColumn Width="90px" Title="Max" Property="c => c.Max" Format="0.##"></PropertyColumn>
+                        <PropertyColumn Width="90px" Title="Weight" Property="c => c.Weight" Format="0.##"></PropertyColumn>
+                        <PropertyColumn Width="90px" Title="Index" Property="c => c.Index" Format="0"></PropertyColumn>
+                        <PropertyColumn Width="90px" Title="Month 1" Property="c => c.TargetValue1" Format="0.####"></PropertyColumn>
+                        <PropertyColumn Width="90px" Title="Month 2" Property="c => c.TargetValue2" Format="0.###"></PropertyColumn>
+                        <PropertyColumn Width="90px" Title="Month 3" Property="c => c.TargetValue3" Format="0.####"></PropertyColumn>
+                        <PropertyColumn Width="90px" Title="Month 4" Property="c => c.TargetValue4" Format="0.####"></PropertyColumn>
+                        <PropertyColumn Width="90px" Title="Month 5" Property="c => c.TargetValue5" Format="0.####"></PropertyColumn>
+                        <PropertyColumn Width="90px" Title="Month 6" Property="c => c.TargetValue6" Format="0.####"></PropertyColumn>
+                        <PropertyColumn Width="90px" Title="Month 7" Property="c => c.TargetValue7" Format="0.####"></PropertyColumn>
+                        <PropertyColumn Width="90px" Title="Month 8" Property="c => c.TargetValue8" Format="0.####"></PropertyColumn>
+                        <PropertyColumn Width="90px" Title="Month 9" Property="c => c.TargetValue9" Format="0.####"></PropertyColumn>
+                        <PropertyColumn Width="90px" Title="Month 10" Property="c => c.TargetValue10" Format="0.####"></PropertyColumn>
+                        <PropertyColumn Width="90px" Title="Month 11" Property="c => c.TargetValue11" Format="0.####"></PropertyColumn>
+                        <PropertyColumn Width="90px" Title="Month 12" Property="c => c.TargetValue12" Format="0.####"></PropertyColumn>
+                        <PropertyColumn Width="90px" Title="Quarter 1" Property="c => c.TargetQarter1" Format="0.####"></PropertyColumn>
+                        <PropertyColumn Width="90px" Title="Quarter 2" Property="c => c.TargetQarter2" Format="0.####"></PropertyColumn>
+                        <PropertyColumn Width="90px" Title="Quarter 3" Property="c => c.TargetQarter3" Format="0.####"></PropertyColumn>
+                        <PropertyColumn Width="90px" Title="Quarter 4" Property="c => c.TargetQarter4" Format="0.####"></PropertyColumn>
+                        <PropertyColumn Width="90px" Title="Hafyear 1" Property="c => c.TargetHaftYear1" Format="0.####"></PropertyColumn>
+                        <PropertyColumn Width="90px" Title="Hafyear 2" Property="c => c.TargetHaftYear2" Format="0.####"></PropertyColumn>
+                        <PropertyColumn Width="90px" Title="Year" Property="c => c.TargetYear" Format="0.####"></PropertyColumn>
+                    </ColumnDefinitions>
+                </Table>
+            </TabPane>
+        </Tabs>
+    </div>
+</Modal>

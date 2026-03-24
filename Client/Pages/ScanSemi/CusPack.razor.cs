@@ -1,5 +1,5 @@
 ﻿
-using AquaSolution.Client.Components.SemiReport.CusPack;
+using AquaSolution.Client.Modals.SemiReport.CusPack;
 using AquaSolution.Shared.SemiReport;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;

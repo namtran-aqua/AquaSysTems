@@ -1,0 +1,35 @@
+﻿@using AntDesign
+@using AntDesign.ProLayout
+@using AquaSolution.Client.Common
+@using AquaSolution.Client.Common.ConvertNumber
+@using AquaSolution.Shared.KPI.KPISubmit;
+@using AquaSolution.Shared.KPI.DealineManagement
+<Panel Class="customMonthInfor" Header="@Title" Key="1">
+    <Table TItem="HandleActualDto"
+           Size="TableSize.Small"
+           Class="customTable fix-table-header"
+           Bordered
+           HidePagination
+           DataSource="HandleActual">
+        <ColumnDefinitions Context="rowTarget">
+            <PropertyColumn Width="100px" Title="Index" Property="c => c.KPIIndexType"></PropertyColumn>
+            <PropertyColumn Width="100px" Title="Categories" Property="c => c.KPICategory"></PropertyColumn>
+            <PropertyColumn Width="250px" Title="TaskName" Property="c => c.TaskName"></PropertyColumn>
+            <PropertyColumn Width="100px" Title="Description" Property="c => c.Description"></PropertyColumn>
+            <PropertyColumn Width="90px" Title="CalculateMethod" Property="c => c.CalculateMethod"></PropertyColumn>
+            <PropertyColumn Width="150px" Title="Formula" Property="c => c.Formula"></PropertyColumn>
+            <PropertyColumn Width="150px" Title="Quartercalculated" Property="c => c.calculated"></PropertyColumn>
+            <PropertyColumn Width="90px" Title="Unit" Property="c => c.Unit"></PropertyColumn>
+            <PropertyColumn Width="90px" Title="DataSource" Property="c => c.DataSource"></PropertyColumn>
+            <PropertyColumn Width="100px" Title="PIC" Property="c => c.PIC"></PropertyColumn>
+            <PropertyColumn Width="100px" Title="Weight" Property="c => c.WeightString" Format="0.####"></PropertyColumn>
+            <PropertyColumn Width="90px" Title="Max" Property="c => c.MaxString" Format="0.####"></PropertyColumn>
+            <PropertyColumn Width="90px" Title="Bottom" Property="c => c.BottomString" Format="0.####"></PropertyColumn>
+            <PropertyColumn Width="150px" Title="TargetValue" Property="c => c.TargetValue" Format="0.####"></PropertyColumn>
+            <PropertyColumn Width="150px" Title="ActualValue" Property="c => c.ActualValue" Format="0.####"></PropertyColumn>
+            <PropertyColumn Width="150px" Title="Achiement" Property="c => c.AchiementString" Format="0.####"></PropertyColumn>
+            <PropertyColumn Width="150px" Title="Score" Property="c => c.Score" Format="0.####"></PropertyColumn>
+        </ColumnDefinitions>
+    </Table>
+</Panel>
+

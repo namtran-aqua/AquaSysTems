@@ -1,5 +1,5 @@
 ﻿using AquaSolution.Client.Common;
-using AquaSolution.Client.Components.ManageMedicalRooms.InventoryPeriod;
+using AquaSolution.Client.Modals.ManageMedicalRooms.InventoryPeriod;
 using AquaSolution.Shared.ManageMedicalRooms.InventoryPeriod;
 using AquaSolution.Shared.ManageMedicalRooms.RequestClinics;
 using AquaSolution.Shared.UserManagements;

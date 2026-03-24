@@ -1,6 +1,6 @@
 ﻿using AntDesign;
 using AquaSolution.Client.Common;
-using AquaSolution.Client.Components.ManageMedicalRooms.Treatments;
+using AquaSolution.Client.Modals.ManageMedicalRooms.Treatments;
 using AquaSolution.Shared.Enum;
 using AquaSolution.Shared.ITSuport.RequestSuport;
 using AquaSolution.Shared.ManageMedicalRooms.RequestClinics;

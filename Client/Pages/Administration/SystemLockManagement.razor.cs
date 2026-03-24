@@ -1,6 +1,6 @@
 ﻿using AquaSolution.Client.Common;
-using AquaSolution.Client.Components.Administration.Department;
-using AquaSolution.Client.Components.Administration.SystemLock;
+using AquaSolution.Client.Modals.Administration.Department;
+using AquaSolution.Client.Modals.Administration.SystemLock;
 using AquaSolution.Shared.Administration.SystemLock;
 using AquaSolution.Shared.CommonDto;
 using AquaSolution.Shared.Departments;

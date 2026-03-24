@@ -1,5 +1,5 @@
 ﻿using AquaSolution.Client.Common;
-using AquaSolution.Client.Components.ITSuport.RequestSuportCategory;
+using AquaSolution.Client.Modals.ITSuport.RequestSuportCategory;
 using AquaSolution.Shared.ITSuport.RequestSuportCategory;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;

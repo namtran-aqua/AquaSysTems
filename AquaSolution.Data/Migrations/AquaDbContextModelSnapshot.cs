@@ -1942,6 +1942,39 @@ namespace AquaSolution.Data.Migrations
                     b.ToTable("tbl_WarehouseImportDetails", "Clinic");
                 });
 
+            modelBuilder.Entity("AquaSolution.Data.KPI.Entities.CeilingLevel", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("CeilingLevelValue")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("FactoryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("FactoryId");
+
+                    b.ToTable("tbl_CeilingLevels", "KPI");
+                });
+
             modelBuilder.Entity("AquaSolution.Data.KPI.Entities.UserTask", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2454,6 +2487,21 @@ namespace AquaSolution.Data.Migrations
                         .WithMany()
                         .HasForeignKey("WarehouseImportId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AquaSolution.Data.KPI.Entities.CeilingLevel", b =>
+                {
+                    b.HasOne("AquaSolution.Data.Data.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AquaSolution.Data.Data.Entities.Factory", null)
+                        .WithMany()
+                        .HasForeignKey("FactoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 

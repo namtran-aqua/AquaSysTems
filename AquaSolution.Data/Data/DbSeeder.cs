@@ -1,12 +1,7 @@
 ﻿using AquaSolution.Data.Connection;
-using AquaSolution.Data.Data.Entities;
-using AquaSolution.Shared.Enum;
+using AquaSolution.Data.Data.Entities.Admin;
 using Microsoft.AspNetCore.Identity;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace AquaSolution.Data.Data
 {

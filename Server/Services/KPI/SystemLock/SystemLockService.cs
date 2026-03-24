@@ -1,5 +1,4 @@
-﻿using AquaSolution.Data.Data.Entities;
-using AquaSolution.Data.Data.Entities.Admin;
+﻿using AquaSolution.Data.Data.Entities.Admin;
 using AquaSolution.Data.Repositories;
 using AquaSolution.Server.Services.Administration.SystemLock;
 using AquaSolution.Shared.Administration.SystemLock;

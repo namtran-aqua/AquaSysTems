@@ -1,5 +1,6 @@
 ﻿using AquaSolution.Data.Connection;
 using AquaSolution.Data.Data.Entities;
+using AquaSolution.Data.Data.Entities.Admin;
 using AquaSolution.Data.Data.Entities.KPI;
 using AquaSolution.Data.KPI.Entities;
 using AquaSolution.Data.Repositories;

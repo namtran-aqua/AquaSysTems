@@ -1,7 +1,7 @@
 ﻿using AntDesign;
-using AquaSolution.Client.Components.ManageMedicalRooms.ReportInventory;
-using AquaSolution.Client.Components.ManageMedicalRooms.WarehouseExports;
-using AquaSolution.Client.Components.ManageMedicalRooms.WarehouseImports;
+using AquaSolution.Client.Modals.ManageMedicalRooms.ReportInventory;
+using AquaSolution.Client.Modals.ManageMedicalRooms.WarehouseExports;
+using AquaSolution.Client.Modals.ManageMedicalRooms.WarehouseImports;
 using AquaSolution.Shared.Departments;
 using AquaSolution.Shared.ManageMedicalRooms.Inventories;
 using AquaSolution.Shared.ManageMedicalRooms.WarehouseExports;

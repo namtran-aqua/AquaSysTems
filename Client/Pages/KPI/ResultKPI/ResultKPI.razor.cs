@@ -2,7 +2,7 @@
 using AntDesign.TableModels;
 using AquaSolution.Client.Common;
 using AquaSolution.Client.Common.ExcelHelper;
-using AquaSolution.Client.Components.KPI.KPISubmit;
+using AquaSolution.Client.Modals.KPI.KPISubmit;
 using AquaSolution.Shared.Enum;
 using AquaSolution.Shared.ITSuport.RequestSuport;
 using AquaSolution.Shared.KPI.KPISubmit;

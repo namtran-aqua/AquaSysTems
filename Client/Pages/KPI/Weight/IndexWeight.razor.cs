@@ -1,5 +1,5 @@
 ﻿using AntDesign;
-using AquaSolution.Client.Components.KPI.IndexWeight;
+using AquaSolution.Client.Modals.KPI.IndexWeight;
 using AquaSolution.Shared.Enum;
 using AquaSolution.Shared.Enum.KPIType;
 using AquaSolution.Shared.KPI.IndexWeight;

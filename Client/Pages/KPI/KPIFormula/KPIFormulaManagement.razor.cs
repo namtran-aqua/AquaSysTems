@@ -1,5 +1,5 @@
 ﻿using AntDesign;
-using AquaSolution.Client.Components.KPI.Formula;
+using AquaSolution.Client.Modals.KPI.Formula;
 using AquaSolution.Shared.KPI.Formula;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;

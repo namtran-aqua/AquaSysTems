@@ -1,4 +1,5 @@
 ﻿using AquaSolution.Data.Data.Entities;
+using AquaSolution.Data.Data.Entities.Admin;
 using AquaSolution.Data.KPI.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;

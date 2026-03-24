@@ -1,9 +1,9 @@
 ﻿using AntDesign;
 using AquaSolution.Client.Common;
 using AquaSolution.Client.Common.ConvertNumber;
-using AquaSolution.Client.Components.Administration.Users;
-using AquaSolution.Client.Components.KPI.Target;
-using AquaSolution.Client.Components.KPI.UserTask;
+using AquaSolution.Client.Modals.Administration.Users;
+using AquaSolution.Client.Modals.KPI.Target;
+using AquaSolution.Client.Modals.KPI.UserTask;
 using AquaSolution.Shared.Departments;
 using AquaSolution.Shared.Enum;
 using AquaSolution.Shared.Enum.KPIType;

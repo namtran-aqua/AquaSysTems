@@ -1,5 +1,5 @@
 ﻿using AquaSolution.Client.Common;
-using AquaSolution.Client.Components.ManageMedicalRooms.Products;
+using AquaSolution.Client.Modals.ManageMedicalRooms.Products;
 using AquaSolution.Shared.CommonDto;
 using AquaSolution.Shared.Enum;
 using AquaSolution.Shared.ManageMedicalRooms.Products;

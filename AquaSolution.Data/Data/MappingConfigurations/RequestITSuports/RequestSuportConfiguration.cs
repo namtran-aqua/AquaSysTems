@@ -1,0 +1,44 @@
+﻿using AquaSolution.Data.Data.Entities.Admin;
+using AquaSolution.Data.Data.Entities.RequestITSuports;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace AquaSolution.Data.Data.MappingConfigurations.RequestITSuport
+{
+    public class RequestSuportConfiguration : IEntityTypeConfiguration<RequestSuport>
+    {
+        public void Configure(EntityTypeBuilder<RequestSuport> builder)
+        {
+            builder.ToTable("tbl_RequestSuports", schema: "RequestSuport");
+            builder.HasKey(e => e.Id);
+            builder.HasOne<User>()
+                   .WithMany()
+                   .HasForeignKey(e => e.RequestBy)
+                   .OnDelete(DeleteBehavior.Restrict);
+            builder.Property(x => x.TicketNumber)
+                   .ValueGeneratedOnAdd()
+                   .UseIdentityColumn(1, 1)
+          .Metadata.SetAfterSaveBehavior(
+           Microsoft.EntityFrameworkCore.Metadata.PropertySaveBehavior.Ignore);
+
+            builder.HasOne<User>()
+                   .WithMany()
+                   .HasForeignKey(e => e.TechnicianId)
+                   .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne<User>()
+                   .WithMany()
+                   .HasForeignKey(e => e.CreatedById)
+                   .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne<RequestSuportCategory>()
+                   .WithMany()
+                   .HasForeignKey(e => e.RequestSuportCategoryId)
+                   .OnDelete(DeleteBehavior.Restrict);
+            builder.Property(e => e.Status)
+            .HasConversion<string>()
+            .IsRequired()
+            .HasMaxLength(100);
+        }
+    }
+}

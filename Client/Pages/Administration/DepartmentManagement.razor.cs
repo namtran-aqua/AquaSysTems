@@ -1,5 +1,5 @@
 ﻿using AquaSolution.Client.Common;
-using AquaSolution.Client.Components.Administration.Department;
+using AquaSolution.Client.Modals.Administration.Department;
 using AquaSolution.Shared.CommonDto;
 using AquaSolution.Shared.Departments;
 using Microsoft.AspNetCore.Components;

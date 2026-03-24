@@ -1,0 +1,21 @@
+﻿using AquaSolution.Data.Data.Entities.Clinic;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace AquaSolution.Data.Data.MappingConfigurations.Clinic
+{
+    public class WarehouseImportConfiguration : IEntityTypeConfiguration<WarehouseImport>
+    {
+        public void Configure(EntityTypeBuilder<WarehouseImport> builder)
+        {
+            builder.ToTable("tbl_WarehouseImports", schema: "Clinic");
+            builder.HasKey(e => e.Id);
+            builder.Property(e => e.Name).IsRequired().HasMaxLength(500);
+            builder.Property(e => e.WarehouseImportType)
+                .HasConversion<string>()
+                .IsRequired()
+                .HasMaxLength(50);
+        }
+    
+    }
+}

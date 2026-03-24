@@ -1,5 +1,5 @@
 ﻿using AquaService.Shared.AuthModels;
-using AquaSolution.Data.Data.Entities;
+using AquaSolution.Data.Data.Entities.Admin;
 using AquaSolution.Data.Repositories;
 using AquaSolution.Server.Services.Administration.UserService;
 using AquaSolution.Shared.Administration.UserManagements;

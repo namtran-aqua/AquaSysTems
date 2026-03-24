@@ -1,10 +1,8 @@
-﻿using AquaSolution.Data.Data.Entities;
-using AquaSolution.Data.Data.Entities.Admin;
-using AquaSolution.Shared.Enum;
+﻿using AquaSolution.Data.Data.Entities.Admin;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace AquaSolution.Data.Data.MappingConfigurations
+namespace AquaSolution.Data.Data.MappingConfigurations.Admin
 {
     public class SystemLockConfiguration : IEntityTypeConfiguration<SystemLock>
     {

@@ -1,5 +1,6 @@
 ﻿using AquaSolution.Data.Connection;
-using AquaSolution.Data.Data.Entities;
+using AquaSolution.Data.Data.Entities.Admin;
+using AquaSolution.Data.Data.Entities.Clinic;
 using AquaSolution.Data.Repositories;
 using AquaSolution.Server.Services.Common.HandleInventories;
 using AquaSolution.Shared.CommonDto;

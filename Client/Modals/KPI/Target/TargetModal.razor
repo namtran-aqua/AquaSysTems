@@ -1,0 +1,61 @@
+﻿@using AntDesign
+@using AquaSolution.Shared.KPI.Formula;
+@using AquaSolution.Shared.KPI.KPITarget
+@using AquaSolution.Shared.UserManagements
+@using AquaSolution.Shared.Administration.UserManagements
+@using AquaSolution.Shared.Enum.KPIType
+@inject IMessageService Message
+@{
+    RenderFragment footer = @<Template>
+
+        <Button Style="color:#808080" OnClick="@Close" @key="@("back")">Close</Button>
+    </Template>;
+}
+<Modal @bind-Visible="IsModalVisible" Style="z-index: 9999;width:1600px;margin-top:-75px" Draggable="true" Footer="@footer">
+    <div style="width:100%;overflow-x:scroll ;max-height:70vh; ">
+
+        <Table TItem="TargetDto"
+               Title="@User.FullName"
+               Size="TableSize.Small"
+               Bordered
+               HidePagination
+               Class="customTable fix-table-header"
+               DataSource="DataSource">
+            <ColumnDefinitions Context="rowTarget">
+                <PropertyColumn Width="250px" Title="TaskName" Fixed="ColumnFixPlacement.Left" Property="c => c.TaskName"></PropertyColumn>
+                <PropertyColumn Width="100px" Title="Category" Property="c => c.KPICategory"></PropertyColumn>
+                <PropertyColumn Width="100px" Title="Index"  Property="c => c.KPIIndexType"></PropertyColumn>
+                <PropertyColumn Width="150px" Title="Department" Property="c => c.Department"></PropertyColumn>
+                <PropertyColumn Width="150px" Title="Formula" Property="c => c.Formula"></PropertyColumn>
+                <PropertyColumn Width="150px" Title="CalculateType" Property="c => c.Calculated"></PropertyColumn>
+                <PropertyColumn Width="90px" Title="Factory" Property="c => c.Factory"></PropertyColumn>
+                <PropertyColumn Width="90px" Title="DataSource" Property="c => c.DataSource"></PropertyColumn>
+                <PropertyColumn Width="200px"Title="PIC" Property="c => c.PIC"></PropertyColumn>
+                <PropertyColumn Width="90px" Title="Unit" Property="c => c.Unit"></PropertyColumn>
+                <PropertyColumn Width="90px" Title="Bottom" Property="c => c.BottomString"></PropertyColumn>
+                <PropertyColumn Width="90px" Title="Max" Property="c => c.MaxString"></PropertyColumn>
+                <PropertyColumn Width="90px" Title="Weight" Property="c => c.WeightString" ></PropertyColumn>
+                <PropertyColumn Width="90px" Title="Index" Property="c => c.Index" Format="0.####"></PropertyColumn>
+                <PropertyColumn Width="90px" Title="Month 1" Property="c => c.TargetValue1" Format="0.####"></PropertyColumn>
+                <PropertyColumn Width="90px" Title="Month 2" Property="c => c.TargetValue2" Format="0.####"></PropertyColumn>
+                <PropertyColumn Width="90px" Title="Month 3" Property="c => c.TargetValue3" Format="0.####"></PropertyColumn>
+                <PropertyColumn Width="90px" Title="Month 4" Property="c => c.TargetValue4" Format="0.####"></PropertyColumn>
+                <PropertyColumn Width="90px" Title="Month 5" Property="c => c.TargetValue5" Format="0.####"></PropertyColumn>
+                <PropertyColumn Width="90px" Title="Month 6" Property="c => c.TargetValue6" Format="0.####"></PropertyColumn>
+                <PropertyColumn Width="90px" Title="Month 7" Property="c => c.TargetValue7" Format="0.####"></PropertyColumn>
+                <PropertyColumn Width="90px" Title="Month 8" Property="c => c.TargetValue8" Format="0.####"></PropertyColumn>
+                <PropertyColumn Width="90px" Title="Month 9" Property="c => c.TargetValue9" Format="0.####"></PropertyColumn>
+                <PropertyColumn Width="90px" Title="Month 10" Property="c => c.TargetValue10" Format="0.####"></PropertyColumn>
+                <PropertyColumn Width="90px" Title="Month 11" Property="c => c.TargetValue11" Format="0.####"></PropertyColumn>
+                <PropertyColumn Width="90px" Title="Month 12" Property="c => c.TargetValue12" Format="0.####"></PropertyColumn>
+                <PropertyColumn Width="90px" Title="Quarter 1" Property="c => c.TargetQarter1" Format="0.####"></PropertyColumn>
+                <PropertyColumn Width="90px" Title="Quarter 2" Property="c => c.TargetQarter2" Format="0.####"></PropertyColumn>
+                <PropertyColumn Width="90px" Title="Quarter 3" Property="c => c.TargetQarter3" Format="0.####"></PropertyColumn>
+                <PropertyColumn Width="90px" Title="Quarter 4" Property="c => c.TargetQarter4" Format="0.####"></PropertyColumn>
+                <PropertyColumn Width="90px" Title="Hafyear 1" Property="c => c.TargetHaftYear1" Format="0.####"></PropertyColumn>
+                <PropertyColumn Width="90px" Title="Hafyear 2" Property="c => c.TargetHaftYear2" Format="0.####"></PropertyColumn>
+                <PropertyColumn Width="90px" Title="Year" Property="c => c.TargetYear" Format="0.####"></PropertyColumn>
+            </ColumnDefinitions>
+        </Table>
+    </div>
+</Modal>

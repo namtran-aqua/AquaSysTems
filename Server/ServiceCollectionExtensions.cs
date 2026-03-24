@@ -15,6 +15,7 @@ using AquaSolution.Server.Services.Common.UserConnectionManager;
 using AquaSolution.Server.Services.ePAD;
 using AquaSolution.Server.Services.HRMS;
 using AquaSolution.Server.Services.ITSuport.RequestSuportCategories;
+using AquaSolution.Server.Services.KPi.CeilingLevelService;
 using AquaSolution.Server.Services.KPi.FormulaService;
 using AquaSolution.Server.Services.KPi.KPITaskService;
 using AquaSolution.Server.Services.KPi.QuarterCalculateds;
@@ -81,7 +82,7 @@ namespace AquaSolution.Server
             services.AddScoped<IDealineManagementService, DealineManagementService>();
             services.AddScoped<IQuarterCalculatedService, QuarterCalculatedService>();
             services.AddScoped<IIndexWeightService, IndexWeightService>();
-
+            services.AddScoped<ICeilingLevelService, CeilingLevelService>();
             #endregion
             #region Common
             services.AddScoped<IUserConnectionManager, UserConnectionManager>();
