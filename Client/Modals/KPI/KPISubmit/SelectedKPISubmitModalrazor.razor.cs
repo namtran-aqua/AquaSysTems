@@ -339,25 +339,25 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
                 decimal omgWeight = indexWeights?.FirstOrDefault(x => x.KPIIndexType == KPIIndexType.OMG)?.Weight ?? 0;
                 decimal kpiWeight = indexWeights?.FirstOrDefault(x => x.KPIIndexType == KPIIndexType.KPI)?.Weight ?? 0;
                 decimal keyTaskWeight = indexWeights?.FirstOrDefault(x => x.KPIIndexType == KPIIndexType.KeyTask)?.Weight ?? 0;
-
+                var Total = handleKPISubmit.KPITotalScore.Where(x=>x.Quarter == null).ToList().Count;
                 if (handleKPISubmit.HandleActual != null && handleKPISubmit.HandleActual.Any())
                 {
                     // OMG
-                    var listOMGDetails = handleKPISubmit.HandleActual.Where(x => x.KPIIndexType == KPIIndexType.OMG).ToList();
+                    var listOMGDetails = handleKPISubmit.HandleActual.Where(x => x.KPIIndexType == KPIIndexType.OMG && x.Quarter == null).ToList();
                     decimal sumOMG = listOMGDetails.Sum(x => x.Score ?? 0);
-                    var avgOMG = listOMGDetails.Count > 0 ? sumOMG / listOMGDetails.Count : 0;
+                    var avgOMG = listOMGDetails.Count > 0 ? sumOMG / Total : 0;
                     omgscore = avgOMG * omgWeight;
 
                     // KPI
-                    var listKPIDetails = handleKPISubmit.HandleActual.Where(x => x.KPIIndexType == KPIIndexType.KPI).ToList();
+                    var listKPIDetails = handleKPISubmit.HandleActual.Where(x => x.KPIIndexType == KPIIndexType.KPI && x.Quarter == null).ToList();
                     decimal sumKPI = listKPIDetails.Sum(x => x.Score ?? 0);
-                    var avgKPI = listKPIDetails.Count > 0 ? sumKPI / listKPIDetails.Count : 0;
+                    var avgKPI = listKPIDetails.Count > 0 ? sumKPI / Total : 0;
                     kpiScore = avgKPI * kpiWeight;
 
                     // KeyTask
-                    var listKeyTaskDetails = handleKPISubmit.HandleActual.Where(x => x.KPIIndexType == KPIIndexType.KeyTask).ToList();
+                    var listKeyTaskDetails = handleKPISubmit.HandleActual.Where(x => x.KPIIndexType == KPIIndexType.KeyTask && x.Quarter == null).ToList();
                     decimal sumKeyTask = listKeyTaskDetails.Sum(x => x.Score ?? 0);
-                    var avgKeyTask = listKeyTaskDetails.Count > 0 ? sumKeyTask / listKeyTaskDetails.Count : 0;
+                    var avgKeyTask = listKeyTaskDetails.Count > 0 ? sumKeyTask / Total : 0;
                     keytaskscore = avgKeyTask * keyTaskWeight;
 
                 }
