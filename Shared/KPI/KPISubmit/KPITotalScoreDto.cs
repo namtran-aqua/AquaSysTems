@@ -11,6 +11,7 @@ namespace AquaSolution.Shared.KPI.KPISubmit
     {
         public string Title { get; set; }
         public decimal KPIScore { get; set; }
+
         public decimal KeyTaskScore { get; set; }
         public decimal OMGScore { get; set; }
         public Guid CreatedBy { get; set; }
@@ -21,6 +22,7 @@ namespace AquaSolution.Shared.KPI.KPISubmit
         public DateTime CreatedDate { get; set; }
         public StatusKPIRequestType Status { get; set; }
         public decimal TotaleScore { get; set; }
+        public decimal TotalActualScore { get; set; }
         public bool IsActive { get; set; }
     }
 }

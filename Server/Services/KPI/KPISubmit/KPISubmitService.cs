@@ -12,6 +12,8 @@ using AquaSolution.Shared.KPI.KPISubmit;
 using AquaSolution.Shared.KPI.Result;
 using AquaSolution.Shared.KPI.UserTask;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using ZstdSharp;
 
 namespace AquaSolution.Server.Services.KPI.KPISubmit
 {
@@ -294,61 +296,6 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
                 throw;
             }
         }
-        public async Task<List<KPITotalScoreDto>> GetKPITotalScoreByUserId(Guid userId, int year, int? month)
-        {
-            var query = from totalScore in await _kpiTotalScoreRepo.GetQueryableAsync()
-                        join request in await _kpiRequestRepo.GetQueryableAsync()
-                        on totalScore.SubmitId equals request.SubmitId
-                        where request.RequestStatus == StatusKPIRequestType.Approved
-                        && totalScore.Status == StatusKPIRequestType.Approved
-                        && totalScore.CreatedBy == userId
-                        && totalScore.Year == year
-                        && (month == null || totalScore.Month == month)
-                        select new KPITotalScoreDto
-                        {
-                            KPIScore = totalScore.KPIScore,
-                            KeyTaskScore = totalScore.KeyTaskScore,
-                            OMGScore = totalScore.OMGScore,
-                            CreatedBy = totalScore.CreatedBy,
-                            Month = totalScore.Month,
-                            Quarter = totalScore.Quarter,
-                            HalfYear = totalScore.HalfYear,
-                            Year = totalScore.Year,
-                            CreatedDate = totalScore.CreatedDate,
-                            Status = request.RequestStatus,
-                            TotaleScore = totalScore.TotaleScore ?? 0,
-                            IsActive = totalScore.IsActive,
-                            Title = totalScore.Title
-                        };
-            return await query.ToListAsync();
-        }
-        public async Task<KPITotalScoreDto> GetKPITotalScoreQuarterByUserId(Guid userId, int year, int? quarter)
-        {
-            var totalScores = await _kpiTotalScoreRepo.GetQueryableAsync();
-            var requests = await _kpiRequestRepo.GetQueryableAsync();
-            var query = from totalScore in totalScores
-                        join request in requests on totalScore.SubmitId equals request.SubmitId
-                        where request.RequestStatus == StatusKPIRequestType.Approved
-                              && totalScore.CreatedBy == userId
-                              && totalScore.Year == year
-                              && (quarter == null || totalScore.Quarter == quarter)
-                        select new KPITotalScoreDto
-                        {
-                            KPIScore = totalScore.KPIScore,
-                            KeyTaskScore = totalScore.KeyTaskScore,
-                            OMGScore = totalScore.OMGScore,
-                            CreatedBy = totalScore.CreatedBy,
-                            Month = totalScore.Month,
-                            Quarter = totalScore.Quarter,
-                            HalfYear = totalScore.HalfYear,
-                            Year = totalScore.Year,
-                            CreatedDate = totalScore.CreatedDate,
-                            Status = request.RequestStatus,
-                            TotaleScore = totalScore.TotaleScore ?? 0,
-                            IsActive = totalScore.IsActive
-                        };
-            return await query.FirstOrDefaultAsync();
-        }
         public async Task<List<IndexWeightDto>> GetIndexWeight(PositionType positionType, PeriodType periodType)
         {
             var query = from indexWeight in await _kpiIndexWeightRepo.GetQueryableAsync()
@@ -364,163 +311,93 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
                         };
             return query.ToList();
         }
-        public async Task<List<HandleActualDto>> GetResultDetail(Guid userId, int year, int month)
-        {
-            var query = from totalScore in await _kpiTotalScoreRepo.GetQueryableAsync()
-                        join detailScore in await _kpiDetailScoreRepo.GetQueryableAsync()
-                        on totalScore.Id equals detailScore.TotalScoreId
-                        join task in await _kpiTaskRepo.GetQueryableAsync()
-                        on detailScore.TaskId equals task.Id
-                        join fomulaRepo in await _formulaRepo.GetQueryableAsync() on task.FormulaId equals fomulaRepo.Id
-                        join quarterCalculate in await _quarterCalculateRepo.GetQueryableAsync()
-                         on task.CalculatedId equals quarterCalculate.Id
-                        where totalScore.CreatedBy == userId
-                        && totalScore.Year == year
-                        && totalScore.Month == month
-                        && totalScore.Status == StatusKPIRequestType.Approved   
-                        select new HandleActualDto
-                        {
-                            TaskId = detailScore.TaskId,
-                            Month = detailScore.Month,
-                            Year = detailScore.Year,
-                            ActualValue = detailScore.Actual,
-                            Index = 0,
-                            CreatedBy = totalScore.CreatedBy,
-                            CreatedDate = totalScore.CreatedDate,
-                            KPIIndexType = task.KPIIndexType,
-                            KPICategory = task.KPICategory,
-                            Max = detailScore.Max,
-                            Bottom = detailScore.Bottom,
-                            Weight = detailScore.Weight,
-                            Unit = task.Unit,
-                            TargetValue = detailScore.Target,
-                            Achiement = detailScore.Achievement,
-                            Score = detailScore.Score,
-                            TaskName = task.TaskName,
-                            QuarterCalculateType = quarterCalculate.QuarterCalculateType,
-                            HeaderTitle = totalScore.Title,
-                            Description = task.TaskDescription,
-                            CalculateMethod = task.CalculatedMdethod,
-                            Formula = fomulaRepo.FormulaName,
-                            calculated = quarterCalculate.QuarterCalculated,
-                            DataSource = task.DataSource,
-                            PIC = task.PIC
-                        };
 
-            return await query.ToListAsync();
-        }
-        #region Submit KPI
+        #region SUBMIT KPI
         public async Task<bool> SubmitKPIAsync(HandleKPISubmitDto submitKPIDto, int month)
         {
             int quarter = (month + 2) / 3;
             int halfYear = month <= 6 ? 1 : 2;
 
-            var returnSave = 0;
-            var totalScoresInserted = new List<KPITotalScore>();
-            var SubmitId = Guid.NewGuid();
+            var submitId = Guid.NewGuid();
+            var userId = submitKPIDto.KPITotalScore.FirstOrDefault()?.CreatedBy ?? Guid.Empty;
+            var totalScores = new List<KPITotalScore>();
 
-            using (var transaction = await _context.Database.BeginTransactionAsync())
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
             {
-                try
-                {
-                    await InsertMonthlyAsync(submitKPIDto, SubmitId, totalScoresInserted, month);
-                    await InsertQuarterAsync(submitKPIDto, SubmitId, totalScoresInserted, quarter);
-                    await InsertHalfYearAsync(submitKPIDto, SubmitId, totalScoresInserted, halfYear);
-                    //await InsertDetailAndActualAsync(submitKPIDto, totalScoresInserted);
-                    await InsertDetailAndActualAsync(submitKPIDto, totalScoresInserted, month);
-                    await CreatedRequest(SubmitId, totalScoresInserted);
-                    await transaction.CommitAsync();
-                }
-                catch
-                {
-                    await transaction.RollbackAsync();
-                    throw;
-                }
-            }
+                await InsertKPIRequestAsync(submitKPIDto, submitId);
+                await InsertMonthlyAsync(submitKPIDto, submitId, totalScores, month);
+                await InsertQuarterAsync(submitKPIDto, submitId, totalScores, quarter);
+                await InsertHalfYearAsync(submitKPIDto, submitId, totalScores, halfYear);
+                await InsertDetailAndActualAsync(submitKPIDto, totalScores, month, userId);
+                await CreatedRequest(submitId, totalScores);
 
-            return true; // hoặc có thể return true luôn nếu bạn không dùng returnSave nữa
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return true;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
+
+        private async Task InsertKPIRequestAsync(HandleKPISubmitDto dto, Guid submitId)
+        {
+            var first = dto.HandleActual.FirstOrDefault();
+            if (first == null) throw new Exception("Không có dữ liệu KPI");
+
+            var request = new KPIRequest
+            {
+                Id = Guid.NewGuid(),
+                SubmitId = submitId,
+                Title = first.HeaderTitle ?? "",
+                RequestStatus = StatusKPIRequestType.WaitingForApproval,
+                CreatedBy = first.CreatedBy,
+                CreatedDate = DateTime.Now
+            };
+
+            await _kpiRequestRepo.InsertAsync(request);
+        }
+
         private async Task InsertMonthlyAsync(HandleKPISubmitDto dtos, Guid submitId, List<KPITotalScore> totalScores, int month)
         {
-            var groups = dtos.HandleActual
-                .Where(x => x.Month.HasValue && x.Month != 0 && x.Month == month)
-                .GroupBy(x => new { x.Month, x.Year })
-                .ToList();
+            var items = dtos.HandleActual.Where(x => x.Month == month).ToList();
+            if (!items.Any()) return;
 
-            var kpiScore = dtos.HandleActual.Where(x => x.Month != null).Sum(x => x.KPIScore ?? 0);
-            var keyTaskScore = dtos.HandleActual.Where(x => x.Month != null).Sum(x => x.KeyTaskScore ?? 0);
-            var omgScore = dtos.HandleActual.Where(x => x.Month != null).Sum(x => x.OMGScore ?? 0);
+            var dto = dtos.KPITotalScore.FirstOrDefault(x => x.Month == month);
 
-            foreach (var group in groups)
-            {
-                var dto = group.First();
-
-                var request = new KPIRequest
-                {
-                    Id = Guid.NewGuid(),
-                    SubmitId = submitId,
-                    Title = dto.HeaderTitle ?? "",
-                    RequestStatus = StatusKPIRequestType.WaitingForApproval,
-                    CreatedBy = dto.CreatedBy,
-                    CreatedDate = DateTime.Now
-                };
-                await _kpiRequestRepo.InsertAsync(request);
-
-                var score = new KPITotalScore
-                {
-                    Id = Guid.NewGuid(),
-                    SubmitId = submitId,
-                    KeyTaskScore = keyTaskScore,
-                    KPIScore = kpiScore,
-                    OMGScore = omgScore,
-                    TotaleScore = keyTaskScore + kpiScore + omgScore,
-                    Status = StatusKPIRequestType.WaitingForApproval,
-                    Month = dto.Month.Value,
-                    Year = dto.Year,
-                    CreatedBy = dto.CreatedBy,
-                    CreatedDate = DateTime.Now,
-                    IsActive = true,
-                    Title = dto.HeaderTitle ?? "",
-                    kPITotalScoreType = KPITotalScoreType.Staff
-                };
-                await _kpiTotalScoreRepo.InsertAsync(score);
-                await _kpiTotalScoreRepo.SaveChangesAsync();
-                totalScores.Add(score);
-            }
-        }
-        private async Task InsertQuarterAsync(HandleKPISubmitDto dtos, Guid submitId, List<KPITotalScore> totalScores, int quarter)
-        {
-            var dto = dtos.KPITotalScore.FirstOrDefault(x => x.Quarter.HasValue && x.Quarter > 0 && x.Quarter == quarter);
-            if (dto == null) return;
-
-            var kpiScore = dto.KPIScore;
-            var keyTaskScore = dto.KeyTaskScore;
-            var omgScore = dto.OMGScore;
             var score = new KPITotalScore
             {
                 Id = Guid.NewGuid(),
                 SubmitId = submitId,
-                KeyTaskScore = keyTaskScore,
-                KPIScore = kpiScore,
-                OMGScore = omgScore,
-                TotaleScore = dto.TotaleScore,
+                KeyTaskScore = items.Sum(x => x.KeyTaskScore ?? 0),
+                KPIScore = items.Sum(x => x.KPIScore ?? 0),
+                OMGScore = items.Sum(x => x.OMGScore ?? 0),
+                TotaleScore = dto?.TotaleScore ?? 0,
+                TotalActualScore = dto?.TotalActualScore ?? 0,
                 Status = StatusKPIRequestType.WaitingForApproval,
-                Quarter = dto.Quarter.Value,
-                Year = dto.Year,
-                CreatedBy = dto.CreatedBy,
+                Month = month,
+                Year = items.First().Year,
+                CreatedBy = items.First().CreatedBy,
                 CreatedDate = DateTime.Now,
                 IsActive = true,
-                Title = dto.Title ?? "",
+                Title = items.First().HeaderTitle ?? "",
                 kPITotalScoreType = KPITotalScoreType.Staff
             };
+
             await _kpiTotalScoreRepo.InsertAsync(score);
-            await _kpiTotalScoreRepo.SaveChangesAsync();
             totalScores.Add(score);
         }
-        private async Task InsertHalfYearAsync(HandleKPISubmitDto dtos, Guid submitId, List<KPITotalScore> totalScores, int haftyear)
+
+        private async Task InsertQuarterAsync(HandleKPISubmitDto dtos, Guid submitId, List<KPITotalScore> totalScores, int quarter)
         {
-            var dto = dtos.KPITotalScore.FirstOrDefault(x => x.HalfYear.HasValue && x.HalfYear > 0 && x.HalfYear == haftyear);
+            var dto = dtos.KPITotalScore.FirstOrDefault(x => x.Quarter == quarter);
             if (dto == null) return;
+
             var score = new KPITotalScore
             {
                 Id = Guid.NewGuid(),
@@ -529,8 +406,9 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
                 KPIScore = dto.KPIScore,
                 OMGScore = dto.OMGScore,
                 TotaleScore = dto.TotaleScore,
+                TotalActualScore = dto.TotalActualScore,
                 Status = StatusKPIRequestType.WaitingForApproval,
-                HalfYear = dto.HalfYear.Value,
+                Quarter = quarter,
                 Year = dto.Year,
                 CreatedBy = dto.CreatedBy,
                 CreatedDate = DateTime.Now,
@@ -538,230 +416,134 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
                 Title = dto.Title ?? "",
                 kPITotalScoreType = KPITotalScoreType.Staff
             };
+
             await _kpiTotalScoreRepo.InsertAsync(score);
-            await _kpiTotalScoreRepo.SaveChangesAsync();
             totalScores.Add(score);
         }
-        //private async Task InsertDetailAndActualAsync(HandleKPISubmitDto dtos, List<KPITotalScore> totalScores)
-        //{
-        //    var monthlyItems = dtos.HandleActual.Where(x => x.Month.HasValue).ToList();
 
-        //    foreach (var item in monthlyItems)
-        //    {
-        //        var totalScore = totalScores.FirstOrDefault(ts =>
-        //            ts.Month == item.Month && ts.Year == item.Year);
-
-        //        if (totalScore == null)
-        //            continue;
-
-        //        var detail = new KPIDetailScore
-        //        {
-        //            Id = Guid.NewGuid(),
-        //            TotalScoreId = totalScore.Id,
-        //            TaskId = item.TaskId,
-        //            Max = item.Max ?? 0,
-        //            Bottom = item.Bottom ?? 0,
-        //            Weight = item.Weight ?? 0,
-        //            Target = item.TargetValue ?? 0,
-        //            Achievement = item.Achiement ?? 0,
-        //            Actual = item.ActualValue ?? 0,
-        //            Score = item.Score ?? 0,
-        //            Month = item.Month,
-        //            Quarter = item.Quarter,
-        //            HalfYear = item.HalfYear,
-        //            Year = item.Year,
-        //            CreatedDate = DateTime.Now,
-        //            IsActive = true
-        //        };
-        //        await _kpiDetailScoreRepo.InsertAsync(detail);
-        //        await _kpiDetailScoreRepo.SaveChangesAsync();
-        //        var actual = new KPIMonthlyActual
-        //        {
-        //            Id = Guid.NewGuid(),
-        //            KPITargetId = item.TargetId,
-        //            KPITotalScoreId = totalScore.Id,
-        //            Month = item.Month,
-        //            Year = item.Year,
-        //            ActualValue = item.ActualValue,
-        //            CreatedDate = DateTime.Now,
-        //            CreatedBy = item.CreatedBy,
-        //            UpdatedDate = DateTime.Now,
-        //            UpdatedBy = item.CreatedBy
-        //        };
-        //        await _KPIMonthlyActualRepo.InsertAsync(actual);
-        //        await _KPIMonthlyActualRepo.SaveChangesAsync();
-        //    }
-        //}
-
-        private async Task InsertDetailAndActualAsync(
-            HandleKPISubmitDto dtos,
-            List<KPITotalScore> totalScores,
-            int submitMonth)
+        private async Task InsertHalfYearAsync(HandleKPISubmitDto dtos, Guid submitId, List<KPITotalScore> totalScores, int halfYear)
         {
-            int quarter = (submitMonth + 2) / 3;
-            int halfYear = submitMonth <= 6 ? 1 : 2;
+            var dto = dtos.KPITotalScore.FirstOrDefault(x => x.HalfYear == halfYear);
+            if (dto == null) return;
 
-            // 👉 LẤY TASK CỦA THÁNG ĐANG SUBMIT
-            var currentMonthItems = dtos.HandleActual
-                .Where(x => x.Month == submitMonth)
-                .ToList();
-
-            // =======================
-            // 1️⃣ LƯU THÁNG
-            // =======================
-            foreach (var item in currentMonthItems)
+            var score = new KPITotalScore
             {
+                Id = Guid.NewGuid(),
+                SubmitId = submitId,
+                KeyTaskScore = dto.KeyTaskScore,
+                KPIScore = dto.KPIScore,
+                OMGScore = dto.OMGScore,
+                TotaleScore = dto.TotaleScore,
+                TotalActualScore = dto.TotalActualScore,
+                Status = StatusKPIRequestType.WaitingForApproval,
+                HalfYear = halfYear,
+                Year = dto.Year,
+                CreatedBy = dto.CreatedBy,
+                CreatedDate = DateTime.Now,
+                IsActive = true,
+                Title = dto.Title ?? "",
+                kPITotalScoreType = KPITotalScoreType.Staff
+            };
+
+            await _kpiTotalScoreRepo.InsertAsync(score);
+            totalScores.Add(score);
+        }
+
+        private async Task InsertDetailAndActualAsync(HandleKPISubmitDto dtos, List<KPITotalScore> totalScores, int submitMonth, Guid userId)
+        {
+            var allTaskIds = dtos.HandleActual.Select(x => x.TaskId).Distinct().ToList();
+
+            var userTasks = await _userTaskepo.Query()
+                .Where(x => allTaskIds.Contains(x.KPITaskId) && x.UserId == userId)
+                .ToDictionaryAsync(x => x.KPITaskId, x => x);
+
+            var targets = await _kpiTargeRepo.GetAllAsync();
+
+            foreach (var item in dtos.HandleActual)
+            {
+                if (!userTasks.TryGetValue(item.TaskId, out var userTask))
+                    continue;
+
+                var targetId = targets
+                    .Where(x => x.UserTaskId == userTask.Id && x.Year == item.Year)
+                    .Select(x => x.Id)
+                    .FirstOrDefault();
+
                 var totalScore = totalScores.FirstOrDefault(x =>
-                    x.Month == submitMonth && x.Year == item.Year);
+                    x.Year == item.Year &&
+                    (
+                        (item.Month != null && x.Month == item.Month) ||
+                        (item.Quarter != null && x.Quarter == item.Quarter) ||
+                        (item.HalfYear != null && x.HalfYear == item.HalfYear)
+                    ));
 
                 if (totalScore == null) continue;
 
-                await InsertDetailAndActual(item, totalScore);
-            }
-
-            // =======================
-            // 2️⃣ LƯU QUÝ (nếu cuối quý)
-            // =======================
-            if (submitMonth % 3 == 0)
-            {
-                var quarterItems = dtos.HandleActual
-                    .Where(x => x.Quarter == quarter && x.Year == currentMonthItems.First().Year)
-                    .ToList();
-
-                foreach (var item in quarterItems)
+                var detail = new KPIDetailScore
                 {
-                    var totalScore = totalScores.FirstOrDefault(x =>
-                        x.Quarter == quarter && x.Year == item.Year);
+                    Id = Guid.NewGuid(),
+                    TotalScoreId = totalScore.Id,
+                    TaskId = item.TaskId,
+                    Max = item.Max ?? 0,
+                    Bottom = item.Bottom ?? 0,
+                    Weight = item.Weight ?? 0,
+                    Target = item.TargetValue ?? 0,
+                    Achievement = item.Achiement ?? 0,
+                    Actual = item.ActualValue ?? 0,
+                    Score = item.Score ?? 0,
+                    Month = item.Month,
+                    Quarter = item.Quarter,
+                    HalfYear = item.HalfYear,
+                    Year = item.Year,
+                    CreatedDate = DateTime.Now,
+                    IsActive = true
+                };
 
-                    if (totalScore == null) continue;
-
-                    await InsertDetailAndActual(item, totalScore);
-                }
-            }
-
-            // =======================
-            // 3️⃣ LƯU HALF YEAR (nếu cuối 6 tháng)
-            // =======================
-            if (submitMonth == 6 || submitMonth == 12)
-            {
-                var halfItems = dtos.HandleActual
-                    .Where(x => x.HalfYear == halfYear && x.Year == currentMonthItems.First().Year)
-                    .ToList();
-
-                foreach (var item in halfItems)
-                {
-                    var totalScore = totalScores.FirstOrDefault(x =>
-                        x.HalfYear == halfYear && x.Year == item.Year);
-
-                    if (totalScore == null) continue;
-
-                    await InsertDetailAndActual(item, totalScore);
-                }
-            }
-
-            // =======================
-            // 4️⃣ LƯU YEAR (nếu tháng 12)
-            // =======================
-            if (submitMonth == 12)
-            {
-                var yearItems = dtos.HandleActual
-                    .Where(x => x.Year == currentMonthItems.First().Year
-                             && !x.Month.HasValue
-                             && !x.Quarter.HasValue
-                             && !x.HalfYear.HasValue)
-                    .ToList();
-
-                foreach (var item in yearItems)
-                {
-                    var totalScore = totalScores.FirstOrDefault(x =>
-                        x.Year == item.Year
-                        && !x.Month.HasValue
-                        && !x.Quarter.HasValue
-                        && !x.HalfYear.HasValue);
-
-                    if (totalScore == null) continue;
-
-                    await InsertDetailAndActual(item, totalScore);
-                }
-            }
-        }
-        private async Task InsertDetailAndActual(
-                HandleActualDto item,
-                KPITotalScore totalScore)
-        {
-            var detail = new KPIDetailScore
-            {
-                Id = Guid.NewGuid(),
-                TotalScoreId = totalScore.Id,
-                TaskId = item.TaskId,
-                Max = item.Max ?? 0,
-                Bottom = item.Bottom ?? 0,
-                Weight = item.Weight ?? 0,
-                Target = item.TargetValue ?? 0,
-                Achievement = item.Achiement ?? 0,
-                Actual = item.ActualValue ?? 0,
-                Score = item.Score ?? 0,
-                Month = item.Month,
-                Quarter = item.Quarter,
-                HalfYear = item.HalfYear,
-                Year = item.Year,
-                CreatedDate = DateTime.Now,
-                IsActive = true
-            };
-
-            await _kpiDetailScoreRepo.InsertAsync(detail);
-            await _kpiDetailScoreRepo.SaveChangesAsync();
-
-            if (item.Month.HasValue)
-            {
                 var actual = new KPIMonthlyActual
                 {
                     Id = Guid.NewGuid(),
-                    KPITargetId = item.TargetId,
+                    KPITargetId = targetId,
                     KPITotalScoreId = totalScore.Id,
                     Month = item.Month,
+                    Quarter = item.Quarter,
+                    HalfYear = item.HalfYear,
                     Year = item.Year,
                     ActualValue = item.ActualValue,
                     CreatedDate = DateTime.Now,
-                    CreatedBy = item.CreatedBy,
-                    UpdatedDate = DateTime.Now,
-                    UpdatedBy = item.CreatedBy
+                    CreatedBy = userId,
+                    UpdatedDate = DateTime.Now
                 };
 
+                await _kpiDetailScoreRepo.InsertAsync(detail);
                 await _KPIMonthlyActualRepo.InsertAsync(actual);
-                await _KPIMonthlyActualRepo.SaveChangesAsync();
             }
         }
-
 
         private async Task CreatedRequest(Guid submitId, List<KPITotalScore> totalScores)
         {
             var kpi = totalScores.FirstOrDefault(x => x.Month != null);
-            if (kpi == null)
-                throw new Exception("Không tìm thấy KPI tương ứng.");
-            var user = await _userRepo.FirstOrDefaultAsync(u => u.Id == kpi.CreatedBy);
-            if (user == null)
-                throw new Exception("Không tìm thấy thông tin người tạo KPI.");
+            if (kpi == null) throw new Exception("Không tìm thấy KPI");
 
-            if (user.PositionId == null)
-                throw new Exception("Người tạo KPI chưa được gán vị trí (Position).");
+            var user = await _userRepo.FirstOrDefaultAsync(x => x.Id == kpi.CreatedBy);
+            if (user == null) throw new Exception("Không tìm thấy user");
 
-            var flowApproval = user.FlowApproval;
-            var approvalFlows = await _approvalFlowRepo.GetAllAsync();
-            var filteredFlows = approvalFlows
-                .Where(f => f.FlowApproval == flowApproval && f.SystemType == SystemType.KPI)
+            var flows = await _approvalFlowRepo.Query()
+                .Where(f => f.FlowApproval == user.FlowApproval && f.SystemType == SystemType.KPI)
                 .OrderBy(f => f.CurrentStep)
-                .ToList();
+                .ToListAsync();
 
-            if (!filteredFlows.Any())
-                throw new Exception("Không tìm thấy flow phê duyệt cho vị trí này.");
+            var tasks = new List<RequestApprovalTask>();
 
-            var requestTasks = new List<RequestApprovalTask>();
-
-            foreach (var flow in filteredFlows)
+            foreach (var flow in flows)
             {
+                // =========================
+                // CASE 1: ASSIGNEE
+                // =========================
                 if (flow.ApprovalSettingType == ApprovalSettingType.Assignee)
                 {
+                    if (flow.DecisionMaker == null)
+                        throw new Exception($"Flow step {flow.CurrentStep} chưa có DecisionMaker.");
+
                     var task = new RequestApprovalTask
                     {
                         Id = Guid.NewGuid(),
@@ -782,37 +564,43 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
                         CreatedDate = DateTime.Now
                     };
 
-                    requestTasks.Add(task);
+                    tasks.Add(task);
                 }
+
+                // =========================
+                // CASE 2: DIRECT MANAGER
+                // =========================
                 else if (flow.ApprovalSettingType == ApprovalSettingType.DirectManagement)
                 {
                     if (user.ManagerId == null)
-                        throw new Exception("Người tạo KPI chưa có Manager được gán.");
+                        throw new Exception("User chưa có Manager.");
 
-                    var directRequest = new RequestApprovalTask
+                    var task = new RequestApprovalTask
                     {
                         Id = Guid.NewGuid(),
                         SubmitId = submitId,
                         Title = kpi.Title,
                         RequesterId = kpi.CreatedBy,
-                        StatusType = EApprovalStatusType.InReview,
+                        StatusType = EApprovalStatusType.InReview, // luôn review ngay
                         ApprovedBy = null,
                         ApprovalDate = null,
                         RejectBy = null,
                         RejectDate = null,
                         Comment = null,
-                        Step = 1,
+                        Step = 1, // luôn step 1
                         DecisionMaker = user.ManagerId,
                         Month = kpi.Month ?? 0,
                         CreatedDate = DateTime.Now
                     };
-                    requestTasks.Add(directRequest);
+
+                    tasks.Add(task);
                 }
             }
 
-            await _requestApprovalTaskRepo.InsertRangeAsync(requestTasks);
-            await _requestApprovalTaskRepo.SaveChangesAsync();
+            await _requestApprovalTaskRepo.InsertRangeAsync(tasks);
         }
+
+        #endregion
         public async Task<List<ViewKPITotalScoreDto>> GetKPITotalScoreByUserId(Guid userId)
         {
             var query = from totalScore in await _kpiTotalScoreRepo.GetQueryableAsync()
@@ -951,102 +739,6 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
 
             return result;
         }
-        //public async Task<ViewDetailApprovalKPI> GetDetailKPIBySubmitId(Guid submitId)
-        //{
-        //    var result = new ViewDetailApprovalKPI();
-
-        //    // 1. Lấy tất cả TotalScore theo submitId, full (month/quarter/half)
-        //    var totalScores = (await _kpiTotalScoreRepo.GetAllAsync())
-        //                       .Where(ts => ts.SubmitId == submitId && ts.IsActive)
-        //                       .OrderBy(ts => ts.CreatedDate) // cũ nhất lên trên
-        //                       .ToList();
-
-        //    if (!totalScores.Any())
-        //        return result;
-
-        //    var totalScoreIds = totalScores.Select(ts => ts.Id).ToList();
-
-        //    // 2. Lấy tất cả DetailScore nhưng chỉ cho các TotalScore có Month != null
-        //    var detailScoresAll = (await _kpiDetailScoreRepo.GetAllAsync())
-        //                        .Where(d => totalScoreIds.Contains(d.TotalScoreId) && d.IsActive)
-        //                        .ToList();
-
-        //    // Lọc TotalScore có Month != null để lấy DetailScore
-        //    //var totalScoresWithMonth = totalScores.Where(ts => ts.Month.HasValue).Select(ts => ts.Id).ToList();
-        //    var totalScoresWithMonth = totalScores.Select(ts => ts.Id).ToList();
-        //    var detailScores = detailScoresAll.Where(d => totalScoresWithMonth.Contains(d.TotalScoreId)).ToList();
-
-        //    // 3. Lấy tất cả task và owner liên quan cho DetailScore
-        //    var taskIds = detailScores.Select(d => d.TaskId).Distinct().ToList();
-        //    var tasks = (await _kpiTaskRepo.GetAllAsync()).Where(t => taskIds.Contains(t.Id)).ToList();
-
-
-        //    var formulaIds = tasks.Select(t => t.FormulaId).Distinct().ToList();
-        //    var formulas = (await _formulaRepo.GetAllAsync()).Where(f => formulaIds.Contains(f.Id)).ToList();
-
-        //    // 4. Map TotalScore full
-        //    foreach (var ts in totalScores)
-        //    {
-        //        result.TotalScore.Add(new TotalScoreDto
-        //        {
-        //            Id = ts.Id,
-        //            Title = ts.Title,
-        //            KPIScore = ts.KPIScore,
-        //            KeyTaskScore = ts.KeyTaskScore,
-        //            OMGScore = ts.OMGScore,
-        //            CreatedBy = ts.CreatedBy,
-        //            Month = ts.Month,
-        //            Quarter = ts.Quarter,
-        //            HalfYear = ts.HalfYear,
-        //            Year = ts.Year,
-        //            CreatedDate = ts.CreatedDate,
-        //            Status = ts.Status,
-        //            TotaleScore = ts.TotaleScore ?? 0,
-        //            IsActive = ts.IsActive
-        //        });
-        //    }
-
-        //    // 5. Map DetailScore chỉ cho TotalScore có Month != null
-        //    foreach (var d in detailScores)
-        //    {
-        //        var task = tasks.FirstOrDefault(t => t.Id == d.TaskId);
-        //        if (task == null) continue;
-
-        //        var formula = formulas.First(f => f.Id == task.FormulaId);
-
-        //        result.DetailScore.Add(new DetailScoreDto
-        //        {
-        //            TotalScoreId = d.TotalScoreId,
-        //            TaskId = d.TaskId,
-        //            Month = d.Month,
-        //            Quarter = d.Quarter,
-        //            HalfYear = d.HalfYear,
-        //            Year = d.Year,
-        //            ActualValue = d.Actual,
-        //            CreatedDate = d.CreatedDate,
-        //            HeaderTitle = task.TaskName,
-        //            TaskName = task.TaskName,
-        //            Description = task.TaskDescription,
-        //            CalculateMethod = task.CalculatedMdethod,
-        //            KPIIndexType = task.KPIIndexType,
-        //            KPICategory = task.KPICategory,
-        //            Max = task.Max,
-        //            Bottom = task.Bottom,
-        //            Weight = d.Weight,
-        //            Unit = task.Unit,
-        //            PIC = task.PIC,
-        //            DataSource = task.DataSource,
-        //            Formula = formula?.FormulaName,
-        //            TargetValue = d.Target,
-        //            Achiement = d.Achievement,
-        //            Score = d.Score,
-        //            KPIFormulaType = formula.KPIFormulaType,
-        //            IndexWeight = d.Weight
-        //        });
-        //    }
-
-        //    return result;
-        //}
         public async Task<ViewDetailApprovalKPI> GetDetailKPIBySubmitId(Guid submitId)
         {
             var result = new ViewDetailApprovalKPI();
@@ -1153,99 +845,7 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
 
             return result;
         }
-
-        #endregion
-        #region Approval or Rejected
-        //public async Task<bool> HandleKpiForApproval(ApprovalInfo approvalInfo)
-        //{
-        //    var currentTask = await _requestApprovalTaskRepo
-        //        .FirstOrDefaultAsync(x => x.Id == approvalInfo.RequestTaskId && x.SubmitId == approvalInfo.SubmitId);
-
-        //    if (currentTask == null)
-        //        return false;
-
-        //    if (approvalInfo.IsApproved)
-        //    {
-        //        currentTask.StatusType = EApprovalStatusType.Approval;
-        //        currentTask.ApprovedBy = approvalInfo.DecisionMaker;
-        //        currentTask.ApprovalDate = DateTime.Now;
-        //        currentTask.Comment = approvalInfo.Comments;
-        //    }
-        //    else
-        //    {
-        //        currentTask.StatusType = EApprovalStatusType.Rejected;
-        //        currentTask.RejectBy = approvalInfo.DecisionMaker;
-        //        currentTask.RejectDate = DateTime.Now;
-        //        currentTask.Comment = approvalInfo.Comments;
-        //    }
-        //    await _requestApprovalTaskRepo.SaveChangesAsync();
-        //    var allTasks = await _requestApprovalTaskRepo.GetListAsync(x => x.SubmitId == approvalInfo.SubmitId);
-        //    if (allTasks.Any(x => x.StatusType == EApprovalStatusType.Rejected))
-        //    {
-        //        var kpiTotalList = await _kpiTotalScoreRepo.GetListAsync(x => x.SubmitId == approvalInfo.SubmitId);
-        //        if (kpiTotalList != null && kpiTotalList.Any())
-        //        {
-        //            foreach (var kpiTotal in kpiTotalList)
-        //            {
-        //                kpiTotal.Status = StatusKPIRequestType.Rejected;
-        //            }
-
-        //            await _kpiTotalScoreRepo.SaveChangesAsync();
-        //        }
-        //        var kpiRequest = await _kpiRequestRepo.FirstOrDefaultAsync(x => x.SubmitId == approvalInfo.SubmitId);
-        //        if (kpiRequest != null)
-        //        {
-        //            kpiRequest.RequestStatus = StatusKPIRequestType.Rejected;
-        //            kpiRequest.RejectDate = DateTime.Now;
-        //            var lastStepTask = allTasks.OrderByDescending(x => x.Step).FirstOrDefault();
-        //            if (lastStepTask != null)
-        //            {
-        //                kpiRequest.RejectBy = lastStepTask.DecisionMaker;
-        //            }
-        //        }
-        //        await _kpiRequestRepo.SaveChangesAsync();
-        //        return true;
-        //    }
-        //    if (approvalInfo.IsApproved)
-        //    {
-        //        var nextTask = allTasks
-        //            .FirstOrDefault(x => x.Step == currentTask.Step + 1 && x.StatusType == EApprovalStatusType.Pending);
-
-        //        if (nextTask != null)
-        //        {
-        //            nextTask.StatusType = EApprovalStatusType.InReview; 
-        //            await _requestApprovalTaskRepo.SaveChangesAsync();
-        //        }
-        //    }
-        //    if (allTasks.All(x => x.StatusType == EApprovalStatusType.Approval))
-        //    {
-        //        var kpiTotalList = await _kpiTotalScoreRepo.GetListAsync(x => x.SubmitId == approvalInfo.SubmitId);
-        //        if (kpiTotalList != null && kpiTotalList.Any())
-        //        {
-        //            foreach (var kpiTotal in kpiTotalList)
-        //            {
-        //                kpiTotal.Status = StatusKPIRequestType.Approval;
-        //            }
-
-        //            await _kpiTotalScoreRepo.SaveChangesAsync();
-        //        }
-        //        var kpiRequest = await _kpiRequestRepo.FirstOrDefaultAsync(x => x.SubmitId == approvalInfo.SubmitId);
-        //        if (kpiRequest != null)
-        //        {
-        //            kpiRequest.RequestStatus = StatusKPIRequestType.Approval;
-        //            kpiRequest.ApprovalDate = DateTime.Now;
-        //            var lastStepTask = allTasks.OrderByDescending(x => x.Step).FirstOrDefault();
-        //            if (lastStepTask != null)
-        //            {
-        //                kpiRequest.ApprovalBy = lastStepTask.DecisionMaker;
-        //            }
-
-        //        }    
-
-        //        await _kpiRequestRepo.SaveChangesAsync();
-        //    }
-        //    return true;
-        //}
+        #region APPROVAL AND REJECT
         public async Task<bool> HandleKpiForApproval(ApprovalInfo approvalInfo)
         {
             var currentTask = await _requestApprovalTaskRepo
@@ -1277,7 +877,6 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
 
             return true;
         }
-
         private async Task UpdateCurrentTask(RequestApprovalTask task, ApprovalInfo approvalInfo)
         {
             if (approvalInfo.IsApproved)
@@ -1295,7 +894,6 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
             task.Comment = approvalInfo.Comments;
             await _requestApprovalTaskRepo.SaveChangesAsync();
         }
-
         private async Task HandleRejectedTasks(List<RequestApprovalTask> allTasks, List<KPITotalScore> kpiTotalList, KPIRequest kpiRequest)
         {
             foreach (var kpiTotal in kpiTotalList)
@@ -1318,7 +916,6 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
                 await _kpiRequestRepo.SaveChangesAsync();
             }
         }
-
         private async Task MoveNextStep(List<RequestApprovalTask> allTasks, RequestApprovalTask currentTask)
         {
             var nextTask = allTasks
@@ -1330,7 +927,6 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
                 await _requestApprovalTaskRepo.SaveChangesAsync();
             }
         }
-
         private async Task HandleApprovedTasks(List<RequestApprovalTask> allTasks, List<KPITotalScore> kpiTotalList, KPIRequest kpiRequest, ApprovalInfo approvalInfo)
         {
             foreach (var kpiTotal in kpiTotalList)
@@ -1351,7 +947,7 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
             }
         }
         #endregion
-        #region Result KPI
+        #region RESULT KPI
         public async Task<List<ViewResultKpiDto>> ResultAllKpi()
         {
             var query = from request in await _kpiRequestRepo.GetQueryableAsync()
@@ -1408,7 +1004,7 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
             return new List<ViewResultKpiDto>();
         }
         #endregion
-        #region CalculateQuarterPoints
+        #region CALCULATE POINT
         public async Task<bool> CalculateQuarterPoint(List<CalculateQuarterPointDto> calculateQuarterPoint)
         {
             var returnSave = 0;
@@ -1500,6 +1096,155 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
             await _kpiTotalScoreRepo.SaveChangesAsync();
         }
         #endregion
+        #region GET MONTH RESULT
+        public async Task<List<KPITotalScoreDto>> GetKPITotalScoreByUserId(Guid userId, int year, int month)
+        {
+            var query = from totalScore in await _kpiTotalScoreRepo.GetQueryableAsync()
+                        join request in await _kpiRequestRepo.GetQueryableAsync()
+                        on totalScore.SubmitId equals request.SubmitId
+                        where request.RequestStatus == StatusKPIRequestType.Approved
+                        && totalScore.Status == StatusKPIRequestType.Approved
+                        && totalScore.CreatedBy == userId
+                        && totalScore.Year == year
+                        && totalScore.Month == month
+                        select new KPITotalScoreDto
+                        {
+                            KPIScore = totalScore.KPIScore,
+                            KeyTaskScore = totalScore.KeyTaskScore,
+                            OMGScore = totalScore.OMGScore,
+                            CreatedBy = totalScore.CreatedBy,
+                            Month = totalScore.Month,
+                            Quarter = totalScore.Quarter,
+                            HalfYear = totalScore.HalfYear,
+                            Year = totalScore.Year,
+                            CreatedDate = totalScore.CreatedDate,
+                            Status = request.RequestStatus,
+                            TotaleScore = totalScore.TotaleScore ?? 0,
+                            IsActive = totalScore.IsActive,
+                            Title = totalScore.Title
+                        };
+            return await query.ToListAsync();
+        }
+        public async Task<List<HandleActualDto>> GetResultDetail(Guid userId, int year, int month)
+        {
+            var query = from totalScore in await _kpiTotalScoreRepo.GetQueryableAsync()
+                        join detailScore in await _kpiDetailScoreRepo.GetQueryableAsync()
+                        on totalScore.Id equals detailScore.TotalScoreId
+                        join task in await _kpiTaskRepo.GetQueryableAsync()
+                        on detailScore.TaskId equals task.Id
+                        join fomulaRepo in await _formulaRepo.GetQueryableAsync() on task.FormulaId equals fomulaRepo.Id
+                        join quarterCalculate in await _quarterCalculateRepo.GetQueryableAsync()
+                         on task.CalculatedId equals quarterCalculate.Id
+                        where totalScore.CreatedBy == userId
+                        && totalScore.Year == year
+                        && totalScore.Month == month
+                        && totalScore.Status == StatusKPIRequestType.Approved
+                        select new HandleActualDto
+                        {
+                            TaskId = detailScore.TaskId,
+                            Month = detailScore.Month,
+                            Year = detailScore.Year,
+                            ActualValue = detailScore.Actual,
+                            Index = 0,
+                            CreatedBy = totalScore.CreatedBy,
+                            CreatedDate = totalScore.CreatedDate,
+                            KPIIndexType = task.KPIIndexType,
+                            KPICategory = task.KPICategory,
+                            Max = detailScore.Max,
+                            Bottom = detailScore.Bottom,
+                            Weight = detailScore.Weight,
+                            Unit = task.Unit,
+                            TargetValue = detailScore.Target,
+                            Achiement = detailScore.Achievement,
+                            Score = detailScore.Score,
+                            TaskName = task.TaskName,
+                            QuarterCalculateType = quarterCalculate.QuarterCalculateType,
+                            HeaderTitle = totalScore.Title,
+                            Description = task.TaskDescription,
+                            CalculateMethod = task.CalculatedMdethod,
+                            Formula = fomulaRepo.FormulaName,
+                            calculated = quarterCalculate.QuarterCalculated,
+                            DataSource = task.DataSource,
+                            PIC = task.PIC
+                        };
 
+            return await query.ToListAsync();
+        }
+        #endregion
+        #region GET QUARTER RESULT
+        public async Task<List<HandleActualDto>> GetResultDetailByQuarter(Guid userId, int year, int quater)
+        {
+            var query = from totalScore in await _kpiTotalScoreRepo.GetQueryableAsync()
+                        join detailScore in await _kpiDetailScoreRepo.GetQueryableAsync()
+                        on totalScore.Id equals detailScore.TotalScoreId
+                        join task in await _kpiTaskRepo.GetQueryableAsync()
+                        on detailScore.TaskId equals task.Id
+                        join fomulaRepo in await _formulaRepo.GetQueryableAsync() on task.FormulaId equals fomulaRepo.Id
+                        join quarterCalculate in await _quarterCalculateRepo.GetQueryableAsync()
+                         on task.CalculatedId equals quarterCalculate.Id
+                        where totalScore.CreatedBy == userId
+                        && totalScore.Year == year
+                        && totalScore.Quarter == quater
+                        && totalScore.Status == StatusKPIRequestType.Approved
+                        select new HandleActualDto
+                        {
+                            TaskId = detailScore.TaskId,
+                            Month = detailScore.Month,
+                            Year = detailScore.Year,
+                            ActualValue = detailScore.Actual,
+                            Index = 0,
+                            CreatedBy = totalScore.CreatedBy,
+                            CreatedDate = totalScore.CreatedDate,
+                            KPIIndexType = task.KPIIndexType,
+                            KPICategory = task.KPICategory,
+                            Max = detailScore.Max,
+                            Bottom = detailScore.Bottom,
+                            Weight = detailScore.Weight,
+                            Unit = task.Unit,
+                            TargetValue = detailScore.Target,
+                            Achiement = detailScore.Achievement,
+                            Score = detailScore.Score,
+                            TaskName = task.TaskName,
+                            QuarterCalculateType = quarterCalculate.QuarterCalculateType,
+                            HeaderTitle = totalScore.Title,
+                            Description = task.TaskDescription,
+                            CalculateMethod = task.CalculatedMdethod,
+                            Formula = fomulaRepo.FormulaName,
+                            calculated = quarterCalculate.QuarterCalculated,
+                            DataSource = task.DataSource,
+                            PIC = task.PIC
+                        };
+
+            return await query.ToListAsync();
+        }
+
+        public async Task<KPITotalScoreDto> GetResultTotalByQuarter(Guid userId, int year, int quarter)
+        {
+            var totalScores = await _kpiTotalScoreRepo.GetQueryableAsync();
+            var requests = await _kpiRequestRepo.GetQueryableAsync();
+            var query = from totalScore in totalScores
+                        join request in requests on totalScore.SubmitId equals request.SubmitId
+                        where request.RequestStatus == StatusKPIRequestType.Approved
+                              && totalScore.CreatedBy == userId
+                              && totalScore.Year == year
+                              && totalScore.Quarter == quarter
+                        select new KPITotalScoreDto
+                        {
+                            KPIScore = totalScore.KPIScore,
+                            KeyTaskScore = totalScore.KeyTaskScore,
+                            OMGScore = totalScore.OMGScore,
+                            CreatedBy = totalScore.CreatedBy,
+                            Month = totalScore.Month,
+                            Quarter = totalScore.Quarter,
+                            HalfYear = totalScore.HalfYear,
+                            Year = totalScore.Year,
+                            CreatedDate = totalScore.CreatedDate,
+                            Status = request.RequestStatus,
+                            TotaleScore = totalScore.TotaleScore ?? 0,
+                            IsActive = totalScore.IsActive
+                        };
+            return await query.FirstOrDefaultAsync();
+        }
+        #endregion
     }
 }

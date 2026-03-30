@@ -8,6 +8,7 @@ using AquaSolution.Shared.KPI.IndexWeight;
 using AquaSolution.Shared.KPI.KPISubmit;
 using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.WebUtilities;
 using NPOI.SS.Formula.Functions;
 using System.Net.Http.Json;
 
@@ -144,12 +145,13 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
 
                 if (month == 3 || month == 6 || month == 9 || month == 12)
                 {
+
                     await LoadAndCalculateQuarterAsync(HandleKPISubmitDto, month);
                 }
 
                 if (month == 6 || month == 12)
                 {
-                    await CalculateHalfYearScoresFromQuarters(HandleKPISubmitDto, month);
+                    await LoadAndCalculateHalfYearAsync(HandleKPISubmitDto, month);
                 }
                 isCalculating = false;
             }
@@ -162,13 +164,16 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
             await InvokeAsync(StateHasChanged);
         }
 
-
         private async Task SaveAsync()
         {
             HandleButtonClicked = true;
 
             var confirm = await MessageBox.Confirm(Modal, "Are you sure you want to submit?");
-            if (!confirm) return;
+            if (!confirm)
+            {
+                HandleButtonClicked = false;
+                return;
+            }    
 
             var response = await Http.PostAsJsonAsync($"api/kpisubmit/create/{KPIPeriodSubmit.Month}", HandleKPISubmitDto);
 
@@ -179,11 +184,9 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
             IsModalVisible = false;
 
         }
-
         #endregion
 
         #region MONTH CALCULATION
-
         private async Task CalculatedScoreMonth(HandleActualDto item)
         {
             if (!item.ActualValue.HasValue || !item.TargetValue.HasValue) return;
@@ -247,15 +250,16 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
             var months = GetMonthsInQuarter(month.Value);
             int year = handleKPISubmit.HandleActual.First().Year;
 
+
             foreach (var m in months)
             {
                 var totals = await Http.GetFromJsonAsync<List<KPITotalScoreDto>>(
-                    $"api/kpiSubmit/get-result-kpi/{CurrenUser.Id}/{year}/{m}");
+                              $"api/kpiSubmit/get-result-total-score-by-month/{CurrenUser.Id}/{year}/{m}");
                 if (totals != null) handleKPISubmit.KPITotalScore.AddRange(totals);
-
                 var details = await Http.GetFromJsonAsync<List<HandleActualDto>>(
-                    $"api/kpiSubmit/get-result-detail/{CurrenUser.Id}/{year}/{m}");
+                    $"api/kpiSubmit/get-result-detail-by-momth/{CurrenUser.Id}/{year}/{m}");
                 if (details != null) handleKPISubmit.HandleActual.AddRange(details);
+
             }
             if (handleKPISubmit.KPITotalScore.Count < 2) return;
             await CalculatedQuarter(handleKPISubmit, month.Value);
@@ -274,7 +278,7 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
             decimal omgscore = 0;
             decimal keytaskscore = 0;
             decimal totalScore = 0;
-
+            decimal totalActualScore = 0;
             // 🔹 STEP 1: BUILD DATA
             foreach (var group in handleKPISubmit.HandleActual.GroupBy(x => x.TaskId))
             {
@@ -350,16 +354,12 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
 
             // 🔹 STEP 2: ADD DATA SAU KHI BUILD XONG
             handleKPISubmit.HandleActual.AddRange(newHandleActualList);
-
             var indexWeights = IndexWeight?.Where(x => x.PeriodType == PeriodType.Quarter).ToList()
                                 ?? new List<IndexWeightDto>();
-
             decimal omgWeight = indexWeights.FirstOrDefault(x => x.KPIIndexType == KPIIndexType.OMG)?.Weight ?? 0;
             decimal kpiWeight = indexWeights.FirstOrDefault(x => x.KPIIndexType == KPIIndexType.KPI)?.Weight ?? 0;
             decimal keyTaskWeight = indexWeights.FirstOrDefault(x => x.KPIIndexType == KPIIndexType.KeyTask)?.Weight ?? 0;
-
             // 🔹 STEP 3: CALCULATE SCORE (SAU KHI CÓ DATA ĐẦY ĐỦ)
-
             var listOMGDetails = handleKPISubmit.HandleActual
                 .Where(x => x.KPIIndexType == KPIIndexType.OMG && x.Quarter == quarter)
                 .ToList();
@@ -381,7 +381,7 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
             keytaskscore = sumKeyTask * keyTaskWeight;
 
             totalScore = ConvertNumberCommon.ConvertNumber(kpiScore + keytaskscore + omgscore);
-
+            totalActualScore = ConvertNumberCommon.ConvertNumber(kpiScore + keytaskscore + omgscore);
             if (totalScore > CeilingLevel.CeilingLevelValue && CeilingLevel.CeilingLevelValue > 0)
             {
                 totalScore = CeilingLevel.CeilingLevelValue;
@@ -396,9 +396,9 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
                 KeyTaskScore = ConvertNumberCommon.ConvertNumber(keytaskscore),
                 OMGScore = ConvertNumberCommon.ConvertNumber(omgscore),
                 TotaleScore = totalScore,
+                TotalActualScore = totalActualScore,
                 CreatedBy = CurrenUser.Id
             };
-
             handleKPISubmit.KPITotalScore.Add(TotalQuarter);
             // 🔹 STEP 4: REMOVE OLD DATA
             var removeHandleActual = handleKPISubmit.HandleActual
@@ -414,37 +414,176 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
 
             await Task.CompletedTask;
         }
-
-
         #endregion
 
         #region HALF YEAR
-
-        private async Task CalculateHalfYearScoresFromQuarters(
+        private async Task LoadAndCalculateHalfYearAsync(
             HandleKPISubmitDto handleKPISubmit,
             int? month)
         {
             if (!month.HasValue) return;
+            int quarter = month <= 6 ? 1 : 3;
+            int year = handleKPISubmit.HandleActual.First().Year;
 
-            int halfYear = month <= 6 ? 1 : 2;
-            var quarters = handleKPISubmit.KPITotalScore
-                .Where(x => x.Quarter != null)
-                .Take(2)
+            var totalQuarters = await Http.GetFromJsonAsync<KPITotalScoreDto>(
+                $"api/kpiSubmit/get-result-total-score-by-quarter/{CurrenUser.Id}/{year}/{quarter}");
+            if (totalQuarters != null) handleKPISubmit.KPITotalScore.Add(totalQuarters);
+
+            var details = await Http.GetFromJsonAsync<List<HandleActualDto>>(
+             $"api/kpiSubmit/get-result-detail-by-momth/{CurrenUser.Id}/{year}/{quarter}");
+            if (details != null) handleKPISubmit.HandleActual.AddRange(details);
+
+            if (handleKPISubmit.KPITotalScore.Count < 1) return;
+            await CalculateHalfYear(handleKPISubmit, month);
+        }
+
+        private async Task CalculateHalfYear(
+            HandleKPISubmitDto handleKPISubmit,
+            int? month)
+        {
+            int haftyear = month <= 6 ? 1 : 2;
+            int quarter = month <= 6 ? 2 : 4;
+            int year = handleKPISubmit.HandleActual.First().Year;
+
+            var TotalQuarter = new KPITotalScoreDto();
+            var newHandleActualList = new List<HandleActualDto>();
+
+            decimal kpiScore = 0;
+            decimal omgscore = 0;
+            decimal keytaskscore = 0;
+            decimal totalScore = 0;
+
+            // 🔹 STEP 1: BUILD DATA
+            foreach (var group in handleKPISubmit.HandleActual.GroupBy(x => x.TaskId))
+            {
+                var first = group.First();
+                decimal? actual = null;
+                decimal? target = null;
+
+                switch (first.QuarterCalculateType)
+                {
+                    case QuarterCalculateType.CAL1:
+                        actual = group.Sum(x => x.ActualValue ?? 0);
+                        target = group.Sum(x => x.TargetValue ?? 0);
+                        break;
+
+                    case QuarterCalculateType.CAL2:
+                        actual = group.Where(x => x.ActualValue.HasValue).Average(x => x.ActualValue);
+                        target = group.Where(x => x.TargetValue.HasValue).Average(x => x.TargetValue);
+                        break;
+
+                    case QuarterCalculateType.CAL3:
+                        var last = group.OrderByDescending(x => x.Month).First();
+                        actual = last.ActualValue;
+                        target = last.TargetValue;
+                        break;
+                }
+
+                decimal achivement = (target.HasValue && target > 0 && actual.HasValue)
+                    ? actual.Value / target.Value
+                    : 0;
+
+                if (first.Bottom.HasValue && achivement < first.Bottom)
+                    achivement = 0;
+
+                if (first.Max.HasValue && achivement > first.Max)
+                    achivement = first.Max.Value;
+
+                var newItem = new HandleActualDto
+                {
+                    TaskId = first.TaskId,
+                    Year = year,
+                    Quarter = null,
+                    Month = null,
+
+                    TaskName = first.TaskName,
+                    KPIIndexType = first.KPIIndexType,
+                    KPICategory = first.KPICategory,
+                    HalfYear = haftyear,
+                    QuarterCalculateType = first.QuarterCalculateType,
+                    KPIFormulaType = first.KPIFormulaType,
+                    Max = first.Max,
+                    Bottom = first.Bottom,
+                    Weight = first.Weight,
+                    IndexWeight = first.IndexWeight,
+                    calculated = first.calculated,
+                    Description = first.Description,
+                    CalculateMethod = first.CalculateMethod,
+                    Formula = first.Formula,
+                    Unit = first.Unit,
+                    DataSource = first.DataSource,
+                    PIC = first.PIC,
+
+                    ActualValue = actual,
+                    TargetValue = target,
+                    Achiement = achivement,
+
+                    Score = achivement != 0 && first.Weight.HasValue
+                        ? Math.Round(achivement * first.Weight.Value, 4, MidpointRounding.AwayFromZero)
+                        : null
+                };
+
+                newHandleActualList.Add(newItem);
+            }
+
+            // 🔹 STEP 2: ADD DATA SAU KHI BUILD XONG
+            handleKPISubmit.HandleActual.AddRange(newHandleActualList);
+            var indexWeights = IndexWeight?.Where(x => x.PeriodType == PeriodType.Quarter).ToList()
+                                ?? new List<IndexWeightDto>();
+            decimal omgWeight = indexWeights.FirstOrDefault(x => x.KPIIndexType == KPIIndexType.OMG)?.Weight ?? 0;
+            decimal kpiWeight = indexWeights.FirstOrDefault(x => x.KPIIndexType == KPIIndexType.KPI)?.Weight ?? 0;
+            decimal keyTaskWeight = indexWeights.FirstOrDefault(x => x.KPIIndexType == KPIIndexType.KeyTask)?.Weight ?? 0;
+            // 🔹 STEP 3: CALCULATE SCORE (SAU KHI CÓ DATA ĐẦY ĐỦ)
+            var listOMGDetails = handleKPISubmit.HandleActual
+                .Where(x => x.KPIIndexType == KPIIndexType.OMG && x.Quarter == haftyear)
                 .ToList();
 
-            if (quarters.Count != 2) return;
+            var listKPIDetails = handleKPISubmit.HandleActual
+                .Where(x => x.KPIIndexType == KPIIndexType.KPI && x.Quarter == haftyear)
+                .ToList();
 
-            handleKPISubmit.KPITotalScore.Add(new KPITotalScoreDto
+            var listKeyTaskDetails = handleKPISubmit.HandleActual
+                .Where(x => x.KPIIndexType == KPIIndexType.KeyTask && x.Quarter == haftyear)
+                .ToList();
+
+            decimal sumOMG = listOMGDetails.Sum(x => x.Score ?? 0);
+            decimal sumKPI = listKPIDetails.Sum(x => x.Score ?? 0);
+            decimal sumKeyTask = listKeyTaskDetails.Sum(x => x.Score ?? 0);
+
+            omgscore = sumOMG * omgWeight;
+            kpiScore = sumKPI * kpiWeight;
+            keytaskscore = sumKeyTask * keyTaskWeight;
+
+            totalScore = ConvertNumberCommon.ConvertNumber(kpiScore + keytaskscore + omgscore);
+
+            if (totalScore > CeilingLevel.CeilingLevelValue && CeilingLevel.CeilingLevelValue > 0)
             {
-                Title = $"EMC - {handleKPISubmit.HandleActual.First().Year} - H{halfYear} - {CurrenUser.FullName}",
-                Year = handleKPISubmit.HandleActual.First().Year,
-                HalfYear = halfYear,
-                KPIScore = quarters.Average(x => x.KPIScore),
-                KeyTaskScore = quarters.Average(x => x.KeyTaskScore),
-                OMGScore = quarters.Average(x => x.OMGScore),
-                TotaleScore = quarters.Average(x => x.TotaleScore),
+                totalScore = CeilingLevel.CeilingLevelValue;
+            }
+
+            TotalQuarter = new KPITotalScoreDto
+            {
+                Title = $"EMC - {year} - H{haftyear} - {CurrenUser.FullName}",
+                Year = year,
+                Quarter = haftyear,
+                KPIScore = ConvertNumberCommon.ConvertNumber(kpiScore),
+                KeyTaskScore = ConvertNumberCommon.ConvertNumber(keytaskscore),
+                OMGScore = ConvertNumberCommon.ConvertNumber(omgscore),
+                TotaleScore = totalScore,
                 CreatedBy = CurrenUser.Id
-            });
+            };
+            handleKPISubmit.KPITotalScore.Add(TotalQuarter);
+            // 🔹 STEP 4: REMOVE OLD DATA
+            var removeHandleActual = handleKPISubmit.HandleActual
+                .Where(x => x.Quarter != quarter && x.HalfYear == null)
+                .ToList();
+
+            var removeTotalScore = handleKPISubmit.KPITotalScore
+                .Where(x => x.Quarter != quarter && x.HalfYear == null)
+                .ToList();
+
+            removeHandleActual.ForEach(x => handleKPISubmit.HandleActual.Remove(x));
+            removeTotalScore.ForEach(x => handleKPISubmit.KPITotalScore.Remove(x));
 
             await Task.CompletedTask;
         }
@@ -465,6 +604,10 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
                     (x.KPIScore ?? 0) +
                     (x.KeyTaskScore ?? 0) +
                     (x.OMGScore ?? 0)),
+                TotalActualScore = handleKPISubmit.HandleActual.Sum(x =>
+                   (x.KPIScore ?? 0) +
+                   (x.KeyTaskScore ?? 0) +
+                   (x.OMGScore ?? 0)),
                 Month = KPIPeriodSubmit.Month,
                 Year = KPIPeriodSubmit.Year,
                 CreatedBy = CurrenUser.Id

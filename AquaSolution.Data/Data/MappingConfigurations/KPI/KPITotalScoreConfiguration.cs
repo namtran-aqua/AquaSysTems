@@ -11,15 +11,15 @@ namespace AquaSolution.Data.Data.MappingConfigurations.KPI
         {
             builder.ToTable("tbl_KPITotalScores", schema: "KPI");
             builder.HasKey(e => e.Id);
-  
+
             builder.HasOne<KPIRequest>()
                      .WithMany()
                      .HasForeignKey(u => u.SubmitId)
                      .OnDelete(DeleteBehavior.Restrict);
-           builder.Property(e => e.Status)
-                      .HasConversion<string>()
-                      .IsRequired()
-                      .HasMaxLength(100);
+            builder.Property(e => e.Status)
+                       .HasConversion<string>()
+                       .IsRequired()
+                       .HasMaxLength(100);
             builder.Property(e => e.kPITotalScoreType)
                        .HasConversion<string>()
                        .IsRequired()
@@ -28,6 +28,10 @@ namespace AquaSolution.Data.Data.MappingConfigurations.KPI
             builder.Property(d => d.CreatedDate)
                        .IsRequired()
                        .HasDefaultValueSql("GETDATE()");
+            builder.Property(e => e.TotalActualScore)
+                   .HasColumnType("decimal(18,4)")
+                   .HasDefaultValue(0m);
+
         }
     }
 }

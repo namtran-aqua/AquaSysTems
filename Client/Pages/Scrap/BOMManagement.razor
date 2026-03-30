@@ -1,0 +1,96 @@
+﻿@page "/bom-management"
+@using AquaSolution.Client.Common
+@using AquaSolution.Client.Modals.Administration.Users
+@using AntDesign
+@inject ModalService modal
+@inject NavigationManager Navigation
+@inject IMessageService Message
+@using AquaSolution.Shared.HRMS
+@using AquaSolution.Shared.UserManagements
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthStateProvider
+@inject PermissionService permissionService
+<PageTitle>Users</PageTitle>
+<div class="mb-3">
+    <style>
+        .custom-button-type {
+            height: 30px;
+            font-size: 12px;
+        }
+
+        .fix-table-header table {
+            border-collapse: collapse;
+        }
+
+            .fix-table-header table thead th {
+                position: sticky !important;
+                z-index: 8 !important;
+                top: 0;
+                background-color: #fff;
+            }
+
+        .ant-table-content {
+            min-height: 65vh !important;
+        }
+
+        .ant-table-pagination {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            z-index: 999;
+            background: white;
+            padding: 8px;
+            text-align: center;
+            box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.1);
+             background: transparent !important; 
+        }
+
+
+
+        .custom-label {
+            background-color: #007bff;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: inline-block;
+        }
+
+            .custom-label:hover {
+                background-color: #0056b3;
+            }
+    </style>
+    <div style="display: flex;  align-items: center; margin-bottom: 10px;">
+
+     @*    <!-- #region Search -->
+        <InputFile OnChange="HandleBonusYearFile"
+                   accept=".xlsx,.xls" />
+        <Input Placeholder="WorkDayId" Value="@WorkDayId" style="margin-left:2px;width:190px;font-size:12px" @onkeydown="HandleKeyDown" @oninput="WorkDayIdInputChanged" />
+        <Input Placeholder="Full Name" Value="@FullName" style="margin-left:2px;width:190px;font-size:12px" @onkeydown="HandleKeyDown" @oninput="FullNameInputChanged" />
+        <button @onclick="Search" style="margin-left:5px;border-color:#fff"><Icon Type="search" />Search</button>
+        <button @onclick="Reset" style="margin-left:5px;border-color:#fff"><Icon Type="undo" />Reset</button> *@
+    </div>
+</div>
+<div style="width:100%;overflow-x:scroll ;max-height:70vh; ">
+    <h1>BOM HEADER</h1>
+   @*  <Table TItem="BonusYearDto"
+           @ref="_tableRef"
+           Size="TableSize.Small"
+           Bordered
+           Class="customTable fix-table-header"
+           DataSource="listBonusYearFilter">
+        <ColumnDefinitions Context="row">
+            <PropertyColumn Width="250px" Title="Fullname" Property="c => c.EmpName">
+                <Template>
+                    <a href="javascript:void(0);" @onclick="() => DetailUser(row)">
+                        @row.EmpName
+                    </a>
+                </Template>
+            </PropertyColumn>
+            <PropertyColumn Width="100px" Title="WorkDayId" Property="c => c.EmpWorkDay"></PropertyColumn>
+            <PropertyColumn Width="100px" Title="Factory" Property="c => c.EmpDept" ></PropertyColumn>
+            <PropertyColumn Width="150px" Title="DepartmentName" Property="c => c.EmpJoinDate" ></PropertyColumn>
+            <PropertyColumn Width="90px"  Title="Position" Property="c => c.BonusYear" ></PropertyColumn>
+        </ColumnDefinitions>
+    </Table> *@
+</div>

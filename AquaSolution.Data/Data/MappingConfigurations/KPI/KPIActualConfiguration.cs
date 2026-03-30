@@ -13,7 +13,7 @@ namespace AquaSolution.Data.Data.MappingConfigurations.KPI
             builder.HasKey(e => e.Id);
             builder.HasOne<User>()
                 .WithMany()
-                .HasForeignKey(e => e.UpdatedBy)
+                .HasForeignKey(e => e.CreatedBy)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasOne<KPIMonthlyTarget>()

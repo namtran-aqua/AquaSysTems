@@ -18,6 +18,7 @@ namespace AquaSolution.Data.Data.Entities
         public DateTime CreatedDate { get; set; }
         public StatusKPIRequestType Status { get; set; }
         public decimal? TotaleScore { get; set; }
+        public decimal? TotalActualScore { get; set; }
         public bool IsActive { get; set; }
         public KPITotalScoreType kPITotalScoreType { get; set; }
     }

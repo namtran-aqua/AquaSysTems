@@ -4,6 +4,7 @@ using AquaSolution.Data.Connection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AquaSolution.Data.Migrations
 {
     [DbContext(typeof(AquaDbContext))]
-    partial class AquaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260327064654_UpdateTable_KPITotalScore")]
+    partial class UpdateTable_KPITotalScore
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1538,6 +1541,9 @@ namespace AquaSolution.Data.Migrations
                     b.Property<int?>("Quarter")
                         .HasColumnType("int");
 
+                    b.Property<Guid>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime>("UpdatedDate")
                         .HasColumnType("datetime2");
 
@@ -1546,11 +1552,11 @@ namespace AquaSolution.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatedBy");
-
                     b.HasIndex("KPITargetId");
 
                     b.HasIndex("KPITotalScoreId");
+
+                    b.HasIndex("UpdatedBy");
 
                     b.ToTable("tbl_KPIMonthlyActuals", "KPI");
                 });
@@ -2349,12 +2355,6 @@ namespace AquaSolution.Data.Migrations
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPIMonthlyActual", b =>
                 {
-                    b.HasOne("AquaSolution.Data.Data.Entities.Admin.User", null)
-                        .WithMany()
-                        .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("AquaSolution.Data.Data.Entities.KPIMonthlyTarget", null)
                         .WithMany()
                         .HasForeignKey("KPITargetId")
@@ -2364,6 +2364,12 @@ namespace AquaSolution.Data.Migrations
                     b.HasOne("AquaSolution.Data.Data.Entities.KPITotalScore", null)
                         .WithMany()
                         .HasForeignKey("KPITotalScoreId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AquaSolution.Data.Data.Entities.Admin.User", null)
+                        .WithMany()
+                        .HasForeignKey("UpdatedBy")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
