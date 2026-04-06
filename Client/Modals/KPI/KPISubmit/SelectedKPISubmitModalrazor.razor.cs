@@ -173,7 +173,7 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
             {
                 HandleButtonClicked = false;
                 return;
-            }    
+            }
 
             var response = await Http.PostAsJsonAsync($"api/kpisubmit/create/{KPIPeriodSubmit.Month}", HandleKPISubmitDto);
 
@@ -202,6 +202,7 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
                 KPIFormulaType.KF4 => actual > target ? 0 : 1,
                 _ => 0
             };
+
             if (target == 0)
             {
                 achievement = item.Max.HasValue ? item.Max.Value * 100 : 0;
@@ -291,27 +292,24 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
                     case QuarterCalculateType.CAL1:
                         actual = group.Sum(x => x.ActualValue ?? 0);
                         target = group.Sum(x => x.TargetValue ?? 0);
-                        achivement = group.Where(x => x.Achiement.HasValue).Average(x => x.Achiement) ?? 0;
+                        //achivement = group.Where(x => x.Achiement.HasValue).Average(x => x.Achiement) ?? 0;
                         break;
 
                     case QuarterCalculateType.CAL2:
                         actual = group.Where(x => x.ActualValue.HasValue).Average(x => x.ActualValue);
                         target = group.Where(x => x.TargetValue.HasValue).Average(x => x.TargetValue);
-                        achivement = group.Where(x => x.Achiement.HasValue).Average(x => x.Achiement) ?? 0;
+                        //achivement = group.Where(x => x.Achiement.HasValue).Average(x => x.Achiement) ?? 0;
                         break;
 
                     case QuarterCalculateType.CAL3:
                         var last = group.OrderByDescending(x => x.Month).First();
                         actual = last.ActualValue;
                         target = last.TargetValue;
-                        achivement = last.Achiement ?? 0;
+                        //achivement = last.Achiement ?? 0;
                         break;
                 }
 
-                 //achivement = (target.HasValue && target > 0 && actual.HasValue)
-                 //   ? actual.Value / target.Value
-                 //   : 0;
-
+                achivement = await HelperCalculated(first.KPIFormulaType, actual ?? 0, target ?? 0, first.Max.Value);
                 if (first.Bottom.HasValue && achivement < first.Bottom)
                     achivement = 0;
 
@@ -621,7 +619,53 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
             }
             handleKPISubmit.KPITotalScore.Add(CurrenTotalScore);
         }
+        private async Task<decimal> HelperCalculated(KPIFormulaType kPIFormulaType, decimal actual, decimal target, decimal max)
+        {
+            try
+            {
+                decimal achievement = 0m;
+                if (kPIFormulaType == KPIFormulaType.KF1)
+                {
+                    if (target == 0)
+                    {
+                        achievement = actual >= 0 ? max * 100 : 0;
+                    }
+                    else
+                    {
+                        achievement = actual / target;
+                    }
+                }
+                if (kPIFormulaType == KPIFormulaType.KF2)
+                {
+                    if(target == 0)
+                    {
+                        achievement = actual > 0 ? 0 : max * 100;
+                    }
+                    else                    {
+                         achievement = 2 - (actual / target);
+                    }
+                }
+                if (kPIFormulaType == KPIFormulaType.KF3)
+                {
+                    if(target == 0)
+                    {
+                        achievement = actual > 0 ? max * 100 : 0;
+                    }
+                    else
+                    {
+                        achievement = target > 0 ? actual / target : 2 - (actual / target);
+                    }
+                   
+                }
 
+                return achievement;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+
+        }
         #endregion
     }
 }
