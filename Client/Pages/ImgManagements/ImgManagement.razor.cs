@@ -49,15 +49,23 @@ namespace AquaSolution.Client.Pages.ImgManagements
 
                 var query = data.AsQueryable();
 
-                if (CurrenUser.FactoryId != Guid.Empty)
+                if (CurrenUser.Roles.Any(x => x.Name == "Admin"))
                 {
-                    query = query.Where(x => x.FactoryId == CurrenUser.FactoryId);
+                    query = data.AsQueryable();
+                }
+                else
+                {
+                    if (CurrenUser.FactoryId != Guid.Empty)
+                    {
+                        query = query.Where(x => x.FactoryId == CurrenUser.FactoryId);
+                    }
+
+                    if (CurrenUser.DepartmentId != Guid.Empty)
+                    {
+                        query = query.Where(x => x.DepartmentId == CurrenUser.DepartmentId);
+                    }
                 }
 
-                if (CurrenUser.DepartmentId != Guid.Empty)
-                {
-                    query = query.Where(x => x.DepartmentId == CurrenUser.DepartmentId);
-                }
 
                 Contributors = query.ToList();
             }
@@ -68,6 +76,43 @@ namespace AquaSolution.Client.Pages.ImgManagements
             }
 
         }
+        //private async Task GetCurrentUser()
+        //{
+        //    if (Http == null) return;
+
+        //    var currenUserClass = new CurrenUser(Http, AuthStateProvider);
+        //    CurrenUser = await currenUserClass.LoadCurrenUser();
+
+        //    try
+        //    {
+        //        var data = await Http.GetFromJsonAsync<List<UserContributerDto>>(
+        //            "api/User/get-contributer");
+
+        //        if (data == null)
+        //        {
+        //            Contributors = new();
+        //            return;
+        //        }
+
+        //        if (CurrenUser.Roles.Any(r => r.Name == "Admin"))
+        //        {
+        //            Contributors = data;
+        //            return;
+        //        }
+
+        //        Contributors = data
+        //            .Where(x =>
+        //                (CurrenUser.FactoryId == Guid.Empty || x.FactoryId == CurrenUser.FactoryId) &&
+        //                (CurrenUser.DepartmentId == Guid.Empty || x.DepartmentId == CurrenUser.DepartmentId)
+        //            )
+        //            .ToList();
+        //    }
+        //    catch (HttpRequestException ex)
+        //    {
+        //        Contributors = new();
+        //        Console.WriteLine(ex);
+        //    }
+        //}
         private async Task GetIMG()
         {
             if (Contributors == null || !Contributors.Any())

@@ -3,6 +3,8 @@ using AquaSolution.Shared.HRMS;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.SqlClient;
 using System.Data;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace AquaSolution.Server.Services.HRMS
 {
@@ -35,7 +37,7 @@ namespace AquaSolution.Server.Services.HRMS
 
             await DeleteAllAsync(conn);
             await InsertBonusYearAsync(conn, data);
-            //await InsertUsersAsync(conn, data);
+          //  await InsertUsersAsync(conn, data);
 
             return true;
         }
@@ -59,7 +61,8 @@ namespace AquaSolution.Server.Services.HRMS
                         Q1Rated, Q2Rated, Q3Rated, Q4Rated,
                         Q1Ratio, Q2Ratio, Q3Ratio, Q4Ratio,
                         YearRatio, NoteRatio, WorkTimeRatio,
-                        AwardYearRatio, BonusYear
+                        AwardYearRatio, BonusYear,
+                        RankForMeritIncrease, RankAverageBonusRate, RankQ1Ratio, RankQ2Ratio, RankQ3Ratio, RankQ4Ratio
                     )
                     VALUES
                     (
@@ -67,7 +70,8 @@ namespace AquaSolution.Server.Services.HRMS
                         @Q1Rated, @Q2Rated, @Q3Rated, @Q4Rated,
                         @Q1Ratio, @Q2Ratio, @Q3Ratio, @Q4Ratio,
                         @YearRatio, @NoteRatio, @WorkTimeRatio,
-                        @AwardYearRatio, @BonusYear
+                        @AwardYearRatio, @BonusYear,
+                        @RankForMeritIncrease,@RankAverageBonusRate,@RankQ1Ratio,@RankQ2Ratio,@RankQ3Ratio,@RankQ4Ratio
                     );";
 
             await using var cmd = new SqlCommand(sql, conn);
@@ -94,6 +98,12 @@ namespace AquaSolution.Server.Services.HRMS
             cmd.Parameters.Add("@AwardYearRatio", SqlDbType.NVarChar);
             cmd.Parameters.Add("@BonusYear", SqlDbType.NVarChar);
 
+            cmd.Parameters.Add("@RankForMeritIncrease", SqlDbType.NVarChar);
+            cmd.Parameters.Add("@RankAverageBonusRate", SqlDbType.NVarChar);
+            cmd.Parameters.Add("@RankQ1Ratio", SqlDbType.NVarChar);
+            cmd.Parameters.Add("@RankQ2Ratio", SqlDbType.NVarChar);
+            cmd.Parameters.Add("@RankQ3Ratio", SqlDbType.NVarChar);
+            cmd.Parameters.Add("@RankQ4Ratio", SqlDbType.NVarChar);
             foreach (var dto in data)
             {
                 cmd.Parameters["@EmpWorkDay"].Value = (object?)dto.EmpWorkDay ?? DBNull.Value;
@@ -118,6 +128,12 @@ namespace AquaSolution.Server.Services.HRMS
                 cmd.Parameters["@AwardYearRatio"].Value = (object?)dto.AwardYearRatio ?? DBNull.Value;
                 cmd.Parameters["@BonusYear"].Value = (object?)dto.BonusYear ?? DBNull.Value;
 
+                cmd.Parameters["@RankForMeritIncrease"].Value = (object?)dto.RankForMeritIncrease ?? DBNull.Value;
+                cmd.Parameters["@RankAverageBonusRate"].Value = (object?)dto.RankAverageBonusRate ?? DBNull.Value;
+                cmd.Parameters["@RankQ1Ratio"].Value = (object?)dto.RankQ1Ratio ?? DBNull.Value;
+                cmd.Parameters["@RankQ2Ratio"].Value = (object?)dto.RankQ2Ratio ?? DBNull.Value;
+                cmd.Parameters["@RankQ3Ratio"].Value = (object?)dto.RankQ3Ratio ?? DBNull.Value;
+                cmd.Parameters["@RankQ4Ratio"].Value = (object?)dto.RankQ4Ratio ?? DBNull.Value;
                 await cmd.ExecuteNonQueryAsync();
             }
         }
@@ -178,7 +194,7 @@ namespace AquaSolution.Server.Services.HRMS
                 cmd.Parameters["@UserName"].Value = userName;
                 cmd.Parameters["@NormalizedUserName"].Value = userName;
                 cmd.Parameters["@EmailConfirmed"].Value = false;
-                cmd.Parameters["@PasswordHash"].Value = Hash(rawPassword);
+                cmd.Parameters["@PasswordHash"].Value = CommonHelper.SHA256EncryptString(rawPassword);
                 cmd.Parameters["@SecurityStamp"].Value = Guid.NewGuid().ToString("N");
                 cmd.Parameters["@ConcurrencyStamp"].Value = Guid.NewGuid().ToString("N");
                 cmd.Parameters["@PhoneNumberConfirmed"].Value = false;
@@ -191,6 +207,20 @@ namespace AquaSolution.Server.Services.HRMS
             }
         }
         #endregion
+        public static partial class CommonHelper
+        {
+            public static string SHA256EncryptString(string data)
+            {
+                byte[] bytes = Encoding.UTF8.GetBytes(data);
+                byte[] hash = SHA256.Create().ComputeHash(bytes);
 
+                StringBuilder builder = new StringBuilder();
+                for (int i = 0; i < hash.Length; i++)
+                {
+                    builder.Append(hash[i].ToString("x2"));
+                }
+                return builder.ToString();
+            }
+        }
     }
 }

@@ -41,7 +41,7 @@ namespace AquaSolution.Client.Pages.HRMS
                 StateHasChanged();
                 if (Http != null) listBonusYear = await Http.GetFromJsonAsync<List<BonusYearDto>>("api/user/get-all");
                 listBonusYear = listBonusYearFilter;
-        
+
             }
             catch (Exception ex)
             {
@@ -56,7 +56,7 @@ namespace AquaSolution.Client.Pages.HRMS
             //    CurrenUser = await currenUserClass.LoadCurrenUser();
             //}
 
-           
+
         }
         #endregion
         #region Action
@@ -233,6 +233,13 @@ namespace AquaSolution.Client.Pages.HRMS
                             WorkTimeRation = sheet.Cells[row, 16].Text.Trim(),
                             AwardYearRatio = sheet.Cells[row, 17].Text.Trim(),
                             BonusYear = sheet.Cells[row, 18].Text.Trim(),
+
+                            RankAverageBonusRate = sheet.Cells[row, 19].Text.Trim(),
+                            RankForMeritIncrease = sheet.Cells[row, 20].Text.Trim(),
+                            RankQ1Ratio = sheet.Cells[row, 21].Text.Trim(),
+                            RankQ2Ratio = sheet.Cells[row, 22].Text.Trim(),
+                            RankQ3Ratio = sheet.Cells[row, 23].Text.Trim(),
+                            RankQ4Ratio = sheet.Cells[row, 24].Text.Trim()
                         };
                     });
                 var response = await Http.PostAsJsonAsync(
