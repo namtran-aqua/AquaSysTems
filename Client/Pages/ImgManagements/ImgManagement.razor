@@ -110,9 +110,9 @@
                         <Column Align="ColumnAlign.Center" TData="CloudinaryImageDto" Width="50px" Title="Action">
                             <Template Style="gap:5px">
                     
-                                <ActionColumn>
+                         @*        <ActionColumn>
                                     <Button Type="ButtonType.Link" OnClick="() => Download(row)">⬇DownLoad</Button>
-                                </ActionColumn>
+                                </ActionColumn> *@
                                 <ActionColumn>
                                     <a href="@row.SecureUrl" target="_blank" style="width:500px;height:500px;">
                                         👁View
