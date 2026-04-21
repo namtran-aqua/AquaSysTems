@@ -103,17 +103,14 @@ namespace AquaSolution.Client.Pages.ImgManagements
             images = result;
         }
         #endregion
-
         private void Download(CloudinaryImageDto row)
         {
             var url =
                 "/api/img/download" +
-                "?url=" + Uri.EscapeDataString(row.SecureUrl) +
-                "&publicId=" + Uri.EscapeDataString(row.PublicId);
+                "?url=" + Uri.EscapeDataString(row.SecureUrl);
 
             Navigation.NavigateTo(url, forceLoad: true);
         }
-
 
     }
 }

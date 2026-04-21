@@ -22,21 +22,22 @@ namespace AquaSolution.Server.Controllers.Imgs
             return Ok(list);
         }
 
+
         [HttpGet("download")]
-        public async Task<IActionResult> Download(
-            [FromQuery] string url,
-            [FromQuery] string publicId)
+        public async Task<IActionResult> Download([FromQuery] string url)
         {
             if (string.IsNullOrWhiteSpace(url))
                 return BadRequest("Missing url");
 
             try
             {
-                url = Uri.UnescapeDataString(url); 
+                // FE đã Escape → BE bắt buộc Unescape
+                url = Uri.UnescapeDataString(url);
+
                 using var http = new HttpClient();
                 var bytes = await http.GetByteArrayAsync(url);
-                var fileName = $"{publicId}.jpg";
 
+                var fileName = $"{Guid.NewGuid()}.jpg";
                 return File(bytes, "image/jpeg", fileName);
             }
             catch (Exception ex)
@@ -44,5 +45,6 @@ namespace AquaSolution.Server.Controllers.Imgs
                 return BadRequest(ex.Message);
             }
         }
+
     }
 }
