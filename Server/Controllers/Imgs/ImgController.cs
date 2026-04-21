@@ -21,7 +21,12 @@ namespace AquaSolution.Server.Controllers.Imgs
             var list = await _imgService.GetImagesFromCloudinary(workId);
             return Ok(list);
         }
-
+        [HttpGet("get-all-img")]
+        public async Task<IActionResult> GetAllImg()
+        {
+            var list = await _imgService.GetAllImagesFromCloudinary();
+            return Ok(list);
+        }
 
         [HttpGet("download")]
         public async Task<IActionResult> Download([FromQuery] string url)

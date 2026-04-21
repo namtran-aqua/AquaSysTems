@@ -83,10 +83,14 @@
 </style>
 <div style="width:100%;overflow-x:scroll ;max-height:70vh; ">
 
-        @if (images == null || !images.Any())
-        {
-            <p>Không có hình ảnh</p>
-        }
+    
+    @if (Loading)
+    {
+        <div class="loading-overlay">
+            <Spin Tip="Đang tải dữ liệu..." Size="SpinSize.Large" />
+        </div>
+    }
+
         else
         {
         <Collapse Accordion="true">
@@ -98,6 +102,7 @@
                        DataSource="group.CloudinaryImageDtos"
                        Size="TableSize.Small"
                        Bordered
+                       Loading="@Loading"
                        Class="customTable fix-table-header">
 
                     <ColumnDefinitions Context="row">
@@ -152,58 +157,5 @@
         </Collapse>
     }
 
-    @* <Table TItem="CloudinaryImageDto"
-           DataSource="images.First()"
-           Size="TableSize.Small"
-           Bordered
-           Class="customTable fix-table-header">
-
-        <ColumnDefinitions Context="row">
-            <!-- Action -->
-            <Column Align="ColumnAlign.Center" TData="CloudinaryImageDto" Width="50px" Title="Action">
-                <Template Style="gap:5px">
-                    
-                    <ActionColumn >
-                        <Button Type="ButtonType.Link" OnClick="() => Download(row)">⬇DownLoad</Button>
-                    </ActionColumn>
-                    <ActionColumn>
-                        <a href="@row.SecureUrl" target="_blank" style="width:500px;height:500px;">
-                            👁View
-                        </a>
-                    </ActionColumn>
-              
-                </Template>
-            </Column>
-            <!-- Ảnh -->
-            <Column Align="ColumnAlign.Center" TData="CloudinaryImageDto" Width="170px" Title="Image">
-                <Template>
-                    <img src="@row.SecureUrl"
-                         style="width:100px;height:100px;object-fit:cover;border-radius:4px;"
-                         loading="lazy" />
-                </Template>
-            </Column>
-
-
-            <PropertyColumn Align="ColumnAlign.Center" Width="280px"
-                            Title="Public Id"
-                            Property="c => c.PublicId" />
-
-            <!-- File Size -->
-            <Column Align="ColumnAlign.Center" TData="CloudinaryImageDto" Width="100px" Title="Size">
-                <Template>
-                    @($"{row.FileSize} {row.FileSizeUnit}")
-                </Template>
-            </Column>
-
-            <!-- Upload Date -->
-            <Column Align="ColumnAlign.Center" Sortable TData="CloudinaryImageDto" Width="160px" Title="Uploaded At">
-                <Template>
-                    @row.UpLoadDate.ToString("dd/MM/yyyy HH:mm")
-                </Template>
-            </Column>
-
-
-        </ColumnDefinitions>
-    </Table> *@
-
+    
 </div>

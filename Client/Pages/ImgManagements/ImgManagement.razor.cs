@@ -5,6 +5,7 @@ using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System.Net.Http.Json;
+using System.Runtime.CompilerServices;
 
 namespace AquaSolution.Client.Pages.ImgManagements
 {
@@ -15,6 +16,7 @@ namespace AquaSolution.Client.Pages.ImgManagements
         private UserDto? CurrenUser { get; set; }
         private List<GroupImg> images = new();
         private List<UserContributerDto> Contributors = new();
+        private bool Loading { get; set; }
         [Inject] private HttpClient? Http { get; set; }
         #endregion
         #region Innit
@@ -78,29 +80,68 @@ namespace AquaSolution.Client.Pages.ImgManagements
         }
         private async Task GetIMG()
         {
-            if (Contributors == null || !Contributors.Any())
-                return;
+            Loading = true;
+            await InvokeAsync(StateHasChanged);
 
-            var result = new List<GroupImg>();
-
-            foreach (var contributor in Contributors)
+            try
             {
-                var workId = contributor.WorkDayId.ToString();
+                var allImages = await Http.GetFromJsonAsync<List<CloudinaryImageDto>>(
+                    "api/Img/get-all-img");
 
-                var data = await Http.GetFromJsonAsync<List<CloudinaryImageDto>>(
-                    $"api/Img/get-img/{workId}");
-
-                if (data != null && data.Any())
+                if (allImages == null || !allImages.Any())
                 {
-                    result.Add(new GroupImg
-                    {
-                        WorkId = workId,
-                        CloudinaryImageDtos = data
-                    });
+                    images = new List<GroupImg>();
+                    return;
                 }
-            }
 
-            images = result;
+                // ✅ Admin → full ảnh
+                if (CurrenUser.Roles.Any(r => r.Name == "Admin"))
+                {
+                    images = allImages
+                        .Where(x => !string.IsNullOrWhiteSpace(x.WorkId))
+                        .GroupBy(x => x.WorkId)
+                        .Select(g => new GroupImg
+                        {
+                            WorkId = g.Key,
+                            CloudinaryImageDtos = g
+                                .OrderByDescending(x => x.UpLoadDate)
+                                .ToList()
+                        })
+                        .ToList();
+
+                    return;
+                }
+
+                // ✅ User thường
+                if (Contributors == null || !Contributors.Any())
+                {
+                    images = new List<GroupImg>();
+                    return;
+                }
+
+                var allowedWorkIds = Contributors
+                    .Select(c => c.WorkDayId.ToString())
+                    .ToHashSet();
+
+                images = allImages
+                    .Where(img =>
+                        !string.IsNullOrWhiteSpace(img.WorkId) &&
+                        allowedWorkIds.Contains(img.WorkId))
+                    .GroupBy(img => img.WorkId)
+                    .Select(g => new GroupImg
+                    {
+                        WorkId = g.Key,
+                        CloudinaryImageDtos = g
+                            .OrderByDescending(x => x.UpLoadDate)
+                            .ToList()
+                    })
+                    .ToList();
+            }
+            finally
+            {
+                Loading = false;
+                await InvokeAsync(StateHasChanged);
+            }
         }
         #endregion
         private async Task Download(CloudinaryImageDto row)
