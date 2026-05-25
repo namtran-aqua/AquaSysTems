@@ -1,11 +1,12 @@
-﻿@page "/bom-management"
+@page "/bom-management"
 @using AquaSolution.Client.Common
 @using AquaSolution.Client.Modals.Administration.Users
 @using AntDesign
 @inject ModalService modal
 @inject NavigationManager Navigation
-@inject IMessageService Message
+@using AquaSolution.Client.Modals.ScrapManagement.Materials
 @using AquaSolution.Shared.HRMS
+@using AquaSolution.Shared.ScrapManagement.Materials
 @using AquaSolution.Shared.UserManagements
 @using Microsoft.AspNetCore.Components.Authorization
 @inject AuthenticationStateProvider AuthStateProvider
@@ -13,56 +14,57 @@
 <PageTitle>Users</PageTitle>
 <div class="mb-3">
     <style>
-        .custom-button-type {
-            height: 30px;
-            font-size: 12px;
-        }
-
-        .fix-table-header table {
-            border-collapse: collapse;
-        }
-
-            .fix-table-header table thead th {
-                position: sticky !important;
-                z-index: 8 !important;
-                top: 0;
-                background-color: #fff;
+            .custom-button-type {
+                height: 30px;
+                font-size: 12px;
             }
 
-        .ant-table-content {
-            min-height: 65vh !important;
-        }
-
-        .ant-table-pagination {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            z-index: 999;
-            background: white;
-            padding: 8px;
-            text-align: center;
-            box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.1);
-             background: transparent !important; 
-        }
-
-
-
-        .custom-label {
-            background-color: #007bff;
-            color: white;
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            display: inline-block;
-        }
-
-            .custom-label:hover {
-                background-color: #0056b3;
+            .fix-table-header table {
+                border-collapse: collapse;
             }
+
+                .fix-table-header table thead th {
+                    position: sticky !important;
+                    z-index: 8 !important;
+                    top: 0;
+                    background-color: #fff;
+                }
+
+            .ant-table-content {
+                min-height: 65vh !important;
+            }
+
+            .ant-table-pagination {
+                position: fixed;
+                bottom: 0;
+                width: 100%;
+                z-index: 999;
+                background: white;
+                padding: 8px;
+                text-align: center;
+                box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.1);
+                background: transparent !important;
+            }
+
+
+
+            .custom-label {
+                background-color: #007bff;
+                color: white;
+                padding: 8px 15px;
+                border-radius: 5px;
+                cursor: pointer;
+                display: inline-block;
+            }
+
+                .custom-label:hover {
+                    background-color: #0056b3;
+                }
     </style>
     <div style="display: flex;  align-items: center; margin-bottom: 10px;">
-
-     @*    <!-- #region Search -->
+        <InputFile OnChange="HandleImportExcelFile"
+                   accept=".xlsx,.xls" />
+        @*    <!-- #region Search -->
         <InputFile OnChange="HandleBonusYearFile"
                    accept=".xlsx,.xls" />
         <Input Placeholder="WorkDayId" Value="@WorkDayId" style="margin-left:2px;width:190px;font-size:12px" @onkeydown="HandleKeyDown" @oninput="WorkDayIdInputChanged" />
@@ -72,25 +74,50 @@
     </div>
 </div>
 <div style="width:100%;overflow-x:scroll ;max-height:70vh; ">
-    <h1>BOM HEADER</h1>
-   @*  <Table TItem="BonusYearDto"
+    <Table TItem="MaterialDto"
            @ref="_tableRef"
            Size="TableSize.Small"
            Bordered
            Class="customTable fix-table-header"
-           DataSource="listBonusYearFilter">
+           DataSource="AllMaterials">
         <ColumnDefinitions Context="row">
-            <PropertyColumn Width="250px" Title="Fullname" Property="c => c.EmpName">
+            <Column Fixed="ColumnFixPlacement.Right" TData="MaterialDto" Width="50px" Context="row">
                 <Template>
-                    <a href="javascript:void(0);" @onclick="() => DetailUser(row)">
-                        @row.EmpName
-                    </a>
+                    <Popover Title="Actions" Trigger="new Trigger[] { Trigger.Click }" Placement="Placement.Bottom">
+                        <ChildContent>
+                            <Button Icon="menu" />
+                        </ChildContent>
+                        <ContentTemplate>
+                            <div style="display: flex; flex-direction: column; gap: 4px; padding: 8px;">
+                          
+                                @if (Edit)
+                                {
+                                    <Button Type="ButtonType.Text" OnClick="@(async () => await EditWeight(row))" Style="text-align: left;">
+                                        <Icon Type="edit" /> Edit
+                                    </Button>
+                                }
+                                <Button Type="ButtonType.Text" OnClick="@(async () => await Detail(row))" Style="text-align: left;">
+                                    <Icon Type="eye" /> Detail
+                                </Button>
+
+                            </div>
+                        </ContentTemplate>
+                    </Popover>
                 </Template>
-            </PropertyColumn>
-            <PropertyColumn Width="100px" Title="WorkDayId" Property="c => c.EmpWorkDay"></PropertyColumn>
-            <PropertyColumn Width="100px" Title="Factory" Property="c => c.EmpDept" ></PropertyColumn>
-            <PropertyColumn Width="150px" Title="DepartmentName" Property="c => c.EmpJoinDate" ></PropertyColumn>
-            <PropertyColumn Width="90px"  Title="Position" Property="c => c.BonusYear" ></PropertyColumn>
+            </Column>
+            <PropertyColumn Width="120px" Title="BOM Head" Property="c => c.BOMHead"></PropertyColumn>
+            <PropertyColumn Width="200px" Title="Description" Property="c => c.BOMDescription"></PropertyColumn>
+            <PropertyColumn Width="130px" Title="Code" Property="c => c.Code"></PropertyColumn>
+            <PropertyColumn Width="200px" Title="Name" Property="c => c.Name"></PropertyColumn>
+            <PropertyColumn Width="100px" Title="Type" Property="c => c.TYPE"></PropertyColumn>
+            <PropertyColumn Width="80px" Title="Unit" Property="c => c.Unit"></PropertyColumn>
+            <PropertyColumn Width="90px" Title="Plant" Property="c => c.Plant"></PropertyColumn>
+            <PropertyColumn Width="110px" Title="Weight (kg)" Property="c => c.WeightValue"></PropertyColumn>
+            <PropertyColumn Width="120px" Title="Start Date" Property="c => c.StartDate" Format="dd/MM/yyyy"></PropertyColumn>
+            <PropertyColumn Width="120px" Title="End Date" Property="c => c.EndDate" Format="dd/MM/yyyy"></PropertyColumn>
         </ColumnDefinitions>
-    </Table> *@
+    </Table>
 </div>
+
+<MaterialModal @ref="_materialModal" OnSaved="LoadAllMaterials" />
+<DetailMaterialModal @ref="_detailMaterialModal" />

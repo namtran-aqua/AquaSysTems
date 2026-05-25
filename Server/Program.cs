@@ -1,9 +1,8 @@
-﻿//----------------------------------------------------------------------------------------------------------------------------------------------
-using AquaSolution.Data.Connection;
-using AquaSolution.Data.Data;
+﻿using AquaSolution.Data.Connection;
 using AquaSolution.Server;
 using AquaSolution.Server.Services.Common.Hangfire;
 using AquaSolution.Server.Services.Hangfire;
+using AquaSolution.Server.Services.ScrapManagetment.MaterialServices;
 using AquaSolution.Server.SignalR;
 using Hangfire;
 using Hangfire.SqlServer;
@@ -11,25 +10,27 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ===================== SERVICES =====================
-
-// MVC + API
+// ===================== MVC + API =====================
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+builder.Services.AddControllers()
+    .AddJsonOptions(opt =>
+    {
+        opt.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    });
 
-// DbContext
+// ===================== DATABASE =====================
 builder.Services.AddDbContext<AquaDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddDbContext<ePADContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("ePAD")));
 
-// JWT Auth (GIỮ NHƯNG SWAGGER KHÔNG DÙNG)
+// ===================== JWT AUTH =====================
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -43,18 +44,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 Encoding.UTF8.GetBytes("VerySecretKey12345"))
         };
     });
-
 builder.Services.AddAuthorization();
+
+// ===================== APP SERVICES =====================
 builder.Services.AddAppServices();
 
 // ===================== SWAGGER =====================
-
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddControllers()
-    .AddJsonOptions(opt =>
-    {
-        opt.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
-    });
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
@@ -62,12 +58,11 @@ builder.Services.AddSwaggerGen(c =>
         Title = "ITSM API",
         Version = "v1"
     });
-
-    // ❌ KHÔNG add security → Swagger không cần login
 });
 
-// SignalR
+// ===================== SIGNALR =====================
 builder.Services.AddSignalR();
+
 // ===================== HANGFIRE =====================
 builder.Services.AddHangfire(config =>
 {
@@ -85,41 +80,33 @@ builder.Services.AddHangfire(config =>
                   DisableGlobalLocks = true
               });
 });
-// ✅ ADD CORS
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll",
-        policy =>
-        {
-            policy
-                .AllowAnyOrigin()
-                .AllowAnyMethod()
-                .AllowAnyHeader();
-        });
-});
-
 builder.Services.AddHangfireServer();
 
-//builder.Services.AddHostedService<VacuumBackgroundService>();
+// ===================== CORS =====================
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
 
 // ===================== BUILD =====================
 var app = builder.Build();
-//app.UsePathBase("/AquaSolution");
-//app.UsePathBase("/ITSM");
 
-// 👉 HANGFIRE DASHBOARD
+// ===================== HANGFIRE DASHBOARD =====================
 app.UseHangfireDashboard("/hangfire", new DashboardOptions
 {
-    Authorization = new[]
-    {
-        new HangfireAllowAllFilter()
-    }
+    Authorization = new[] { new HangfireAllowAllFilter() }
 });
 
+// ===================== HANGFIRE JOBS =====================
 var lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
-
 lifetime.ApplicationStarted.Register(() =>
 {
+    // Job 9h sáng
     RecurringJob.AddOrUpdate<DailyJobService>(
         "daily-job-9am",
         job => job.RunDailyAsync(),
@@ -129,25 +116,28 @@ lifetime.ApplicationStarted.Register(() =>
             TimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")
         }
     );
-});
 
-// ===================== MIDDLEWARE =====================
-
-// ===================== SWAGGER =====================
-// ⚠️ QUAN TRỌNG: SwaggerEndpoint PHẢI LÀ RELATIVE PATH
-app.UseSwagger();
-
-app.UseSwaggerUI(c =>
-{
-    c.RoutePrefix = "swagger";         
-    c.SwaggerEndpoint(
-        "v1/swagger.json",
-        "ITSM API v1"
+    // Job 00:00 kích hoạt weight đã lên lịch
+    RecurringJob.AddOrUpdate<MaterialService>(
+        "activate-scheduled-weights-midnight",
+        job => job.ActivateScheduledWeightsAsync(),
+        Cron.Daily(0, 0),
+        new RecurringJobOptions
+        {
+            TimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")
+        }
     );
 });
 
+// ===================== SWAGGER UI =====================
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.RoutePrefix = "swagger";
+    c.SwaggerEndpoint("v1/swagger.json", "ITSM API v1");
+});
 
-// ===================== ENV =====================
+// ===================== ENVIRONMENT =====================
 if (app.Environment.IsDevelopment())
 {
     app.UseWebAssemblyDebugging();
@@ -158,24 +148,19 @@ else
     app.UseHsts();
 }
 
+// ===================== MIDDLEWARE =====================
 app.UseHttpsRedirection();
-
 app.UseBlazorFrameworkFiles();
 app.UseStaticFiles();
-
 app.UseRouting();
-
-// Auth (API vẫn dùng, Swagger thì không)
+app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 
-// ===================== MAP =====================
-app.UseCors("AllowAll");
+// ===================== ENDPOINTS =====================
 app.MapRazorPages();
 app.MapControllers();
 app.MapHub<SignalrHub>("/signalrhub");
+app.MapFallbackToFile("index.html"); // Blazor fallback (phải cuối cùng)
 
-// Blazor fallback (PHẢI CUỐI CÙNG)
-app.MapFallbackToFile("index.html");
 app.Run();
-

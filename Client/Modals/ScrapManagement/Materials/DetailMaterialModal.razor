@@ -1,0 +1,88 @@
+@using AntDesign
+@using AquaSolution.Client.Common
+@using AquaSolution.Shared.ScrapManagement.Materials
+@inject HttpClient httpClient
+
+@{
+    RenderFragment footer = @<div>
+        <Button Style="color:#808080" OnClick="@Close">
+            Close
+        </Button>
+    </div>;
+}
+
+<style>
+    .fix-table-header table thead th {
+        position: sticky !important;
+        top: 0;
+        z-index: 8 !important;
+        background-color: #fff;
+    }
+
+    .fix-table-wrapper {
+        max-height: 260px;
+        overflow: auto;
+    }
+</style>
+
+
+<Modal @bind-Visible="IsModalVisible" Title="Chi tiết vật liệu" Style="z-index: 9999;width:1200px;margin-top:-75px" Footer="@footer">
+    @if (Material != null)
+    {
+        <div style="margin-bottom: 20px;">
+            <h3>Thông tin chung</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div>
+                    <strong>BOM Head:</strong> @Material.BOMHead
+                </div>
+                <div>
+                    <strong>BOM Description:</strong> @Material.BOMDescription
+                </div>
+                <div>
+                    <strong>Code:</strong> @Material.Code
+                </div>
+                <div>
+                    <strong>Name:</strong> @Material.Name
+                </div>
+                <div>
+                    <strong>Type:</strong> @Material.TYPE
+                </div>
+                <div>
+                    <strong>Unit:</strong> @Material.Unit
+                </div>
+                <div>
+                    <strong>Plant:</strong> @Material.Plant
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <h2>Chi tiết Weight</h2>
+            <div class="fix-table-wrapper">
+                <Table TItem="WeightDto"
+                       Class="fix-table-header"
+                       DataSource="@ListWeight"
+                       Size="TableSize.Small"
+                       Bordered="true"
+                       HidePagination
+                       Style="min-width:100%;">
+                    <PropertyColumn Property="c => c.WeightValue" Title="Weight Value" />
+                    <PropertyColumn Property="c => c.StartDate" Title="Start Date" Format="dd/MM/yyyy" />
+                    <PropertyColumn Property="c => c.EndDate" Title="End Date" Format="dd/MM/yyyy" />
+                    <PropertyColumn Property="c => c.CreatedDate" Title="Created Date" Format="dd/MM/yyyy HH:mm" />
+                    <PropertyColumn Property="c => c.CreatedBy" Title="Created By" />
+                    <PropertyColumn Property="c => c.IsActive" Title="Active">
+                        @if (context.IsActive)
+                        {
+                            <Tag Color="@GetTagColor.GetTagColorCss("Resolved")">Active</Tag>
+                        }
+                        else
+                        {
+                            <Tag Color="@GetTagColor.GetTagColorCss("Rejected")">Inactive</Tag>
+                        }
+                    </PropertyColumn>
+                </Table>
+            </div>
+        </div>
+    }
+</Modal>
