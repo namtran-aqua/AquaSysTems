@@ -1,0 +1,423 @@
+@using AntDesign
+@using AquaSolution.Shared.ScrapManagement.Scrap
+@using AquaSolution.Shared.ScrapManagement.Materials
+@using AquaSolution.Shared.UserManagements
+@using AquaSolution.Shared.Enum.Scrap
+
+<style>
+    .scrap-info-field {
+        background: #fafafa;
+        border-radius: 6px;
+        padding: 8px 12px;
+        border: 1px solid #f0f0f0;
+        display: inline-flex;
+        gap: 6px;
+    }
+    .scrap-info-label {
+        font-size: 13px;
+        color: #888;
+        font-weight: 600;
+    }
+    .scrap-info-value {
+        font-size: 13px;
+        font-weight: 500;
+        color: #222;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .scrap-title-field {
+        background: #fafafa;
+        border-radius: 6px;
+        padding: 10px 14px;
+        border: 1px solid #f0f0f0;
+    }
+    .fix-table-header table thead th {
+        position: sticky !important;
+        top: 0;
+        z-index: 8 !important;
+        background-color: #fafafa;
+    }
+    .fix-table-wrapper {
+        max-height: 200px;
+        overflow: auto;
+        border: 1px solid #f0f0f0;
+        border-radius: 6px;
+    }
+    .readonly-cell { color: #999; font-size: 13px; }
+    .step-tag {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px; height: 24px;
+        border-radius: 50%;
+        color: #fff;
+        font-size: 11px; font-weight: 600;
+        flex-shrink: 0; margin-top: 2px;
+    }
+    .step-card {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 6px 10px;
+        border: 0.5px solid #e8e8e8;
+        border-radius: 6px;
+        background: #fafafa;
+        min-width: 150px;
+        max-width: 220px;
+        flex: 1;
+    }
+    .step-card-info { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+    .step-card-step { font-size: 12px; font-weight: 600; color: #1677ff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .step-card-name { font-size: 12px; color: #222; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .step-card-sub { font-size: 11px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .step-card-comment { font-size: 11px; color: #d48806; font-style: italic; margin-top: 2px; }
+    .step-separator { color: #d9d9d9; font-size: 16px; flex-shrink: 0; }
+    .steps-row {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding: 4px 0;
+        margin-bottom: 4px;
+    }
+    .confirm-section {
+        background: #f6ffed;
+        border: 1px solid #b7eb8f;
+        border-radius: 8px;
+        padding: 12px 16px;
+    }
+</style>
+
+@{
+    RenderFragment footer =
+        @<div style="display:flex; gap:8px; justify-content:flex-end">
+            <Button OnClick="Close">Đóng</Button>
+            @if (Mode == ScrapModalMode.Create)
+            {
+                <Button Type="ButtonType.Primary" Loading="@_submitting" OnClick="SubmitAsync">Tạo phiếu</Button>
+            }
+            @if (Mode == ScrapModalMode.Approval)
+            {
+                <Button Danger Loading="@_submitting" OnClick="RejectAction">Reject</Button>
+                <Button Type="ButtonType.Primary"
+                        Style="background:#52c41a; border-color:#52c41a;"
+                        Loading="@_submitting"
+                        OnClick="ApproveAction">Approve</Button>
+            }
+            @if (Mode == ScrapModalMode.Confirm)
+            {
+                <Button Type="ButtonType.Primary" Loading="@_submitting" OnClick="ConfirmAction">Xác nhận nhận hàng</Button>
+            }
+        </div>;
+}
+
+<Modal @bind-Visible="IsModalVisible"
+       Title="@ModalTitle"
+       Style="z-index:9999; width:1200px; margin-top:-95px"
+       Footer="@footer"
+       Draggable="true"
+       OnCancel="Close">
+
+    @if (_loading)
+    {
+        <div style="text-align:center; padding:40px"><Spin /></div>
+    }
+    else if (HandleScrap == null || CurrenUser == null)
+    {
+        <div style="text-align:center; padding:40px"><Spin /></div>
+    }
+    else
+    {
+        <div style="display:flex; flex-direction:column; gap:10px;">
+
+            @* Step Process - hiển thị khi Detail/Approval/Confirm *@
+            @if (Mode != ScrapModalMode.Create && HandleScrap?.Approvals != null && HandleScrap.Approvals.Any())
+            {
+                <div>
+                    <div style="font-size:11px; font-weight:600; text-transform:uppercase; color:#999; margin-bottom:6px; letter-spacing:.06em;">
+                        Luồng duyệt
+                    </div>
+                    <div class="steps-row">
+                        @foreach (var step in HandleScrap.Approvals.OrderBy(x => x.Step))
+                        {
+                            var tagColor = step.Status switch
+                            {
+                                StatusScrap.Approved  => "#52c41a",
+                                StatusScrap.Rejected  => "#ff4d4f",
+                                StatusScrap.InterView => "#1677ff",
+                                _                     => "#bfbfbf"
+                            };
+                            @if (step.Step > 1)
+                            {
+                                <span class="step-separator">→</span>
+                            }
+                            <div class="step-card">
+                                <div class="step-tag" style="background:@tagColor;">@step.Step</div>
+                                <div class="step-card-info">
+                                    <div class="step-card-step">@step.Title</div>
+                                    <div class="step-card-name">
+                                        @(step.ActionByName ?? step.DecisionMakerName ?? "—")
+                                    </div>
+                                    <div class="step-card-sub">
+                                        @(step.ActionByWorkDayId ?? step.DecisionMakerWorkDayId ?? "")
+                                    </div>
+                                    <div class="step-card-sub">
+                                        @(step.ActionByEmail ?? step.DecisionMakerEmail ?? "")
+                                    </div>
+                                    <Tag Color="@tagColor" Style="font-size:10px; margin-top:2px;">
+                                        @step.Status.ToString()
+                                    </Tag>
+                                    @if (step.ActionDate.HasValue)
+                                    {
+                                        <div class="step-card-sub">@step.ActionDate.Value.ToString("dd/MM/yyyy HH:mm")</div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(step.Comment))
+                                    {
+                                        <div class="step-card-comment">💬 @step.Comment</div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            @* Header info *@
+            <div class="scrap-title-field">
+                <div style="font-size:15px; text-align:center; font-weight:500; color:#222;">@HandleScrap?.Title</div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <div class="scrap-info-field">
+                    <div class="scrap-info-label">Người tạo:</div>
+                    <div class="scrap-info-value">
+                        @if (Mode == ScrapModalMode.Create)
+                        {
+                            @($"{CurrenUser?.WorkDayId} — {CurrenUser?.FullName}")
+                        }
+                        else
+                        {
+                            @HandleScrap?.CreatedByName
+                        }
+                    </div>
+                </div>
+                <div class="scrap-info-field">
+                    <div class="scrap-info-label">Trạng thái:</div>
+                    @{
+                        var (sColor, sText) = HandleScrap!.Status switch
+                        {
+                            StatusScrap.Approved  => ("#52c41a", "Approved"),
+                            StatusScrap.Rejected  => ("#ff4d4f", "Rejected"),
+                            StatusScrap.InterView => ("#1677ff", "Đang duyệt"),
+                            StatusScrap.Done      => ("#722ed1", "Done"),
+                            _                     => ("#faad14", "Pending")
+                        };
+                    }
+                    <Tag Color="@sColor">@sText</Tag>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
+                <div class="scrap-info-field">
+                    <div class="scrap-info-label">Factory:</div>
+                    <div class="scrap-info-value">
+                        @(Mode == ScrapModalMode.Create ? CurrenUser?.FactoryName : HandleScrap?.FactoryName)
+                    </div>
+                </div>
+                <div class="scrap-info-field">
+                    <div class="scrap-info-label">Department:</div>
+                    <div class="scrap-info-value">
+                        @(Mode == ScrapModalMode.Create ? CurrenUser?.DepartmentName : HandleScrap?.DepartmentName)
+                    </div>
+                </div>
+                <div class="scrap-info-field">
+                    <div class="scrap-info-label">Ngày tạo:</div>
+                    <div class="scrap-info-value">
+                        @(Mode == ScrapModalMode.Create ? DateTime.Now.ToString("dd/MM/yyyy HH:mm") : HandleScrap?.CreatedDate.ToString("dd/MM/yyyy HH:mm"))
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="scrap-info-label" style="margin-bottom:4px;">Mô tả</div>
+                <TextArea @bind-Value="HandleScrap!.Description"
+                          Rows="1"
+                          Disabled="@(Mode != ScrapModalMode.Create)"
+                          Placeholder="Nhập mô tả..." />
+            </div>
+
+            <Divider Style="margin:6px 0" />
+
+            @* Detail table *@
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <span style="font-size:11px; font-weight:600; text-transform:uppercase; color:#999; letter-spacing:.06em;">
+                    Chi tiết vật tư
+                    @if (HandleScrap?.TotalAmount > 0)
+                    {
+                        <span style="color:#1677ff; margin-left:8px;">
+                            Tổng: @HandleScrap.TotalAmount?.ToString("N2") kg
+                        </span>
+                    }
+                </span>
+                @if (Mode == ScrapModalMode.Create)
+                {
+                    <Button Size="ButtonSize.Small" OnClick="AddRow">
+                        <Icon Type="plus" Theme="IconThemeType.Outline" /> Thêm dòng
+                    </Button>
+                }
+            </div>
+
+            <div class="fix-table-wrapper">
+                <Table DataSource="@_details"
+                       TItem="HistoryDetailScrapDto"
+                       HidePagination="true"
+                       Class="fix-table-header"
+                       Size="TableSize.Small">
+                    <ColumnDefinitions Context="context">
+
+                        <Column TData="string" Title="#" Width="40px">
+                            @(_details.IndexOf(context) + 1)
+                        </Column>
+
+                        <Column TData="Guid" Title="Code" Width="280px">
+                            <Select TItem="MaterialDto"
+                                    TItemValue="Guid"
+                                    DataSource="@_materials"
+                                    Value="context.MaterialId"
+                                    ValueChanged="(val) => OnMaterialIdChanged(context, val)"
+                                    ValueName="@nameof(MaterialDto.Id)"
+                                    LabelName="@nameof(MaterialDto.Code)"
+                                    Placeholder="-- Chọn --"
+                                    Style="width:100%"
+                                    Disabled="@(Mode != ScrapModalMode.Create)"
+                                    AllowClear>
+                                <ItemTemplate Context="mat">
+                                    <div style="line-height:1.3">
+                                        <div style="font-weight:500;">@mat.Code</div>
+                                        <div style="font-size:11px; color:#999;">@mat.Name</div>
+                                    </div>
+                                </ItemTemplate>
+                            </Select>
+                        </Column>
+
+                        <Column TData="string" Title="Name" Width="200px">
+                            <span class="readonly-cell">@(context.Name ?? "—")</span>
+                        </Column>
+                        <Column TData="string" Title="BOM Head" Width="150px">
+                            <span class="readonly-cell">@(context.BOMHead ?? "—")</span>
+                        </Column>
+                        <Column TData="string" Title="Unit" Width="70px">
+                            <span class="readonly-cell">@(context.Unit ?? "—")</span>
+                        </Column>
+                        <Column TData="string" Title="Type" Width="70px">
+                            <span class="readonly-cell">@(context.TYPE ?? "—")</span>
+                        </Column>
+                        <Column TData="string" Title="Plant" Width="70px">
+                            <span class="readonly-cell">@context.Plant</span>
+                        </Column>
+                        <Column TData="decimal" Title="Weight(kg)" Width="90px">
+                            <span class="readonly-cell">@context.Weight</span>
+                        </Column>
+                        <Column TData="decimal" Title="Quantity" Width="100px">
+                            <AntDesign.InputNumber TValue="decimal"
+                                                   Value="context.Quantity"
+                                                   ValueChanged="(val) => context.Quantity = val"
+                                                   Min="0"
+                                                   Disabled="@(Mode != ScrapModalMode.Create)"
+                                                   Style="width:100%" />
+                        </Column>
+                        <Column TData="decimal" Title="Total(kg)" Width="100px">
+                            <span class="readonly-cell">@((context.Quantity * context.Weight).ToString("N2"))</span>
+                        </Column>
+                        <Column TData="string" Title="Lý do" Width="150px">
+                            <AntDesign.Input @bind-Value="context.Reson"
+                                             Disabled="@(Mode != ScrapModalMode.Create)"
+                                             Placeholder="Lý do..." />
+                        </Column>
+
+                        @if (Mode == ScrapModalMode.Create)
+                        {
+                            <Column TData="string" Title="" Width="40px">
+                                <Button Size="ButtonSize.Small" Danger Shape="ButtonShape.Circle"
+                                        Icon="delete" OnClick="() => RemoveRow(context)" />
+                            </Column>
+                        }
+
+                    </ColumnDefinitions>
+                </Table>
+            </div>
+
+            @* Confirm section - chỉ hiện khi Mode = Confirm *@
+            @if (Mode == ScrapModalMode.Confirm)
+            {
+                <Divider Style="margin:6px 0" />
+                <div class="confirm-section">
+                    <div style="font-size:13px; font-weight:600; color:#389e0d; margin-bottom:12px;">
+                        ✅ Xác nhận nhận hàng
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                        <div>
+                            <div class="scrap-info-label" style="margin-bottom:4px;">Số lượng thực tế nhận (kg)</div>
+                            <AntDesign.InputNumber TValue="decimal"
+                                                   @bind-Value="_confirmAmount"
+                                                   Min="0"
+                                                   Style="width:100%"
+                                                   Placeholder="Nhập số lượng thực tế..." />
+                            @if (HandleScrap?.TotalAmount > 0)
+                            {
+                                <div style="font-size:11px; color:#999; margin-top:4px;">
+                                    Tổng phiếu: @HandleScrap.TotalAmount?.ToString("N2") kg
+                                </div>
+                            }
+                        </div>
+                        <div>
+                            <div class="scrap-info-label" style="margin-bottom:4px;">Tình trạng nhận</div>
+                            <RadioGroup @bind-Value="_confirmStatus" Style="display:flex; flex-direction:column; gap:6px;">
+                                <Radio Value="@ConfirmationStatusType.Received">
+                                    <span style="color:#52c41a; font-weight:500;">✓ Nhận đủ (Received)</span>
+                                </Radio>
+                                <Radio Value="@ConfirmationStatusType.Overreceived">
+                                    <span style="color:#1677ff; font-weight:500;">↑ Nhận dư (Over received)</span>
+                                </Radio>
+                                <Radio Value="@ConfirmationStatusType.Underreceived">
+                                    <span style="color:#faad14; font-weight:500;">↓ Nhận thiếu (Under received)</span>
+                                </Radio>
+                            </RadioGroup>
+                        </div>
+                    </div>
+                    <div style="margin-top:10px;">
+                        <div class="scrap-info-label" style="margin-bottom:4px;">Ghi chú</div>
+                        <TextArea @bind-Value="_confirmNote" Rows="2" Placeholder="Ghi chú thêm nếu có..." />
+                    </div>
+                </div>
+            }
+
+        </div>
+    }
+</Modal>
+
+@* Reject comment modal *@
+@{
+    RenderFragment rejectFooter =
+        @<div style="display:flex; gap:8px; justify-content:flex-end">
+            <Button OnClick="CloseRejectModal">Huy</Button>
+            <Button Danger OnClick="ConfirmRejectAction">Xac nhan tu choi</Button>
+        </div>;
+}
+
+<Modal Title="Ly do tu choi"
+       Visible="IsRejectModalVisible"
+       OnCancel="CloseRejectModal"
+       Footer="@rejectFooter">
+    <p style="font-size:13px; color:#555; margin-bottom:8px;">
+        Phieu: <strong>@HandleScrap?.Title</strong>
+    </p>
+    <textarea class="ant-input"
+              rows="4"
+              placeholder="Nhap ly do tu choi..."
+              value="@RejectComment"
+              @oninput="@((e) => RejectComment = e.Value?.ToString())">
+    </textarea>
+</Modal>

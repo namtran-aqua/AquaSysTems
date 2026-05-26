@@ -33,10 +33,12 @@ namespace AquaSolution.Data.Data.MappingConfigurations.Scraps
             builder.Property(e => e.Weight)
                  .HasColumnType("decimal(18,4)")
                  .HasDefaultValue(0m);
+
             builder.Property(e => e.TotalWeight)
                  .HasColumnType("decimal(18,4)")
                  .HasDefaultValue(0m);
-
+            builder.Property(x => x.Reson)
+       .HasMaxLength(3000);
 
 
         }

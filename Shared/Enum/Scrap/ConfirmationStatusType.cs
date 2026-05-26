@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -7,12 +7,10 @@ using System.Threading.Tasks;
 
 namespace AquaSolution.Shared.Enum.Scrap
 {
-    public enum StatusScrap
+    public enum ConfirmationStatusType
     {
-        Pending,
-        InterView,
-        Approved,
-        Rejected,
-        Done
+        Received,
+        Overreceived,
+        Underreceived
     }
 }

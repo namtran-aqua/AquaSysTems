@@ -1,0 +1,187 @@
+@using AntDesign
+@using AquaSolution.Shared.ScrapManagement.FlowApprovals
+@using AquaSolution.Shared.UserManagements
+@using AquaSolution.Shared.Factory
+@using AquaSolution.Shared.Departments
+
+<style>
+    .flow-info-label {
+        font-size: 13px;
+        color: var(--color-text-secondary);
+        font-weight: 500;
+        margin-bottom: 4px;
+    }
+    .fix-table-header table thead th {
+        position: sticky !important;
+        top: 0;
+        z-index: 8 !important;
+        background-color: var(--color-background-secondary);
+    }
+    .fix-table-wrapper {
+        max-height: 300px;
+        overflow: auto;
+        border: 0.5px solid var(--color-border-tertiary);
+        border-radius: 6px;
+    }
+</style>
+
+@{
+    RenderFragment footer =
+        @<div style="display:flex; gap:8px; justify-content:flex-end">
+            <Button OnClick="Close">Đóng</Button>
+            <Button Type="ButtonType.Primary" Loading="@_submitting" OnClick="SubmitAsync">Lưu</Button>
+        </div>;
+}
+
+<Modal @bind-Visible="IsModalVisible"
+       Title="@(_isEdit ? "Chỉnh sửa luồng duyệt" : "Tạo luồng duyệt")"
+       Style="z-index:9999; width:950px; margin-top:-80px"
+       Footer="@footer"
+       Draggable="true"
+       OnCancel="Close">
+
+    @if (_loading)
+    {
+        <div style="text-align:center; padding:40px">
+            <Spin />
+        </div>
+    }
+    else
+    {
+        <div style="display:flex; flex-direction:column; gap:12px;">
+
+            @* Header chọn Factory/Department - ẩn khi Edit *@
+            @if (!_isEdit)
+            {
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                    <div>
+                        <div class="flow-info-label">Factory</div>
+                        <Select TItem="FactoryDto"
+                                TItemValue="Guid"
+                                DataSource="@_factories"
+                                @bind-Value="_selectedFactoryId"
+                                ValueName="@nameof(FactoryDto.Id)"
+                                LabelName="@nameof(FactoryDto.Name)"
+                                Placeholder="-- Chọn Factory --"
+                                Style="width:100%"
+                                AllowClear>
+                        </Select>
+                    </div>
+                    <div>
+                        <div class="flow-info-label">Department</div>
+                        <Select TItem="DepartmentDto"
+                                TItemValue="Guid"
+                                DataSource="@_departments"
+                                @bind-Value="_selectedDepartmentId"
+                                ValueName="@nameof(DepartmentDto.Id)"
+                                LabelName="@nameof(DepartmentDto.Name)"
+                                Placeholder="-- Chọn Department --"
+                                Style="width:100%"
+                                AllowClear>
+                        </Select>
+                    </div>
+                </div>
+                <Divider Style="margin:4px 0" />
+            }
+            else
+            {
+                @* Khi Edit: hiển thị readonly Factory/Department *@
+                <div style="display:flex; gap:12px; align-items:center; padding:8px 12px; background:#fafafa; border:0.5px solid #f0f0f0; border-radius:6px;">
+                    <div style="font-size:13px; color:#999;">Factory:</div>
+                    <div style="font-size:13px; font-weight:500; color:#222;">@_editFactoryName</div>
+                    <div style="font-size:13px; color:#d9d9d9; margin:0 4px;">|</div>
+                    <div style="font-size:13px; color:#999;">Department:</div>
+                    <div style="font-size:13px; font-weight:500; color:#222;">@_editDepartmentName</div>
+                </div>
+                <Divider Style="margin:4px 0" />
+            }
+
+            @* Header Steps *@
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:11px; font-weight:500; text-transform:uppercase; letter-spacing:.06em; color:var(--color-text-tertiary);">
+                    Các bước duyệt
+                </span>
+                <Button Size="ButtonSize.Small" OnClick="AddStep"
+                        Disabled="@(!_isEdit && (_selectedFactoryId == Guid.Empty || _selectedDepartmentId == Guid.Empty))">
+                    <Icon Type="plus" Theme="IconThemeType.Outline" /> Thêm bước
+                </Button>
+            </div>
+
+            @* Table Steps *@
+            <div class="fix-table-wrapper">
+                <Table DataSource="@_steps"
+                       TItem="CreateFlowStepRequest"
+                       HidePagination="true"
+                       Class="fix-table-header"
+                       Size="TableSize.Small">
+                    <ColumnDefinitions Context="step">
+
+                        <Column TData="int" Title="Step" Width="60px">
+                            <span style="font-weight:600; color:var(--color-text-primary);">@step.Step</span>
+                        </Column>
+
+                        <Column TData="string" Title="Tên bước" Width="160px">
+                            <Input @bind-Value="step.Name" Placeholder="Nhập tên bước..." />
+                        </Column>
+
+                        <Column TData="string" Title="Người duyệt" Width="230px">
+                            <Select TItem="UserDto"
+                                    TItemValue="Guid"
+                                    DataSource="@_users"
+                                    Value="step.DecisionMaker"
+                                    ValueChanged="(val) => OnUserSelected(step, val)"
+                                    ValueName="@nameof(UserDto.Id)"
+                                    EnableSearch
+                                    LabelName="@nameof(UserDto.FullName)"
+                                    Placeholder="-- Chọn --"
+                                    Style="width:100%"
+                                    AllowClear>
+                                <ItemTemplate Context="user">
+                                    <div style="line-height:1.4">
+                                        <div style="font-size:13px; font-weight:500; color:var(--color-text-primary);">@user.FullName</div>
+                                        <div style="font-size:11px; color:var(--color-text-secondary);">@user.Email</div>
+                                    </div>
+                                </ItemTemplate>
+                            </Select>
+                        </Column>
+
+                        <Column TData="string" Title="Thông tin người duyệt" Width="220px">
+                            @{
+                                var selectedUser = _users.FirstOrDefault(u => u.Id == step.DecisionMaker);
+                            }
+                            @if (selectedUser != null)
+                            {
+                                <div style="line-height:1.6">
+                                    <div style="font-size:12px; font-weight:500; color:var(--color-text-primary);">
+                                        @selectedUser.WorkDayId — @selectedUser.FullName
+                                    </div>
+                                    <div style="font-size:11px; color:var(--color-text-secondary);">
+                                        @selectedUser.Email
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <span style="color:var(--color-text-tertiary); font-size:12px;">—</span>
+                            }
+                        </Column>
+
+                        <Column TData="string" Title="Mô tả" Width="180px">
+                            <Input @bind-Value="step.Description" Placeholder="Mô tả..." />
+                        </Column>
+
+                        <Column TData="string" Title="" Width="40px">
+                            <Button Size="ButtonSize.Small"
+                                    Danger
+                                    Shape="ButtonShape.Circle"
+                                    Icon="delete"
+                                    OnClick="() => RemoveStep(step)" />
+                        </Column>
+
+                    </ColumnDefinitions>
+                </Table>
+            </div>
+
+        </div>
+    }
+</Modal>

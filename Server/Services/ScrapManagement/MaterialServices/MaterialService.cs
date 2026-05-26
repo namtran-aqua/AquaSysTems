@@ -114,7 +114,7 @@ namespace AquaSolution.Server.Services.ScrapManagetment.MaterialServices
                               Unit = m.Unit,
                               Plant = m.Plant,
                               WeightId = w?.Id,
-                              WeightValue = w?.WeightValue,
+                              WeightValue = w.WeightValue,
                               StartDate = w?.StartDate,
                               EndDate = w?.EndDate,
                               CreatedDate = w?.CreatedDate,

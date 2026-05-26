@@ -36,7 +36,7 @@ namespace AquaSolution.Client.Modals.ScrapManagement.Materials
                 {
                     MaterialId = material.Id,
                     WeightId = material.WeightId ?? Guid.Empty,
-                    WeightValue = material.WeightValue ?? 0,
+                    WeightValue = material.WeightValue ,
                     StartDate = material.StartDate ?? DateTime.Now,
                     CreatedBy = currentUserId ?? Guid.Empty
                 };

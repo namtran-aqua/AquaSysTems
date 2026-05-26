@@ -1,0 +1,232 @@
+@page "/flow-approval-management"
+@using AquaSolution.Client.Common
+@using AntDesign
+@using AquaSolution.Client.Modals.ScrapManagement.FlowApprovalScraps
+@using AquaSolution.Shared.ScrapManagement.FlowApprovals
+@using AquaSolution.Shared.UserManagements
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>Flow Approval Management</PageTitle>
+
+<style>
+    .fix-table-header table { border-collapse: collapse; }
+    .fix-table-header table thead th {
+        position: sticky !important;
+        z-index: 8 !important;
+        top: 0;
+        background-color: #fff;
+    }
+    .ant-table-content { min-height: 65vh !important; }
+    .ant-table-pagination {
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        z-index: 999;
+        padding: 8px;
+        text-align: center;
+        box-shadow: 0 -1px 4px rgba(0,0,0,0.1);
+        background: transparent !important;
+    }
+    .step-tag {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: #1677ff;
+        color: #fff;
+        font-size: 11px;
+        font-weight: 600;
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+    .step-card {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 8px 10px;
+        border: 0.5px solid #e8e8e8;
+        border-radius: 6px;
+        background: #fafafa;
+        min-width: 160px;
+        max-width: 300px;
+        flex: 1;
+    }
+    .step-card-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        flex: 1;
+        min-width: 0;
+    }
+    .step-card-step {
+        font-size: 12px;
+        font-weight: 600;
+        color: #1677ff;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .step-card-workid {
+        font-size: 12px;
+        font-weight: 600;
+        color: #0e0e0e;;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .step-card-name {
+        font-size: 12px;
+        color:#0e0e0e;;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .step-card-email {
+        font-size: 12px;
+        color: #0e0e0e;;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .step-card-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        flex-shrink: 0;
+    }
+    .steps-row {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding: 4px 0;
+    }
+    .step-separator {
+        color: #d9d9d9;
+        font-size: 16px;
+        flex-shrink: 0;
+    }
+</style>
+
+<div class="mb-3">
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px; flex-wrap:wrap;">
+        <Button OnClick="CreateFlow" Icon="plus" Type="ButtonType.Primary">
+            Tạo luồng duyệt
+        </Button>
+
+        <Select TItem="string"
+                TItemValue="string"
+                DataSource="@_factoryOptions"
+                Value="@_filterFactory"
+                ValueChanged="OnFilterFactory"
+                Placeholder="-- Factory --"
+                Style="width:160px"
+                AllowClear>
+        </Select>
+
+        <Select TItem="string"
+                TItemValue="string"
+                DataSource="@_departmentOptions"
+                Value="@_filterDepartment"
+                ValueChanged="OnFilterDepartment"
+                Placeholder="-- Department --"
+                Style="width:160px"
+                AllowClear>
+        </Select>
+
+        <Button OnClick="ClearFilter" Icon="clear">Xóa filter</Button>
+
+        <span style="font-size:12px; color:#999;">
+            Hiển thị @ListFiltered.Count / @ListFlowApproval.Count luồng
+        </span>
+    </div>
+</div>
+
+<div style="width:100%; overflow-x:auto; max-height:75vh;">
+    <Table TItem="FlowApprovalResponse"
+           Size="TableSize.Small"
+           Bordered
+           Class="customTable fix-table-header"
+           DataSource="ListFiltered"
+           Loading="IsLoading">
+        <ColumnDefinitions Context="row">
+
+            <Column TData="string" Fixed="ColumnFixPlacement.Left" Width="50px">
+                <Template>
+                    <Popover Title="Actions"
+                             Trigger="new Trigger[] { Trigger.Click }"
+                             Placement="Placement.Bottom">
+                        <ChildContent>
+                            <Button Icon="menu" Size="ButtonSize.Small" />
+                        </ChildContent>
+                        <ContentTemplate>
+                            <div style="display:flex; flex-direction:column; gap:4px; padding:4px;">
+                                <Popconfirm Title="Xóa luồng duyệt này?"
+                                            OnConfirm="@(async () => await DeleteFlow(row.DepartmentId, row.FactoryId))"
+                                            OkText="Xóa" CancelText="Hủy">
+                                    <Button Type="ButtonType.Text" Danger Style="text-align:left;">
+                                        <Icon Type="delete" /> Xóa luồng
+                                    </Button>
+                                 </Popconfirm>
+                                  <Button Type="ButtonType.Text" Style="text-align:left;"
+                                            OnClick="@(async () => await UpdateFlow(row))">
+                                                <Icon Type="edit" /> Chỉnh sửa luồng
+                                     </Button>
+                            </div>
+                        </ContentTemplate>
+                    </Popover>
+                </Template>
+            </Column>
+
+            <PropertyColumn Width="100px" Title="Factory" Property="c => c.FactoryName" />
+            <PropertyColumn Width="130px" Title="Department" Property="c => c.DepartmentName" />
+
+            <Column TData="string" Title="Các bước duyệt">
+                <Template>
+                    <div class="steps-row">
+                        @foreach (var step in row.Steps.OrderBy(s => s.Step))
+                        {
+                            @if (step.Step > 1)
+                            {
+                                <span class="step-separator">→</span>
+                            }
+                            <div class="step-card">
+                                <div class="step-tag">@step.Step</div>
+                                <div class="step-card-info">
+                                    @* Dòng 1: Tên bước *@
+                                    <div class="step-card-step">@step.Name</div>
+                                    @* Dòng 2: WorkId *@
+                                    <div class="step-card-workid">@step.DecisionMakerWorkId</div>
+                                    @* Dòng 3: Họ tên *@
+                                    <div class="step-card-name">@step.DecisionMakerName</div>
+                                    @* Dòng 4: Email *@
+                                    <div class="step-card-email">@step.DecisionMakerEmail</div>
+                                </div>
+                                <div class="step-card-actions">
+                                    <Popconfirm Title="Xóa step này?"
+                                                OnConfirm="@(async () => await DeleteStep(step.Id))"
+                                                OkText="Xóa" CancelText="Hủy">
+                                        <Button Type="ButtonType.Text" Danger
+                                                Size="ButtonSize.Small" Icon="delete" />
+                                    </Popconfirm>
+                                    <Button Type="ButtonType.Text"
+                                            Size="ButtonSize.Small" Icon="edit"
+                                            OnClick="@(async () => await UpdateStep(step))" />
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </Template>
+            </Column>
+
+        </ColumnDefinitions>
+    </Table>
+</div>
+
+<FlowApprovalScrapModal  OnSaved="LoadFlows" @ref="FlowApprovalScrapModal" />
+<EditStepModal @ref="EditStepModal"OnSaved="LoadFlows"></EditStepModal>

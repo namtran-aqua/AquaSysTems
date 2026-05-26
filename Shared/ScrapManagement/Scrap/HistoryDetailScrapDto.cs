@@ -1,15 +1,14 @@
-﻿using AquaSolution.Shared.Enum.Scrap;
+using AquaSolution.Shared.Enum.Scrap;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AquaSolution.Data.Data.Entities.Scraps
+namespace AquaSolution.Shared.ScrapManagement.Scrap
 {
-    public class HistoryScrapDetail
+    public class HistoryDetailScrapDto
     {
-
         public Guid Id { get; set; }
 
         public Guid ScrapHistoryId { get; set; }
@@ -35,6 +34,5 @@ namespace AquaSolution.Data.Data.Entities.Scraps
         public decimal Weight { get; set; }
         public decimal TotalWeight { get; set; }
         public string? Reson { get; set; } = null;
-
     }
 }

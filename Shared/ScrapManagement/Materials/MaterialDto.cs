@@ -19,7 +19,7 @@ namespace AquaSolution.Shared.ScrapManagement.Materials
         public string Unit { get; set; }
         public PlantType Plant { get; set; }
         public Guid? WeightId { get; set; }
-        public decimal? WeightValue { get; set; }
+        public decimal WeightValue { get; set; } = default;
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public DateTime? CreatedDate { get; set; }

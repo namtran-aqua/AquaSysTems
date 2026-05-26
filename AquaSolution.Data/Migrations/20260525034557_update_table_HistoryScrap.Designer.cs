@@ -4,6 +4,7 @@ using AquaSolution.Data.Connection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AquaSolution.Data.Migrations
 {
     [DbContext(typeof(AquaDbContext))]
-    partial class AquaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260525034557_update_table_HistoryScrap")]
+    partial class update_table_HistoryScrap
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1983,20 +1986,8 @@ namespace AquaSolution.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<decimal?>("ConfirmAmount")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("decimal(18,4)")
-                        .HasDefaultValue(0m);
-
-                    b.Property<DateTime?>("ConfirmDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ConfirmationStatusType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid?>("Confirmer")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<bool>("Confirm")
+                        .HasColumnType("bit");
 
                     b.Property<Guid>("CreatedBy")
                         .HasColumnType("uniqueidentifier");
@@ -2032,14 +2023,7 @@ namespace AquaSolution.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal?>("TotalAmount")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("decimal(18,4)")
-                        .HasDefaultValue(0m);
-
                     b.HasKey("Id");
-
-                    b.HasIndex("Confirmer");
 
                     b.HasIndex("CreatedBy");
 
@@ -2085,10 +2069,6 @@ namespace AquaSolution.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("decimal(18,4)")
                         .HasDefaultValue(0m);
-
-                    b.Property<string>("Reson")
-                        .HasMaxLength(3000)
-                        .HasColumnType("nvarchar(3000)");
 
                     b.Property<Guid>("ScrapHistoryId")
                         .HasColumnType("uniqueidentifier");
@@ -2790,11 +2770,6 @@ namespace AquaSolution.Data.Migrations
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.Scraps.HistoryScrap", b =>
                 {
-                    b.HasOne("AquaSolution.Data.Data.Entities.Admin.User", null)
-                        .WithMany()
-                        .HasForeignKey("Confirmer")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("AquaSolution.Data.Data.Entities.Admin.User", null)
                         .WithMany()
                         .HasForeignKey("CreatedBy")

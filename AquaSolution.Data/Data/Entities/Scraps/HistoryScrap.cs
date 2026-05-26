@@ -14,6 +14,12 @@ namespace AquaSolution.Data.Data.Entities.Scraps
         public Guid FactoryId { get; set; }
         public DateTime CreatedDate { get; set; }
         public Guid CreatedBy { get; set; }
+        public string? Notes { get; set; }
+        public Guid? Confirmer { get; set; }
+        public DateTime? ConfirmDate { get; set; }
+        public ConfirmationStatusType ConfirmationStatusType { get; set;  }
+        public decimal? ConfirmAmount { get; set; } = 0;
+        public decimal? TotalAmount { get; set; } = 0;
 
     }
 }
