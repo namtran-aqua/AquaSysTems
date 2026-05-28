@@ -91,6 +91,12 @@
 </style>
 
 @{
+    // Kiểm tra step của CurrenUser có đang InterView không
+    // => chỉ khi đó mới cho phép bấm Approve / Reject
+    var _myStep = HandleScrap?.Approvals?
+        .FirstOrDefault(a => a.DecisionMaker == CurrenUser!.Id);
+    var _canAct = _myStep?.Status == StatusScrap.InterView;
+
     RenderFragment footer =
         @<div style="display:flex; gap:8px; justify-content:flex-end">
             <Button OnClick="Close">Đóng</Button>
@@ -98,7 +104,7 @@
             {
                 <Button Type="ButtonType.Primary" Loading="@_submitting" OnClick="SubmitAsync">Tạo phiếu</Button>
             }
-            @if (Mode == ScrapModalMode.Approval)
+            @if (Mode == ScrapModalMode.Approval && _canAct)
             {
                 <Button Danger Loading="@_submitting" OnClick="RejectAction">Reject</Button>
                 <Button Type="ButtonType.Primary"
@@ -348,8 +354,6 @@
                     </ColumnDefinitions>
                 </Table>
             </div>
-
-            @* Confirm section - chỉ hiện khi Mode = Confirm *@
             @if (Mode == ScrapModalMode.Confirm)
             {
                 <Divider Style="margin:6px 0" />
@@ -414,10 +418,10 @@
     <p style="font-size:13px; color:#555; margin-bottom:8px;">
         Phieu: <strong>@HandleScrap?.Title</strong>
     </p>
-    <textarea class="ant-input"
+    <TextArea class="ant-input"
               rows="4"
               placeholder="Nhap ly do tu choi..."
               value="@RejectComment"
               @oninput="@((e) => RejectComment = e.Value?.ToString())">
-    </textarea>
+    </TextArea>
 </Modal>

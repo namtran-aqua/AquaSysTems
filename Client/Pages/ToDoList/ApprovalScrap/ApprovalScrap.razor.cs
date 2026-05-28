@@ -16,6 +16,13 @@ namespace AquaSolution.Client.Pages.ToDoList.ApprovalScrap
 
         private List<HistoryScrapDto> ListScrap { get; set; } = new();
         private List<HistoryScrapDto> ListFiltered { get; set; } = new();
+
+        // Grouped theo trạng thái step của user hiện tại: InterView / Approved / Rejected
+        private Dictionary<string, List<HistoryScrapDto>> GroupedScraps { get; set; } = new();
+
+        // Mặc định mở nhóm Pending (InterView) khi vào trang
+        private HashSet<string> ExpandedGroups { get; set; } = new() { "InterView" };
+
         private bool IsLoading { get; set; } = false;
         private UserDto CurrenUser { get; set; } = new();
         private RegisterScrapModal registerScrapModal { get; set; } = default!;
@@ -35,8 +42,6 @@ namespace AquaSolution.Client.Pages.ToDoList.ApprovalScrap
             var currenUserClass = new CurrenUser(Http, AuthStateProvider);
             CurrenUser = await currenUserClass.LoadCurrenUser();
             await LoadScraps();
-
-            await LoadScraps();
         }
 
         public async Task LoadScraps()
@@ -46,7 +51,6 @@ namespace AquaSolution.Client.Pages.ToDoList.ApprovalScrap
             IsLoading = true;
             try
             {
-           
                 var res = await Http.GetFromJsonAsync<List<HistoryScrapDto>>(
                     $"api/scrap/get-scrap-for-approval/{CurrenUser.Id}");
 
@@ -106,10 +110,50 @@ namespace AquaSolution.Client.Pages.ToDoList.ApprovalScrap
         {
             ListFiltered = ListScrap
                 .Where(x =>
-                    (string.IsNullOrEmpty(_filterFactory) || x.FactoryName == _filterFactory) &&
+                    (string.IsNullOrEmpty(_filterFactory)    || x.FactoryName    == _filterFactory) &&
                     (string.IsNullOrEmpty(_filterDepartment) || x.DepartmentName == _filterDepartment))
                 .ToList();
+            BuildGroups();
             StateHasChanged();
+        }
+
+        /// <summary>
+        /// Nhóm danh sách theo trạng thái step của chính CurrenUser trên từng phiếu.
+        /// InterView = Pending, Approved = Approved, Rejected = Rejected.
+        /// Thứ tự: Pending > Approved > Rejected.
+        /// </summary>
+        private void BuildGroups()
+        {
+            GroupedScraps = ListFiltered
+                .GroupBy(x =>
+                {
+                    var myStep = x.Approvals?
+                        .FirstOrDefault(a => a.DecisionMaker == CurrenUser.Id);
+
+                    return myStep?.Status switch
+                    {
+                        StatusScrap.InterView => "InterView",
+                        StatusScrap.Approved  => "Approved",
+                        StatusScrap.Rejected  => "Rejected",
+                        _                    => "Other"
+                    };
+                })
+                .OrderBy(g => g.Key switch
+                {
+                    "InterView" => 0,
+                    "Approved"  => 1,
+                    "Rejected"  => 2,
+                    _           => 3
+                })
+                .ToDictionary(g => g.Key, g => g.ToList());
+        }
+
+        private void ToggleGroup(string key)
+        {
+            if (ExpandedGroups.Contains(key))
+                ExpandedGroups.Remove(key);
+            else
+                ExpandedGroups.Add(key);
         }
         #endregion
 

@@ -18,16 +18,23 @@
         top: 0;
         background-color: #fff;
     }
-    .ant-table-content { min-height: 65vh !important; }
-    .ant-table-pagination {
-        position: fixed;
-        bottom: 0;
-        width: 100%;
-        z-index: 999;
-        padding: 8px;
-        text-align: center;
-        box-shadow: 0 -1px 4px rgba(0,0,0,0.1);
-        background: transparent !important;
+    .ant-table-content { min-height: unset !important; }
+    .group-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        background: #fafafa;
+        cursor: pointer;
+        user-select: none;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .group-header:hover { background: #f0f5ff; }
+    .group-wrapper {
+        margin-bottom: 10px;
+        border: 1px solid #e8e8e8;
+        border-radius: 6px;
+        overflow: hidden;
     }
 </style>
 
@@ -58,111 +65,178 @@
     </div>
 </div>
 
-<div style="width:100%; overflow-x:auto; max-height:75vh;">
-    <Table TItem="HistoryScrapDto"
-           Size="TableSize.Small"
-           Bordered
-           Class="customTable fix-table-header"
-           DataSource="ListFiltered"
-           Loading="IsLoading">
-        <ColumnDefinitions Context="row">
+<div style="width:100%; overflow-x:auto; max-height:80vh; overflow-y:auto;">
 
-            @* Action menu *@
-            <Column TData="string" Fixed="ColumnFixPlacement.Left" Width="50px">
-                <Template>
-                    <Popover Title="Actions"
-                             Trigger="new Trigger[] { Trigger.Click }"
-                             Placement="Placement.Bottom">
-                        <ChildContent>
-                            <Button Icon="menu" Size="ButtonSize.Small" />
-                        </ChildContent>
-                        <ContentTemplate>
-                            <div style="display:flex; flex-direction:column; gap:4px; padding:4px;">
+    @foreach (var group in GroupedScraps)
+    {
+        var isExpanded = ExpandedGroups.Contains(group.Key);
 
-                                <Button Type="ButtonType.Text"
-                                        OnClick="@(async () => await DetailScrap(row))"
-                                        Style="text-align:left;">
-                                    <Icon Type="eye" /> Detail
-                                </Button>
+        var (headerColor, groupLabel) = group.Key switch
+        {
+            "InterView" => ("#1677ff", "Pending"),
+            "Approved"  => ("#52c41a", "Approved"),
+            "Rejected"  => ("#ff4d4f", "Rejected"),
+            _           => ("#faad14", group.Key)
+        };
 
-                                @* Chỉ hiện Approve/Reject khi đang InterView *@
-                                @if (row.Status == StatusScrap.InterView)
-                                {
-                                    <Popconfirm Title="Confirm approval?"
-                                                OnConfirm="@(async () => await ApproveRow(row))"
-                                                OkText="Approve" CancelText="Cancel">
-                                        <Button Type="ButtonType.Text"
-                                                Style="text-align:left; color:#52c41a;">
-                                            <Icon Type="check" /> Approve
-                                        </Button>
-                                    </Popconfirm>
+        <div class="group-wrapper">
+            <div class="group-header" @onclick="() => ToggleGroup(group.Key)">
+                <Icon Type="@(isExpanded ? "down" : "right")" Style="font-size:12px; color:#888;" />
+                <Tag Color="@headerColor">@groupLabel (@group.Value.Count)</Tag>
+            </div>
 
-                                    <Button Type="ButtonType.Text" Danger
-                                            OnClick="@(() => OpenRejectModal(row))"
-                                            Style="text-align:left;">
-                                        <Icon Type="close" /> Reject
-                                    </Button>
-                                }
+            @if (isExpanded)
+            {
+                <div style="overflow-x:auto;">
+                    <Table TItem="HistoryScrapDto"
+                           Size="TableSize.Small"
+                           Bordered
+                           Class="customTable fix-table-header"
+                           DataSource="group.Value"
+                           Loading="IsLoading"
+                           HidePagination>
+                        <ColumnDefinitions Context="row">
 
-                            </div>
-                        </ContentTemplate>
-                    </Popover>
-                </Template>
-            </Column>
+                            @* Action menu *@
+                            <Column TData="string" Fixed="ColumnFixPlacement.Left" Width="50px">
+                                <Template>
+                                    <Popover Title="Actions"
+                                             Trigger="new Trigger[] { Trigger.Click }"
+                                             Placement="Placement.Bottom">
+                                        <ChildContent>
+                                            <Button Icon="menu" Size="ButtonSize.Small" />
+                                        </ChildContent>
+                                        <ContentTemplate>
+                                            <div style="display:flex; flex-direction:column; gap:4px; padding:4px;">
 
-            <PropertyColumn Width="200px" Title="Title" Property="c => c.Title" />
-            <PropertyColumn Width="120px" Title="Factory" Property="c => c.FactoryName" />
-            <PropertyColumn Width="130px" Title="Department" Property="c => c.DepartmentName" />
+                                                <Button Type="ButtonType.Text"
+                                                        OnClick="@(async () => await DetailScrap(row))"
+                                                        Style="text-align:left;">
+                                                    <Icon Type="eye" /> Detail
+                                                </Button>
 
-            <Column TData="string" Title="Status" Width="120px">
-                <Template>
-                    @{
-                        var (color, text) = row.Status switch
-                        {
-                            StatusScrap.Approved  => ("#52c41a", "Approved"),
-                            StatusScrap.Rejected  => ("#ff4d4f", "Rejected"),
-                            StatusScrap.InterView => ("#1677ff", "In Review"),
-                            StatusScrap.Done      => ("#722ed1", "Done"),
-                            _                     => ("#faad14", "Pending")
-                        };
-                    }
-                    <Tag Color="@color">@text</Tag>
-                </Template>
-            </Column>
+                                                @{
+                                                    var myPendingStep = row.Approvals?
+                                                        .FirstOrDefault(a => a.DecisionMaker == CurrenUser.Id
+                                                                          && a.Status == StatusScrap.InterView);
+                                                }
+                                                @if (myPendingStep != null)
+                                                {
+                                                    <Popconfirm Title="Confirm approval?"
+                                                                OnConfirm="@(async () => await ApproveRow(row))"
+                                                                OkText="Approve" CancelText="Cancel">
+                                                        <Button Type="ButtonType.Text"
+                                                                Style="text-align:left; color:#52c41a;">
+                                                            <Icon Type="check" /> Approve
+                                                        </Button>
+                                                    </Popconfirm>
 
-            <Column TData="string" Title="Current Step" Width="180px">
-                <Template>
-                    @{
-                        var currentStep = row.Approvals?
-                            .FirstOrDefault(a => a.Status == StatusScrap.InterView);
-                    }
-                    @if (currentStep != null)
-                    {
-                        <div style="line-height:1.5">
-                            <div style="font-size:12px; font-weight:600; color:#1677ff;">
-                                Step @currentStep.Step — @currentStep.Title
-                            </div>
-                            <div style="font-size:11px; color:#555;">
-                                @currentStep.DecisionMakerName
-                            </div>
-                        </div>
-                    }
-                    else
-                    {
-                        <span style="color:#999; font-size:12px;">—</span>
-                    }
-                </Template>
-            </Column>
+                                                    <Button Type="ButtonType.Text" Danger
+                                                            OnClick="@(() => OpenRejectModal(row))"
+                                                            Style="text-align:left;">
+                                                        <Icon Type="close" /> Reject
+                                                    </Button>
+                                                }
 
-            <PropertyColumn Width="150px" Title="Created By" Property="c => c.CreatedByName" />
-            <PropertyColumn Width="130px" Title="Created Date" Property="c => c.CreatedDate" Format="dd/MM/yyyy HH:mm" />
-            <PropertyColumn Width="150px" Title="Last Action By" Property="c => c.LastActionByName" />
-            <Column TData="string" Title="Last Action Time" Width="130px">
-                @(row.LastActionDate?.ToString("dd/MM/yyyy HH:mm") ?? "—")
-            </Column>
+                                            </div>
+                                        </ContentTemplate>
+                                    </Popover>
+                                </Template>
+                            </Column>
 
-        </ColumnDefinitions>
-    </Table>
+                            <PropertyColumn Width="200px" Title="Title" Property="c => c.Title" />
+                            <PropertyColumn Width="120px" Title="Factory" Property="c => c.FactoryName" />
+                            <PropertyColumn Width="130px" Title="Department" Property="c => c.DepartmentName" />
+
+                            <Column TData="string" Title="Overall Status" Width="120px">
+                                <Template>
+                                    @{
+                                        var (color, text) = row.Status switch
+                                        {
+                                            StatusScrap.Approved  => ("#52c41a", "Approved"),
+                                            StatusScrap.Rejected  => ("#ff4d4f", "Rejected"),
+                                            StatusScrap.InterView => ("#1677ff", "In Review"),
+                                            StatusScrap.Done      => ("#722ed1", "Done"),
+                                            _                     => ("#faad14", "Pending")
+                                        };
+                                    }
+                                    <Tag Color="@color">@text</Tag>
+                                </Template>
+                            </Column>
+
+                            <Column TData="string" Title="Current Step" Width="180px">
+                                <Template>
+                                    @{
+                                        var currentStep = row.Approvals?
+                                            .FirstOrDefault(a => a.Status == StatusScrap.InterView);
+                                    }
+                                    @if (currentStep != null)
+                                    {
+                                        <div style="line-height:1.5">
+                                            <div style="font-size:12px; font-weight:600; color:#1677ff;">
+                                                Step @currentStep.Step — @currentStep.Title
+                                            </div>
+                                            <div style="font-size:11px; color:#555;">
+                                                @currentStep.DecisionMakerName
+                                            </div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span style="color:#999; font-size:12px;">—</span>
+                                    }
+                                </Template>
+                            </Column>
+
+                            @* Trạng thái action của chính user này trên phiếu *@
+                            <Column TData="string" Title="My Action" Width="150px">
+                                <Template>
+                                    @{
+                                        var myApproval = row.Approvals?
+                                            .FirstOrDefault(a => a.DecisionMaker == CurrenUser.Id);
+                                    }
+                                    @if (myApproval != null)
+                                    {
+                                        var (ac, at) = myApproval.Status switch
+                                        {
+                                            StatusScrap.Approved  => ("#52c41a", "Approved"),
+                                            StatusScrap.Rejected  => ("#ff4d4f", "Rejected"),
+                                            StatusScrap.InterView => ("#1677ff", "Pending"),
+                                            _                     => ("#faad14", "Waiting")
+                                        };
+                                        <div>
+                                            <Tag Color="@ac">@at</Tag>
+                                            @if (myApproval.ActionDate.HasValue)
+                                            {
+                                                <div style="font-size:11px; color:#999; margin-top:2px;">
+                                                    @myApproval.ActionDate.Value.ToString("dd/MM/yyyy HH:mm")
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                </Template>
+                            </Column>
+
+                            <PropertyColumn Width="150px" Title="Created By" Property="c => c.CreatedByName" />
+                            <PropertyColumn Width="130px" Title="Created Date" Property="c => c.CreatedDate" Format="dd/MM/yyyy HH:mm" />
+                            <PropertyColumn Width="150px" Title="Last Action By" Property="c => c.LastActionByName" />
+                            <Column TData="string" Title="Last Action Time" Width="130px">
+                                @(row.LastActionDate?.ToString("dd/MM/yyyy HH:mm") ?? "—")
+                            </Column>
+
+                        </ColumnDefinitions>
+                    </Table>
+                </div>
+            }
+        </div>
+    }
+
+    @if (!IsLoading && !GroupedScraps.Any())
+    {
+        var description = "No Data";
+        <Empty Description="description" />
+    }
+
 </div>
 
 <RegisterScrapModal @ref="registerScrapModal" OnActionCompleted="LoadScraps" />
@@ -182,11 +256,11 @@
     <p style="font-size:13px; color:#555; margin-bottom:8px;">
         Ticket: <strong>@RowToReject?.Title</strong>
     </p>
-    <textarea class="ant-input"
+    <TextArea class="ant-input"
               rows="4"
               placeholder="Enter reject reason..."
               value="@RejectComment"
               @oninput="@((e) => RejectComment = e.Value?.ToString())"
               style="width:100%; padding:8px; border-radius:4px;">
-    </textarea>
+    </TextArea>
 </Modal>

@@ -25,7 +25,6 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
         private readonly IRepository<FlowApprovalScrap> _flowApprovalScrapRepository;
         private readonly IRepository<RequestApproval> _requestApprovalRepository;
 
-
         public ScrapService(IRepository<Material> materialRepository,
                 IRepository<Factory> factoryRepository,
                 IRepository<Department> departmentRepository,
@@ -47,9 +46,9 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
             _requestApprovalRepository = requestApprovalRepository;
         }
 
+        // ── Không đụng vào ──────────────────────────────────────────────────────────
         public async Task CreateScrap(HandleScrapDto createScrapDto)
         {
-            // Kiểm tra null
             var factory = await _factoryRepository.GetByIdAsync(createScrapDto.FactoryId)
                 ?? throw new Exception($"Factory không tồn tại: {createScrapDto.FactoryId}");
 
@@ -59,9 +58,7 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
             var historyScrapId = Guid.NewGuid();
             decimal totalAmount = 0;
             if (createScrapDto.HistoryDetails != null && createScrapDto.HistoryDetails.Any())
-            {
                 totalAmount = createScrapDto.HistoryDetails.Sum(d => d.Quantity * d.Weight);
-            }
 
             var historyScrap = new HistoryScrap
             {
@@ -77,6 +74,7 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
             };
 
             await _historyScrapRepository.InsertAsync(historyScrap);
+
             if (createScrapDto.HistoryDetails != null)
             {
                 var historyDetails = createScrapDto.HistoryDetails.Select(detail => new HistoryScrapDetail
@@ -99,7 +97,6 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
                 await _historyScrapDetailRepository.InsertRangeAsync(historyDetails);
             }
 
-            // Lấy flow approval theo FactoryId và DepartmentId
             var flowSteps = await _flowApprovalScrapRepository.Query()
                 .Where(x => x.FactoryId == createScrapDto.FactoryId && x.DepartmentId == createScrapDto.DepartmentId)
                 .OrderBy(x => x.Step)
@@ -126,16 +123,15 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
             await _historyScrapRepository.SaveChangesAsync();
         }
 
+        // ── Không đụng vào ──────────────────────────────────────────────────────────
         public async Task<List<HistoryScrapDto>> GetHistory()
         {
             var query = from hs in _historyScrapRepository.Query()
                         join factory in _factoryRepository.Query() on hs.FactoryId equals factory.Id
                         join department in _departmentRepository.Query() on hs.DepartmentId equals department.Id
                         join creator in _userRepository.Query() on hs.CreatedBy equals creator.Id
-
                         join lastUser in _userRepository.Query() on hs.LastActionBy equals lastUser.Id into lastUserGroup
                         from lastUser in lastUserGroup.DefaultIfEmpty()
-
                         join confirmer in _userRepository.Query() on hs.Confirmer equals confirmer.Id into confirmerGroup
                         from confirmer in confirmerGroup.DefaultIfEmpty()
                         select new HistoryScrapDto
@@ -166,30 +162,21 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
             var historyScrapDtos = await query.ToListAsync();
             var ids = historyScrapDtos.Select(x => x.Id).ToList();
             var allDetails = await _historyScrapDetailRepository.Query()
-                                  .Where(d => ids.Contains(d.ScrapHistoryId))
-                                  .ToListAsync();
-
+                                  .Where(d => ids.Contains(d.ScrapHistoryId)).ToListAsync();
             var materialIds = allDetails.Select(d => d.MaterialId).Distinct().ToList();
             var materials = await _materialRepository.Query()
-                                  .Where(m => materialIds.Contains(m.Id))
-                                  .ToDictionaryAsync(m => m.Id);
-
+                                  .Where(m => materialIds.Contains(m.Id)).ToDictionaryAsync(m => m.Id);
             var detailsGrouped = allDetails.GroupBy(d => d.ScrapHistoryId)
                                            .ToDictionary(g => g.Key, g => g.ToList());
-
             var allApprovals = await _requestApprovalRepository.Query()
                                   .Where(a => ids.Contains(a.HistoryScrapId))
-                                  .OrderBy(a => a.Step)
-                                  .ToListAsync();
-
+                                  .OrderBy(a => a.Step).ToListAsync();
             var approvalUserIds = allApprovals.Select(a => a.DecisionMaker)
                                   .Union(allApprovals.Where(a => a.ActionBy.HasValue).Select(a => a.ActionBy.Value))
                                   .Distinct().ToList();
-
             var approvalUsers = await _userRepository.Query()
                                   .Where(u => approvalUserIds.Contains(u.Id))
                                   .ToDictionaryAsync(u => u.Id, u => new { u.FullName, u.Email, u.WorkDayId });
-
             var approvalsGrouped = allApprovals.GroupBy(a => a.HistoryScrapId)
                                                .ToDictionary(g => g.Key, g => g.ToList());
 
@@ -225,18 +212,13 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
                     dto.Approvals = approvals.Select(a =>
                     {
                         approvalUsers.TryGetValue(a.DecisionMaker, out var decisionMakerInfo);
-                        
-                        string? actionByName = null;
-                        string? actionByWorkDayId = null;
-                        string? actionByEmail = null;
-
+                        string? actionByName = null, actionByWorkDayId = null, actionByEmail = null;
                         if (a.ActionBy.HasValue && approvalUsers.TryGetValue(a.ActionBy.Value, out var actionByInfo))
                         {
                             actionByName = actionByInfo.FullName;
                             actionByWorkDayId = actionByInfo.WorkDayId;
                             actionByEmail = actionByInfo.Email;
                         }
-
                         return new RequestApprovalDto
                         {
                             Id = a.Id,
@@ -262,20 +244,24 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
             return historyScrapDtos;
         }
 
+        // ── SỬA: lấy tất cả phiếu user từng tham gia duyệt (không chỉ InterView) ──
         public async Task<List<HistoryScrapDto>> GetScrapForApproval(Guid userId)
         {
-            // Tìm tất cả các RequestApproval mà user này là DecisionMaker và đang ở trạng thái InterView
-            var pendingApprovals = await _requestApprovalRepository.Query()
-                .Where(a => a.DecisionMaker == userId && a.Status != StatusScrap.Pending)
+            // Lấy tất cả phiếu mà user này là DecisionMaker ở bất kỳ step nào
+            // (InterView = đang chờ, Approved = đã duyệt, Rejected = đã từ chối)
+            // Loại trừ Pending vì Pending = chưa đến lượt user này
+            var relatedScrapIds = await _requestApprovalRepository.Query()
+                .Where(a => a.DecisionMaker == userId
+                         && a.Status != StatusScrap.Pending)
                 .Select(a => a.HistoryScrapId)
                 .Distinct()
                 .ToListAsync();
 
-            if (!pendingApprovals.Any())
+            if (!relatedScrapIds.Any())
                 return new List<HistoryScrapDto>();
 
-            // Tận dụng lại logic GetHistory nhưng chỉ filter những phiếu trong danh sách pendingApprovals
-            var query = from hs in _historyScrapRepository.Query().Where(x => pendingApprovals.Contains(x.Id))
+            var query = from hs in _historyScrapRepository.Query()
+                            .Where(x => relatedScrapIds.Contains(x.Id))
                         join factory in _factoryRepository.Query() on hs.FactoryId equals factory.Id
                         join department in _departmentRepository.Query() on hs.DepartmentId equals department.Id
                         join creator in _userRepository.Query() on hs.CreatedBy equals creator.Id
@@ -316,17 +302,20 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
             var materialIds = allDetails.Select(d => d.MaterialId).Distinct().ToList();
             var materials = await _materialRepository.Query()
                                   .Where(m => materialIds.Contains(m.Id)).ToDictionaryAsync(m => m.Id);
-            var detailsGrouped = allDetails.GroupBy(d => d.ScrapHistoryId).ToDictionary(g => g.Key, g => g.ToList());
+            var detailsGrouped = allDetails.GroupBy(d => d.ScrapHistoryId)
+                                           .ToDictionary(g => g.Key, g => g.ToList());
 
             var allApprovals = await _requestApprovalRepository.Query()
-                                  .Where(a => ids.Contains(a.HistoryScrapId)).OrderBy(a => a.Step).ToListAsync();
+                                  .Where(a => ids.Contains(a.HistoryScrapId))
+                                  .OrderBy(a => a.Step).ToListAsync();
             var approvalUserIds = allApprovals.Select(a => a.DecisionMaker)
                                   .Union(allApprovals.Where(a => a.ActionBy.HasValue).Select(a => a.ActionBy.Value))
                                   .Distinct().ToList();
             var approvalUsers = await _userRepository.Query()
                                   .Where(u => approvalUserIds.Contains(u.Id))
                                   .ToDictionaryAsync(u => u.Id, u => new { u.FullName, u.Email, u.WorkDayId });
-            var approvalsGrouped = allApprovals.GroupBy(a => a.HistoryScrapId).ToDictionary(g => g.Key, g => g.ToList());
+            var approvalsGrouped = allApprovals.GroupBy(a => a.HistoryScrapId)
+                                               .ToDictionary(g => g.Key, g => g.ToList());
 
             foreach (var dto in historyScrapDtos)
             {
@@ -337,9 +326,20 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
                         materials.TryGetValue(d.MaterialId, out var mat);
                         return new HistoryDetailScrapDto
                         {
-                            Id = d.Id, MaterialId = d.MaterialId, Name = mat?.Name ?? string.Empty, Code = mat?.Code ?? string.Empty, Unit = mat?.Unit ?? string.Empty,
-                            BOMHead = d.BOMHead, BOMDescription = d.BOMDescription, Quantity = d.Quantity, Weight = d.Weight, TotalWeight = d.TotalWeight,
-                            TYPE = d.TYPE, Plant = d.Plant, ScrapHistoryId = d.ScrapHistoryId, Reson = d.Reson
+                            Id = d.Id,
+                            MaterialId = d.MaterialId,
+                            Name = mat?.Name ?? string.Empty,
+                            Code = mat?.Code ?? string.Empty,
+                            Unit = mat?.Unit ?? string.Empty,
+                            BOMHead = d.BOMHead,
+                            BOMDescription = d.BOMDescription,
+                            Quantity = d.Quantity,
+                            Weight = d.Weight,
+                            TotalWeight = d.TotalWeight,
+                            TYPE = d.TYPE,
+                            Plant = d.Plant,
+                            ScrapHistoryId = d.ScrapHistoryId,
+                            Reson = d.Reson
                         };
                     }).ToList();
                 }
@@ -352,14 +352,27 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
                         string? actionByName = null, actionByWorkDayId = null, actionByEmail = null;
                         if (a.ActionBy.HasValue && approvalUsers.TryGetValue(a.ActionBy.Value, out var actionByInfo))
                         {
-                            actionByName = actionByInfo.FullName; actionByWorkDayId = actionByInfo.WorkDayId; actionByEmail = actionByInfo.Email;
+                            actionByName = actionByInfo.FullName;
+                            actionByWorkDayId = actionByInfo.WorkDayId;
+                            actionByEmail = actionByInfo.Email;
                         }
                         return new RequestApprovalDto
                         {
-                            Id = a.Id, HistoryScrapId = a.HistoryScrapId, Status = a.Status, Comment = a.Comment, ActionBy = a.ActionBy,
-                            ActionByName = actionByName, ActionByWorkDayId = actionByWorkDayId, ActionByEmail = actionByEmail,
-                            ActionDate = a.ActionDate, Title = a.Title, Step = a.Step, DecisionMaker = a.DecisionMaker,
-                            DecisionMakerName = decisionMakerInfo?.FullName, DecisionMakerWorkDayId = decisionMakerInfo?.WorkDayId, DecisionMakerEmail = decisionMakerInfo?.Email
+                            Id = a.Id,
+                            HistoryScrapId = a.HistoryScrapId,
+                            Status = a.Status,
+                            Comment = a.Comment,
+                            ActionBy = a.ActionBy,
+                            ActionByName = actionByName,
+                            ActionByWorkDayId = actionByWorkDayId,
+                            ActionByEmail = actionByEmail,
+                            ActionDate = a.ActionDate,
+                            Title = a.Title,
+                            Step = a.Step,
+                            DecisionMaker = a.DecisionMaker,
+                            DecisionMakerName = decisionMakerInfo?.FullName,
+                            DecisionMakerWorkDayId = decisionMakerInfo?.WorkDayId,
+                            DecisionMakerEmail = decisionMakerInfo?.Email
                         };
                     }).ToList();
                 }
@@ -384,36 +397,53 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
             if (currentStep.DecisionMaker != request.ActionBy)
                 throw new Exception("Bạn không phải là người duyệt bước này!");
 
+            var now = DateTime.Now;
+
+            // Ghi nhận action trên step hiện tại
             currentStep.ActionBy = request.ActionBy;
-            currentStep.ActionDate = DateTime.Now;
+            currentStep.ActionDate = now;
             currentStep.Comment = request.Comment;
 
+            // LastAction luôn là người vừa thao tác (approve hoặc reject)
             scrap.LastActionBy = request.ActionBy;
-            scrap.LastActionDate = DateTime.Now;
+            scrap.LastActionDate = now;
 
             if (!request.IsApproved)
             {
+                // Reject ở bất kỳ step nào → đóng phiếu luôn
                 currentStep.Status = StatusScrap.Rejected;
                 scrap.Status = StatusScrap.Rejected;
+
+                await _requestApprovalRepository.UpdateAsync(currentStep);
             }
             else
             {
                 currentStep.Status = StatusScrap.Approved;
+
                 var nextStep = approvals.FirstOrDefault(a => a.Step == currentStep.Step + 1);
-                
+
                 if (nextStep != null)
                 {
+                    // Còn step tiếp theo → mở step đó, scrap vẫn InterView
                     nextStep.Status = StatusScrap.InterView;
+                    scrap.Status = StatusScrap.InterView;
+
+                    await _requestApprovalRepository.UpdateAsync(currentStep);
+                    await _requestApprovalRepository.UpdateAsync(nextStep);
                 }
                 else
                 {
-                    scrap.Status = StatusScrap.Approved; // Hoàn thành tất cả các bước
+                    // Đây là step cuối → phiếu được duyệt hoàn toàn
+                    scrap.Status = StatusScrap.Approved;
+
+                    await _requestApprovalRepository.UpdateAsync(currentStep);
                 }
             }
 
-            await _requestApprovalRepository.UpdateAsync(currentStep);
             await _historyScrapRepository.UpdateAsync(scrap);
         }
+
+        // ── Không đụng vào ──────────────────────────────────────────────────────────
         public async Task<List<HistoryScrapDto>> GetScrapForConfirm()
         {
             var query = from hs in _historyScrapRepository.Query()
@@ -534,6 +564,7 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
             return historyScrapDtos;
         }
 
+        // ── Không đụng vào ──────────────────────────────────────────────────────────
         public async Task ConfirmScrap(ConfirmScrapDto request)
         {
             var scrap = await _historyScrapRepository.GetByIdAsync(request.HistoryScrapId)
