@@ -38,20 +38,7 @@ namespace AquaSolution.Client.Modals.ScrapManagement.Materials
             {
                 var data = await Http.GetFromJsonAsync<List<WeightDto>>(
                     $"api/Material/get-scheduled-weights/{CurrentMaterialId}") ?? new();
-                ListWeight = Enumerable.Range(1, 30)
-                   .SelectMany(i => data.Select(w => new WeightDto
-                   {
-
-                       MaterialId = w.MaterialId,
-                       WeightValue = w.WeightValue,
-                       StartDate = w.StartDate?.AddDays(i),
-                       EndDate = w.EndDate?.AddDays(i),
-                       IsActive = w.IsActive,
-                       CreatedDate = w.CreatedDate,
-                       CreatedBy = w.CreatedBy
-                   }))
-                   .ToList();
-
+                ListWeight = data.ToList();
             }
             catch (Exception ex)
             {

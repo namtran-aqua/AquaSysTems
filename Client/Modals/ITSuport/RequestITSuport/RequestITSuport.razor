@@ -1,4 +1,4 @@
-﻿@using AntDesign
+﻿@* @using AntDesign
 @using AquaSolution.Shared.CommonDto
 @using AquaSolution.Shared.Enum
 @using AquaSolution.Shared.ITSuport.RequestSuport
@@ -199,4 +199,577 @@
             </div>
         </div>
     </Form>
+</Modal>
+ *@
+@using AntDesign
+@using AquaSolution.Shared.CommonDto
+@using AquaSolution.Shared.Enum
+@using AquaSolution.Shared.ITSuport.RequestSuport
+@inject HttpClient httpClient
+@using AquaSolution.Shared.ITSuport.RequestSuportCategory
+@using AquaSolution.Shared.UserManagements
+@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IMessageService Message
+
+<style>
+    .its-modal .ant-modal-content {
+        border-radius: 12px;
+        overflow: hidden;
+        padding: 0;
+    }
+
+    .its-modal .ant-modal-body {
+        padding: 0;
+    }
+
+    .its-modal .ant-modal-footer {
+        display: none;
+    }
+
+    /* ── Header ── */
+    .its-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 20px;
+        border-bottom: 1px solid #d9d9d9;
+        background: #fff;
+    }
+
+    .its-modal-header-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .its-modal-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        background: #e6f4ff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .its-modal-title {
+        font-size: 15px;
+        font-weight: 500;
+        color: #141414;
+        margin: 0;
+    }
+
+    .its-modal-sub {
+        font-size: 11px;
+        color: #595959;
+        margin-top: 1px;
+    }
+
+    .its-ticket-tag {
+        font-family: monospace;
+        font-size: 11px;
+        color: #595959;
+        background: #f5f5f5;
+        border: 1px solid #d9d9d9;
+        padding: 3px 8px;
+        border-radius: 6px;
+    }
+
+    .its-status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 500;
+    }
+
+    .its-status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    /* ── Body ── */
+    .its-modal-body {
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        overflow-y: auto;
+        max-height: 65vh;
+    }
+
+    /* ── Field ── */
+    .its-field-label {
+        font-size: 11px;
+        font-weight: 500;
+        color: #595959;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 5px;
+    }
+
+        .its-field-label .req {
+            color: #ff4d4f;
+            margin-left: 2px;
+        }
+
+    .its-grid-3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 12px;
+    }
+
+    .its-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    /* ── Section divider ── */
+    .its-section-divider {
+        border: none;
+        border-top: 1px solid #d9d9d9;
+        margin: 4px 0;
+    }
+
+    .its-section-title {
+        font-size: 11px;
+        font-weight: 500;
+        color: #8c8c8c;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    /* ── Attachments ── */
+    .its-attach-area {
+        border: 1px dashed #bfbfbf;
+        border-radius: 8px;
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .its-attach-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 4px;
+    }
+
+    .its-file-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 7px 10px;
+        border-radius: 6px;
+        background: #f5f5f5;
+        border: 1px solid #d9d9d9;
+        font-size: 12px;
+    }
+
+    .its-file-name {
+        flex: 1;
+        color: #262626;
+    }
+
+    .its-file-meta {
+        font-size: 11px;
+        color: #595959;
+    }
+
+    /* ── Footer ── */
+    .its-modal-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 20px;
+        border-top: 1px solid #d9d9d9;
+        background: #f5f5f5;
+    }
+
+    .its-footer-left {
+        display: flex;
+        gap: 8px;
+    }
+
+    .its-footer-right {
+        display: flex;
+        gap: 8px;
+    }
+
+    .its-btn {
+        height: 32px;
+        border-radius: 20px !important;
+        font-size: 12px !important;
+        font-weight: 500 !important;
+        display: inline-flex !important;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .its-btn-resolved {
+        background: #f6ffed !important;
+        color: #237804 !important;
+        border-color: #73d13d !important;
+    }
+
+    .its-btn-onhold {
+        background: #fff7e6 !important;
+        color: #ad4e00 !important;
+        border-color: #ffa940 !important;
+    }
+
+    .its-btn-cancel {
+        background: #fff1f0 !important;
+        color: #a8071a !important;
+        border-color: #ff7875 !important;
+    }
+
+    /* override ant form spacing */
+    .its-modal-body .ant-form-item {
+        margin-bottom: 0;
+    }
+
+    .its-modal-body .ant-form-item-label > label {
+        font-size: 11px;
+        font-weight: 500;
+        color: #595959;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        height: auto;
+        margin-bottom: 4px;
+    }
+
+    .its-modal-body .ant-picker,
+    .its-modal-body .ant-select-selector,
+    .its-modal-body .ant-input,
+    .its-modal-body .ant-input-affix-wrapper {
+        border-radius: 8px !important;
+        font-size: 13px !important;
+    }
+</style>
+
+@{
+    var title1 = string.IsNullOrWhiteSpace(RequestSuport.RequestSolution)
+        ? "Vui lòng nhập RequestSolution !" : "";
+    var title2 = RequestSuport.DueDate == null
+        ? "Vui lòng nhập DueDate !" : "";
+
+    string statusColor = "", statusBg = "";
+    switch (RequestSuport.Status)
+    {
+        case RequestSuportStatusType.Open:
+            statusColor = "#1677ff"; statusBg = "#e6f4ff"; break;
+        case RequestSuportStatusType.InProgress:
+            statusColor = "#fa8c16"; statusBg = "#fff7e6"; break;
+        case RequestSuportStatusType.Resolved:
+            statusColor = "#52c41a"; statusBg = "#f6ffed"; break;
+        case RequestSuportStatusType.OnHold:
+            statusColor = "#8c8c8c"; statusBg = "#f5f5f5"; break;
+        case RequestSuportStatusType.Cancel:
+            statusColor = "#ff4d4f"; statusBg = "#fff1f0"; break;
+    }
+}
+
+<Modal @bind-Visible="IsModalVisible"
+       Class="its-modal"
+       Style="z-index:9999; width:1100px; top:20px;"
+       Closable="false"
+       Footer="null">
+
+    <!-- Header -->
+    <div class="its-modal-header">
+        <div class="its-modal-header-left">
+            <div class="its-modal-icon">
+                <Icon Type="customer-service" Theme="IconThemeType.Outline"
+                      Style="font-size:17px;color:#1677ff;" />
+            </div>
+            <div>
+                <p class="its-modal-title">IT Support Request</p>
+                <p class="its-modal-sub">@(IsEdit ? "Edit ticket" : "New ticket")</p>
+            </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+        
+            @if (RequestSuport.Status != default)
+            {
+                <span class="its-status-pill"
+                      style="color:@statusColor;background-color:@statusBg;">
+                    <span class="its-status-dot" style="background-color:@statusColor;"></span>
+                    @RequestSuport.Status
+                </span>
+            }
+            <Button Icon="close" Size="ButtonSize.Small"
+                    Style="border-radius:6px;border:1px solid #bfbfbf;"
+                    OnClick="@Close" />
+        </div>
+    </div>
+
+    <!-- Body -->
+    <Form @ref="@formRef"
+          Model="@RequestSuport"
+          Layout="FormLayout.Vertical"
+          OnFinish="SaveAsync"
+          ValidateOnChange="true">
+
+        <div class="its-modal-body">
+
+            <!-- Title -->
+            <FormItem Label="Title" Required="true">
+                <Input ShowCount
+                       @bind-Value="@RequestSuport.RequestTitle"
+                       AllowClear="true"
+                       Placeholder="Enter request title..." />
+            </FormItem>
+
+            <!-- Row: DueDate / Category / Technician (IT edit) or Category / RequestBy (user) -->
+            @if (IsEdit)
+            {
+                <div class="its-grid-3">
+                    <FormItem Label="Due Date">
+                        <DatePicker TValue="DateTime?"
+                                    Picker="@DatePickerType.Date"
+                                    Format="yyyy/MM/dd HH:mm"
+                                    ShowTime="true"
+                                    Style="width:100%;"
+                                    DisabledDate="date => date <= DateTime.Today.AddDays(-1)"
+                                    @bind-Value="RequestSuport.DueDate" />
+                    </FormItem>
+                    <FormItem Label="Category">
+                        <Select TItem="RequestSuportCategoryDto"
+                                TItemValue="Guid"
+                                DataSource="@RequestSuportCategories"
+                                @bind-Value="@RequestSuport.RequestSuportCategoryId"
+                                ItemValue="c => c.Id"
+                                EnableSearch
+                                AutoClearSearchValue="false"
+                                ItemLabel="c => c.Name"
+                                Style="width:100%;" />
+                    </FormItem>
+                    <FormItem Label="Technician">
+                        <Select TItem="UserContributerDto"
+                                TItemValue="Guid?"
+                                DataSource="@ListTechnician"
+                                EnableSearch
+                                AutoClearSearchValue="false"
+                                @bind-Value="@RequestSuport.TechnicianId"
+                                ItemValue="c => c.Id ?? Guid.Empty"
+                                ItemLabel="c => c.Name ?? string.Empty"
+                                Style="width:100%;" />
+                    </FormItem>
+                </div>
+
+                <FormItem Label="Requested By">
+                    <Select TItem="UserContributerDto"
+                            TItemValue="Guid"
+                            DataSource="@ListUser"
+                            EnableSearch
+                            AutoClearSearchValue="true"
+                            @bind-Value="@RequestSuport.RequestById"
+                            ItemValue="c => c.Id ?? Guid.Empty"
+                            ItemLabel="c => c.Name ?? string.Empty"
+                            Style="width:100%;">
+                        <ItemTemplate Context="item">
+                            <div style="white-space:normal;">
+                                @((MarkupString)item.DisplayName)
+                            </div>
+                        </ItemTemplate>
+                    </Select>
+                </FormItem>
+            }
+            else
+            {
+                <div class="its-grid-2">
+                    <FormItem Label="Category">
+                        <Select TItem="RequestSuportCategoryDto"
+                                TItemValue="Guid"
+                                DataSource="@RequestSuportCategories"
+                                @bind-Value="@RequestSuport.RequestSuportCategoryId"
+                                ItemValue="c => c.Id"
+                                EnableSearch
+                                AutoClearSearchValue="false"
+                                ItemLabel="c => c.Name"
+                                Style="width:100%;" />
+                    </FormItem>
+                    <FormItem Label="Requested By">
+                        <Select TItem="UserContributerDto"
+                                TItemValue="Guid"
+                                DataSource="@ListUser"
+                                EnableSearch
+                                Disabled="true"
+                                AutoClearSearchValue="false"
+                                @bind-Value="@RequestSuport.RequestById"
+                                ItemValue="c => c.Id ?? Guid.Empty"
+                                ItemLabel="c => c.Name ?? string.Empty"
+                                Style="width:100%;" />
+                    </FormItem>
+                </div>
+            }
+
+            <hr class="its-section-divider" />
+
+            <!-- Description & Solution -->
+            <div>
+                <div class="its-section-title">
+                    <Icon Type="file-text" Theme="IconThemeType.Outline" Style="font-size:12px;" />
+                    Description &amp; Solution
+                </div>
+                <div style="display:flex;flex-direction:column;gap:12px;">
+                    <FormItem Required="true" Label="Request Description">
+                        <TextArea ShowCount
+                                  MinRows="3"
+                                  @bind-Value="@RequestSuport.RequestDescription"
+                                  MaxLength="2000"
+                                  AllowClear="true"
+                                  Placeholder="Describe the issue in detail..." />
+                    </FormItem>
+                    @if (IsEdit)
+                    {
+                        <FormItem Label="Solution">
+                            <TextArea ShowCount
+                                      MinRows="3"
+                                      @bind-Value="@RequestSuport.RequestSolution"
+                                      MaxLength="2000"
+                                      AllowClear="true"
+                                      Placeholder="Enter solution details..." />
+                        </FormItem>
+                    }
+                </div>
+            </div>
+
+            <hr class="its-section-divider" />
+
+            <!-- Attachments -->
+            <div class="its-attach-area">
+                <div class="its-attach-header">
+                    <div class="its-section-title" style="margin-bottom:0;">
+                        <Icon Type="paper-clip" Theme="IconThemeType.Outline" Style="font-size:12px;" />
+                        Attachments
+                    </div>
+                    <Upload Action="@($"{Navigation.BaseUri}api/Common/upload-file-suport")"
+                            Name="file"
+                            Accept=".jpg,.jpeg,.png,.xlsx,.docx,.pdf,.slx"
+                            BeforeUpload="BeforeUpload1"
+                            ShowUploadList="false"
+                            OnSingleCompleted="OnSingleCompleted">
+                        <Button Shape="ButtonShape.Round"
+                                Size="ButtonSize.Small"
+                                Icon="upload"
+                                Style="font-size:12px;">
+                            Upload file
+                        </Button>
+                    </Upload>
+                </div>
+
+                @if (Attachment != null && Attachment.Any())
+                {
+                    <Table Class="style-attach"
+                           DataSource="Attachment"
+                           HidePagination
+                           Size="TableSize.Small">
+                        <ChildContent Context="file">
+                            <Column Title="File name" TData="string">
+                                <div style="display:flex;align-items:center;gap:7px;">
+                                    <Icon Type="file" Theme="IconThemeType.Outline"
+                                          Style="color:#1677ff;font-size:14px;" />
+                                    <span style="font-size:12px;">@file.FileName</span>
+                                </div>
+                            </Column>
+                            <Column Title="Size" Width="90" TData="string">
+                                <span style="font-size:11px;color:#595959;">@FormatSize(file.FileSize)</span>
+                            </Column>
+                            <Column Title="Uploaded" Width="170" TData="string">
+                                <span style="font-size:11px;color:#595959;">
+                                    @file.CreatedTime.ToString("dd/MM/yyyy HH:mm")
+                                </span>
+                            </Column>
+                            <ActionColumn Width="50">
+                                <Button Icon="delete"
+                                        Type="ButtonType.Link"
+                                        Danger="true"
+                                        Size="ButtonSize.Small"
+                                        OnClick="() => Deleted(file)" />
+                            </ActionColumn>
+                        </ChildContent>
+                    </Table>
+                }
+                else
+                {
+                    <div style="text-align:center;padding:12px 0;font-size:12px;color:#8c8c8c;">
+                        No attachments yet
+                    </div>
+                }
+            </div>
+
+        </div>
+    </Form>
+
+    <!-- Footer -->
+    <div class="its-modal-footer">
+        <div class="its-footer-left">
+            @if (RequestSuport.Status == RequestSuportStatusType.InProgress && IsEdit)
+            {
+                <Tooltip Title="@title1">
+                    <Button Class="its-btn its-btn-resolved"
+                            Disabled="@string.IsNullOrWhiteSpace(RequestSuport.RequestSolution)"
+                            OnClick="@(async () => await ChangeStatus(RequestSuportStatusType.Resolved))">
+                        <Icon Type="check-circle" Theme="IconThemeType.Outline" /> Resolved
+                    </Button>
+                </Tooltip>
+                <Button Class="its-btn its-btn-onhold"
+                        OnClick="@(async () => await ChangeStatus(RequestSuportStatusType.OnHold))">
+                    <Icon Type="pause-circle" Theme="IconThemeType.Outline" /> On Hold
+                </Button>
+                <Button Class="its-btn its-btn-cancel"
+                        OnClick="@(async () => await ChangeStatus(RequestSuportStatusType.Cancel))">
+                    <Icon Type="close-circle" Theme="IconThemeType.Outline" /> Cancel
+                </Button>
+            }
+            else if ((RequestSuport.Status == RequestSuportStatusType.Open ||
+                      RequestSuport.Status == RequestSuportStatusType.OnHold) && IsEdit)
+            {
+                <Tooltip Title="@title2">
+                    <Button Class="its-btn"
+                            Style="background:#e6f4ff;color:#003eb3;border-color:#4096ff;"
+                            Disabled="@(RequestSuport.DueDate == null)"
+                            OnClick="@(async () => await ChangeStatus(RequestSuportStatusType.InProgress))">
+                        <Icon Type="sync" Theme="IconThemeType.Outline" /> In Progress
+                    </Button>
+                </Tooltip>
+                <Button Class="its-btn its-btn-cancel"
+                        OnClick="@(async () => await ChangeStatus(RequestSuportStatusType.Cancel))">
+                    <Icon Type="close-circle" Theme="IconThemeType.Outline" /> Cancel
+                </Button>
+            }
+        </div>
+
+        <div class="its-footer-right">
+            <Button Class="its-btn"
+                    Shape="ButtonShape.Round"
+                    OnClick="@Close"
+                    Style="font-size:12px;">
+                <Icon Type="close" /> Close
+            </Button>
+            <Button Class="its-btn"
+                    Shape="ButtonShape.Round"
+                    Type="ButtonType.Primary"
+                    Disabled="@IsSave"
+                    OnClick="@SaveAsync"
+                    Style="font-size:12px;">
+                <Icon Type="save" Theme="IconThemeType.Outline" /> Save
+            </Button>
+        </div>
+    </div>
+
 </Modal>
