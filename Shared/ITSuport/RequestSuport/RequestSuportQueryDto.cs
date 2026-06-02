@@ -15,5 +15,7 @@ namespace AquaSolution.Shared.ITSuport.RequestSuport
         public int? TicketCode { get; set; }
         public Guid? CurrentUserId { get; set; }   // ← thêm vào
         public bool IsITOrAdmin { get; set; }
+        public List<string>? Statuses { get; set; }
+        public List<string>? TechnicianNames { get; set; }
     }
 }

@@ -14,10 +14,9 @@
 @inject AuthenticationStateProvider AuthStateProvider
 @inject GetInitial GetInitials
 
-<PageTitle>RequestSuport</PageTitle>
+<PageTitle>IT Support Requests</PageTitle>
 
 <div class="its-page">
-
     <style>
         .its-page {
             padding: 1.5rem;
@@ -29,7 +28,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.25rem;
         }
 
         .its-header-left {
@@ -42,6 +41,7 @@
             margin: 0;
             font-size: 18px;
             font-weight: 500;
+            color: #141414;
         }
 
         .its-header-icon {
@@ -60,81 +60,71 @@
         }
 
         /* ── Stats ── */
-        /* ── Stats ── */
-.its-stats {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-    margin-bottom: 1.25rem;
-}
-
-.its-stat-card {
-    background-color: #ffffff;
-    border: 1px solid #e8e8e8;
-    border-radius: 10px;
-    padding: 10px 14px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    min-width: 0;
-}
-
-.its-stat-icon-wrap {
-    width: 38px;
-    height: 38px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.its-stat-info {
-    min-width: 0;
-}
-
-.its-stat-label {
-    font-size: 11px;
-    color: #8c8c8c;
-    margin-bottom: 2px;
-    white-space: nowrap;
-}
-
-.its-stat-value {
-    font-size: 22px;
-    font-weight: 600;
-    color: #1f1f1f;
-    line-height: 1.2;
-}
-
-.its-stat-value.blue   { color: #1677ff; }
-.its-stat-value.orange { color: #fa8c16; }
-.its-stat-value.green  { color: #52c41a; }
-
-        /* ── Filters ── */
-        .its-filter-row1 {
+        .its-stats {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-bottom: 8px;
-        }
-
-        .its-filter-row2 {
-            display: flex;
-            gap: 8px;
-            align-items: center;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
             margin-bottom: 1.25rem;
         }
 
-        .its-filter-row2 .ant-input-affix-wrapper {
-            width: 160px;
-            border-radius: 20px;
-            font-size: 12px;
+        .its-stat-card {
+            background-color: #ffffff;
+            border: 1px solid #d9d9d9;
+            border-radius: 10px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
         }
 
-        .its-filter-row1 .ant-input-affix-wrapper {
-            border-radius: 20px;
-            font-size: 12px;
+        .its-stat-icon-wrap {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .its-stat-label {
+            font-size: 11px;
+            color: #595959;
+            margin-bottom: 2px;
+            white-space: nowrap;
+        }
+
+        .its-stat-value {
+            font-size: 22px;
+            font-weight: 600;
+            color: #141414;
+            line-height: 1.2;
+        }
+
+        .its-stat-value.blue   { color: #1677ff; }
+        .its-stat-value.orange { color: #fa8c16; }
+        .its-stat-value.green  { color: #52c41a; }
+        .its-stat-value.red    { color: #ff4d4f; }
+
+        /* ── Toolbar ── */
+        .its-toolbar {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 1.25rem;
+        }
+
+        .its-toolbar .ant-input-affix-wrapper {
+            border-radius: 20px !important;
+            font-size: 12px !important;
+            width: 195px !important;
+        }
+
+        .its-toolbar .ant-select-selector {
+            border-radius: 20px !important;
+            font-size: 12px !important;
         }
 
         .its-btn-action {
@@ -145,22 +135,19 @@
             gap: 5px;
         }
 
+        .its-toolbar-divider {
+            width: 1px;
+            height: 20px;
+            background: #d9d9d9;
+            flex-shrink: 0;
+        }
+
         /* ── Table ── */
         .its-table-wrap {
-            border: 1px solid #f0f0f0;
+            border: 1px solid #d9d9d9;
             border-radius: 12px;
             overflow: hidden;
-            max-height: 65vh;
-        }
-
-        .its-table-wrap .ant-table-container {
-            border-radius: 0 !important;
-        }
-
-        .its-table-wrap .ant-table-content {
-            overflow-x: auto !important;
-            overflow-y: auto !important;
- 
+            max-height:60vh;
         }
 
         .its-table-wrap table thead th {
@@ -188,35 +175,19 @@
             flex-shrink: 0;
         }
 
-        /* ── Avatar ── */
-        .user-avatar {
-            width: 26px;
-            height: 26px;
-            border-radius: 50%;
-            background-color: #bae0ff;
-            color: #0958d9;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            font-weight: 500;
-            flex-shrink: 0;
-        }
-
         .user-cell {
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
-        /* ── Pagination fix ── */
         .ant-table-pagination {
             position: sticky;
             bottom: 0;
             background: white;
             padding: 8px 16px;
             margin: 0 !important;
-            border-top: 1px solid #f0f0f0;
+            border-top: 1px solid #d9d9d9;
             z-index: 9;
         }
     </style>
@@ -229,114 +200,150 @@
             </div>
             <h3>IT Support requests</h3>
         </div>
-        <Button Type="ButtonType.Primary"
-                Shape="ButtonShape.Round"
-                OnClick="CreatedAsync"
-                Style="display:flex;align-items:center;gap:5px;font-weight:500;">
-            <Icon Type="plus" /> New ticket
-        </Button>
+        @if (Created)
+        {
+            <Button Type="ButtonType.Primary"
+                    Shape="ButtonShape.Round"
+                    OnClick="CreatedAsync"
+                    Style="display:flex;align-items:center;gap:5px;font-weight:500;">
+                <Icon Type="plus" /> New ticket
+            </Button>
+        }
     </div>
 
     <!-- Stats -->
-    @* <div class="its-stats">
-    <div class="its-stat-card">
-        <div class="its-stat-icon-wrap" style="background:#f0f5ff;">
-            <Icon Type="unordered-list" Theme="IconThemeType.Outline" Style="font-size:16px;color:#1677ff;" />
+    <div class="its-stats">
+        <div class="its-stat-card">
+            <div class="its-stat-icon-wrap" style="background:#f0f5ff;">
+                <Icon Type="unordered-list" Theme="IconThemeType.Outline" Style="font-size:16px;color:#1677ff;" />
+            </div>
+            <div>
+                <div class="its-stat-label">Total</div>
+                <div class="its-stat-value">@_statTotal</div>
+            </div>
         </div>
-        <div class="its-stat-info">
-            <div class="its-stat-label">Total</div>
-            <div class="its-stat-value">@(_requestSuport.Count)</div>
+        <div class="its-stat-card">
+            <div class="its-stat-icon-wrap" style="background:#e6f4ff;">
+                <Icon Type="clock-circle" Theme="IconThemeType.Outline" Style="font-size:16px;color:#1677ff;" />
+            </div>
+            <div>
+                <div class="its-stat-label">Open</div>
+                <div class="its-stat-value blue">@_statOpen</div>
+            </div>
+        </div>
+        <div class="its-stat-card">
+            <div class="its-stat-icon-wrap" style="background:#fff7e6;">
+                <Icon Type="sync" Theme="IconThemeType.Outline" Style="font-size:16px;color:#fa8c16;" />
+            </div>
+            <div>
+                <div class="its-stat-label">In progress</div>
+                <div class="its-stat-value orange">@_statInProgress</div>
+            </div>
+        </div>
+        <div class="its-stat-card">
+            <div class="its-stat-icon-wrap" style="background:#f6ffed;">
+                <Icon Type="check-circle" Theme="IconThemeType.Outline" Style="font-size:16px;color:#52c41a;" />
+            </div>
+            <div>
+                <div class="its-stat-label">Resolved</div>
+                <div class="its-stat-value green">@_statResolved</div>
+            </div>
+        </div>
+        <div class="its-stat-card">
+            <div class="its-stat-icon-wrap" style="background:#fff1f0;">
+                <Icon Type="close-circle" Theme="IconThemeType.Outline" Style="font-size:16px;color:#ff4d4f;" />
+            </div>
+            <div>
+                <div class="its-stat-label">Cancel</div>
+                <div class="its-stat-value red">@_statCancel</div>
+            </div>
         </div>
     </div>
-    <div class="its-stat-card">
-        <div class="its-stat-icon-wrap" style="background:#e6f4ff;">
-            <Icon Type="clock-circle" Theme="IconThemeType.Outline" Style="font-size:16px;color:#1677ff;" />
-        </div>
-        <div class="its-stat-info">
-            <div class="its-stat-label">Open</div>
-            <div class="its-stat-value blue">@(_requestSuport.Count(x => x.Status == RequestSuportStatusType.Open))</div>
-        </div>
-    </div>
-    <div class="its-stat-card">
-        <div class="its-stat-icon-wrap" style="background:#fff7e6;">
-            <Icon Type="sync" Theme="IconThemeType.Outline" Style="font-size:16px;color:#fa8c16;" />
-        </div>
-        <div class="its-stat-info">
-            <div class="its-stat-label">In progress</div>
-            <div class="its-stat-value orange">@(_requestSuport.Count(x => x.Status == RequestSuportStatusType.InProgress))</div>
-        </div>
-    </div>
-    <div class="its-stat-card">
-        <div class="its-stat-icon-wrap" style="background:#f6ffed;">
-            <Icon Type="check-circle" Theme="IconThemeType.Outline" Style="font-size:16px;color:#52c41a;" />
-        </div>
-        <div class="its-stat-info">
-            <div class="its-stat-label">Resolved</div>
-            <div class="its-stat-value green">@(_requestSuport.Count(x => x.Status == RequestSuportStatusType.Resolved))</div>
-        </div>
-    </div>
-</div> *@
 
-   <!-- Filter row 1: Name + Email -->
-<div class="its-filter-row1">
-    <Input Placeholder="Requester name"
-        Value="@RequesterName"
-           @oninput="RequesterNameInputChanged" 
-           Style="font-size:12px;"
-           @onkeydown="HandleKeyDown">
-        <Prefix><Icon Type="user" Style="color:#bfbfbf;" /></Prefix>
-    </Input>
-    <Input Placeholder="Requester email"
-          @oninput="RequesteremailInputChanged"
-          Value="@Requesteremail"
-           Style="font-size:12px;"
-           @onkeydown="HandleKeyDown">
-        <Prefix><Icon Type="mail" Style="color:#bfbfbf;" /></Prefix>
-    </Input>
-</div>
+    <!-- Toolbar: tất cả filter + nút trên 1 hàng -->
+    <div class="its-toolbar">
 
-<!-- Filter row 2: Code + buttons -->
-<div class="its-filter-row2">
-    <Input Placeholder="Ticket code"
-           @oninput="TicketCodeInputChanged"
-          Value="@TicketCode"
-           Style="font-size:12px;"
-           @onkeydown="HandleKeyDown">
-        <Prefix><Icon Type="search" Style="color:#bfbfbf;" /></Prefix>
-    </Input>
-    <Button Class="its-btn-action" OnClick="Search" Shape="ButtonShape.Round">
-        <Icon Type="search" /> Search
-    </Button>
-    <Button Class="its-btn-action" OnClick="Reset" Shape="ButtonShape.Round">
-        <Icon Type="undo" /> Reset
-    </Button>
-</div>
+        <!-- Requester name -->
+        <Input Placeholder="Requester name"
+               Value="@RequesterName"
+               @oninput="RequesterNameInputChanged"
+               Style="font-size:12px;"
+               @onkeydown="HandleKeyDown">
+            <Prefix><Icon Type="user" Style="color:#bfbfbf;" /></Prefix>
+        </Input>
+
+        <!-- Requester email -->
+        <Input Placeholder="Email"
+               Value="@Requesteremail"
+               @oninput="RequesteremailInputChanged"
+               Style="font-size:12px;"
+               @onkeydown="HandleKeyDown">
+            <Prefix><Icon Type="mail" Style="color:#bfbfbf;" /></Prefix>
+        </Input>
+
+        <!-- Ticket code -->
+        <Input Placeholder="Ticket code"
+               Value="@TicketCode"
+               @oninput="TicketCodeInputChanged"
+               Style="font-size:12px;"
+               @onkeydown="HandleKeyDown">
+            <Prefix><Icon Type="barcode" Style="color:#bfbfbf;" /></Prefix>
+        </Input>
+
+        <div class="its-toolbar-divider"></div>
+
+        <!-- Status multi-select -->
+       <Select Mode="SelectMode.Multiple"
+                TItem="string"
+                TItemValue="string"
+                Placeholder="Status"
+                @bind-Values="_selectedStatuses"
+                DataSource="_statusOptions"
+                ItemValue="s => s"
+                ItemLabel="s => s"
+                Style="min-width:190px;font-size:12px;"
+                AllowClear="true" />
+
+        <!-- Technician multi-select -->
+        <Select Mode="SelectMode.Multiple"
+                TItem="UserContributerDto"
+                TItemValue="string"
+                Placeholder="Technician"
+                @bind-Values="_selectedTechnicians"
+                DataSource="_listTechnician"
+                ItemValue="c => c.Name ?? string.Empty"
+                ItemLabel="c => c.Name ?? string.Empty"
+                Style="min-width:190px;font-size:12px;"
+                EnableSearch
+                AllowClear="true" />
+
+        <div class="its-toolbar-divider"></div>
+
+        <Button Class="its-btn-action" OnClick="Search" Shape="ButtonShape.Round" Type="ButtonType.Primary">
+            <Icon Type="search" /> Search
+        </Button>
+        <Button Class="its-btn-action" OnClick="Reset" Shape="ButtonShape.Round">
+            <Icon Type="undo" /> Reset
+        </Button>
+    </div>
 
     <!-- Table -->
     <div class="its-table-wrap">
-    @*     <Table TItem="RequestSuportDto"
-               Size="TableSize.Small"
-               @ref="@_tableRef"
-               Loading="@Loading"
-               ScrollX="1000"
-
-               ScrollY="55vh"
-               DataSource="_requestSuportFillter"> *@
         <Table TItem="RequestSuportDto"
-            Size="TableSize.Small"
-            Loading="@Loading"
-            DataSource="_requestSuportFillter"
-            Total="_total"
-            ScrollX="1000"
-            ScrollY="55vh"
-            PageIndex="_currentPage"
-            PageSize="_pageSize"
-            OnChange="OnTableChange">
+               Size="TableSize.Small"
+               Loading="@Loading"
+               DataSource="_requestSuportFillter"
+               Total="_total"
+               ScrollX="1000"
+               ScrollY="55vh"
+               PageIndex="_currentPage"
+               PageSize="_pageSize"
+               OnChange="OnTableChange">
             <ColumnDefinitions Context="row">
 
-                <PropertyColumn Width="110" Title="Ticket code" Property="c => c.TicketCode">
+                <PropertyColumn Width="120" Title="Ticket code" Property="c => c.TicketCode">
                     <Template>
-                        <span style="font-family:monospace;font-size:12px;color:#8c8c8c;">
+                        <span style="font-family:monospace;font-size:12px;color:#595959;">
                             @row.TicketCode
                         </span>
                     </Template>
@@ -351,7 +358,7 @@
                     </Template>
                 </PropertyColumn>
 
-                <PropertyColumn Width="130" Title="Status" Property="c => c.Status" Filters="_statusFilter">
+                <PropertyColumn Width="130" Title="Status" Property="c => c.Status">
                     <Template>
                         @{
                             string color = "", bgColor = "";
@@ -364,7 +371,7 @@
                                 case RequestSuportStatusType.Resolved:
                                     color = "#52c41a"; bgColor = "#f6ffed"; break;
                                 case RequestSuportStatusType.OnHold:
-                                    color = "#8c8c8c"; bgColor = "#f5f5f5"; break;
+                                    color = "#595959"; bgColor = "#f5f5f5"; break;
                                 case RequestSuportStatusType.Cancel:
                                     color = "#ff4d4f"; bgColor = "#fff1f0"; break;
                             }
@@ -379,12 +386,12 @@
                 <PropertyColumn Width="160" Title="Requested by" Property="c => c.RequestByName">
                     <Template>
                         <div class="user-cell">
-                            <span>@row.RequestByName</span>
+                            <span style="font-size:13px;">@row.RequestByName</span>
                         </div>
                     </Template>
                 </PropertyColumn>
 
-                <PropertyColumn Width="160" Title="Technician" Property="c => c.TechnicianName" Filters="_technicianNameFilter">
+                <PropertyColumn Width="160" Title="Technician" Property="c => c.TechnicianName">
                     <Template>
                         @if (string.IsNullOrWhiteSpace(row.TechnicianName))
                         {
@@ -393,8 +400,7 @@
                         else
                         {
                             <div class="user-cell">
-     
-                                <span>@row.TechnicianName</span>
+                                <span style="font-size:13px;">@row.TechnicianName</span>
                             </div>
                         }
                     </Template>
@@ -413,7 +419,8 @@
                             </ChildContent>
                             <ContentTemplate>
                                 <div style="display:flex;flex-direction:column;gap:2px;min-width:110px;">
-                                    <Button Type="ButtonType.Text" OnClick="@(async () => await ViewAsync(row))"
+                                    <Button Type="ButtonType.Text"
+                                            OnClick="@(async () => await ViewAsync(row))"
                                             Style="text-align:left;font-size:13px;">
                                         <Icon Type="eye" /> Detail
                                     </Button>
@@ -431,7 +438,7 @@
                                     }
                                     @if (Delete)
                                     {
-                                        var disible = CurrenUser.Roles.Any(x => x.Name == "Admin") ? false : disable3;
+                                        var disible = CurrenUser!.Roles.Any(x => x.Name == "Admin") ? false : disable3;
                                         <Button Disabled="disible" Type="ButtonType.Text"
                                                 OnClick="@(async () => await DeleteAsync(row.Id))"
                                                 Style="text-align:left;font-size:13px;color:#ff4d4f;">

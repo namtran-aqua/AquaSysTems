@@ -6,6 +6,7 @@ using AquaSolution.Shared.Enum;
 using AquaSolution.Shared.ITSuport.Attachments;
 using AquaSolution.Shared.ITSuport.RequestSuport;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace AquaSolution.Server.Services.ITSuport.RequestSuportCategories
 {
@@ -201,7 +202,6 @@ namespace AquaSolution.Server.Services.ITSuport.RequestSuportCategories
                 .OrderByDescending(x => x.CreatedDate)
                 .ToListAsync();
         }
-
         public async Task<PagedResult<RequestSuportDto>> GetPagedAsync(RequestSuportQueryDto request)
         {
             var users = _userRepo.Query();
@@ -209,6 +209,7 @@ namespace AquaSolution.Server.Services.ITSuport.RequestSuportCategories
             var categories = _requestSuportCategoryRepo.Query();
             var departments = _departmentRepo.Query();
             var factories = _factoryRepo.Query();
+
             var query = from requestSuport in requestSuports
                         join created in users on requestSuport.CreatedById equals created.Id
                         join requestCategory in categories
@@ -252,9 +253,11 @@ namespace AquaSolution.Server.Services.ITSuport.RequestSuportCategories
                             RequestByWorkDay = requestBy.WorkDayId,
                         };
 
+            // Filter theo role
             if (!request.IsITOrAdmin && request.CurrentUserId.HasValue)
                 query = query.Where(x => x.RequestById == request.CurrentUserId);
 
+            // Filter search text
             if (!string.IsNullOrEmpty(request.RequesterName))
                 query = query.Where(x => x.RequestByName.Contains(request.RequesterName));
 
@@ -263,6 +266,23 @@ namespace AquaSolution.Server.Services.ITSuport.RequestSuportCategories
 
             if (request.TicketCode.HasValue)
                 query = query.Where(x => x.TicketNumber == request.TicketCode.Value);
+
+            // Filter status (multi-select từ toolbar)
+            if (request.Statuses != null && request.Statuses.Any())
+            {
+                var statusEnums = request.Statuses
+                    .Select(s => Enum.TryParse<RequestSuportStatusType>(s, out var e) ? (RequestSuportStatusType?)e : null)
+                    .Where(e => e.HasValue)
+                    .Select(e => e!.Value)
+                    .ToList();
+
+                if (statusEnums.Any())
+                    query = query.Where(x => statusEnums.Contains(x.Status));
+            }
+
+            // Filter technician (multi-select từ toolbar)
+            if (request.TechnicianNames != null && request.TechnicianNames.Any())
+                query = query.Where(x => x.TechnicianName != null && request.TechnicianNames.Contains(x.TechnicianName));
 
             var total = await query.CountAsync();
 
@@ -274,6 +294,8 @@ namespace AquaSolution.Server.Services.ITSuport.RequestSuportCategories
 
             return new PagedResult<RequestSuportDto> { Items = items, Total = total };
         }
+
+      
 
         public async Task<List<AttachmentDto>> LoadListAttachment(Guid requestITSuportId)
         {
@@ -353,66 +375,28 @@ namespace AquaSolution.Server.Services.ITSuport.RequestSuportCategories
 
             return await _requestSuportRepo.UpdateAsync(requestSuport);
         }
-        //public async Task<bool> UpdateAsync(HandleRequestSuportDto handleRequestSuportDto)
-        //{
-        //    var requestSuport = await _requestSuportRepo.FirstOrDefaultAsync(x => x.Id == handleRequestSuportDto.Id);
-        //    if (requestSuport != null)
-        //    {
-        //        requestSuport.RequestTitle = handleRequestSuportDto.RequestTitle;
-        //        requestSuport.RequestSuportCategoryId = handleRequestSuportDto.RequestSuportCategoryId;
-        //        requestSuport.Status = handleRequestSuportDto.Status;
-        //        requestSuport.RequestBy = handleRequestSuportDto.RequestBy;
-        //        requestSuport.CreatedDate = handleRequestSuportDto.CreatedDate;
-        //        requestSuport.RequestDescription = handleRequestSuportDto.RequestDescription;
-        //        requestSuport.RequestSolution = handleRequestSuportDto.RequestSolution;
-        //        requestSuport.TechnicianId = handleRequestSuportDto.TechnicianId;
-        //        switch (requestSuport.Status)
-        //        {
-        //            case RequestSuportStatusType.InProgress:
-        //                requestSuport.InProgessDate = handleRequestSuportDto.InProgessDate;
-        //                break;
-        //            case RequestSuportStatusType.Resolved:
-        //                requestSuport.ResolveDate = handleRequestSuportDto.ResolveDate;
-        //                break;
-        //            case RequestSuportStatusType.OnHold:
-        //                requestSuport.OnHoldDate = handleRequestSuportDto.OnHoldDate;
-        //                break;
-        //            case RequestSuportStatusType.Cancel:
-        //                requestSuport.CancelDate = handleRequestSuportDto.CancelDate;
-        //                break;
+        public async Task<RequestSuportStatsDto> GetStatsAsync(Guid? currentUserId, bool isITOrAdmin)
+        {
+            var query = _requestSuportRepo.Query();
 
-        //        }
-        //        requestSuport.DueDate = handleRequestSuportDto.DueDate;
+            // Giới hạn theo role — user thường chỉ thấy ticket của mình
+            if (!isITOrAdmin && currentUserId.HasValue)
+                query = query.Where(x => x.RequestBy == currentUserId);
 
-        //        var attachments = await _attachmentRepo.GetListAsync(x => x.RequestSuportId == requestSuport.Id);
-        //        if (attachments != null && attachments.Any())
-        //        {
-        //            foreach (var att in attachments)
-        //            {
-        //                await _attachmentRepo.DeleteAsync(att);
-        //            }
-        //        }
-        //        if (handleRequestSuportDto.Attachments != null)
-        //        {
-        //            foreach (var attach in handleRequestSuportDto.Attachments)
-        //            {
-        //                var attachment = new Attachment
-        //                {
-        //                    Id = Guid.NewGuid(),
-        //                    RequestSuportId = requestSuport.Id,
-        //                    FilePath = attach.FilePath,
-        //                    FileExtend = attach.FileExtend,
-        //                    FileName = attach.FileName,
-        //                    FileSize = attach.FileSize,
-        //                    CreatedTime = attach.CreatedTime
-        //                };
-        //                await _attachmentRepo.InsertAsync(attachment);
-        //            }
-        //        }
-        //        return await _requestSuportRepo.UpdateAsync(requestSuport);
-        //    }
-        //    return false;
-        //}
+            var stats = await query
+                .GroupBy(_ => 1)
+                .Select(g => new RequestSuportStatsDto
+                {
+                    Total = g.Count(),
+                    Open = g.Count(x => x.Status == RequestSuportStatusType.Open),
+                    InProgress = g.Count(x => x.Status == RequestSuportStatusType.InProgress),
+                    Resolved = g.Count(x => x.Status == RequestSuportStatusType.Resolved),
+                    Cancel =g.Count(x=>x.Status == RequestSuportStatusType.Cancel)
+                })
+                .FirstOrDefaultAsync();
+
+            return stats ?? new RequestSuportStatsDto();
+        }
 
     }
 }

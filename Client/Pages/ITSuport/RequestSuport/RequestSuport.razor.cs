@@ -1,4 +1,3 @@
-﻿
 using AntDesign;
 using AntDesign.TableModels;
 using AquaSolution.Client.Common;
@@ -11,9 +10,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
-using System.Globalization;
 using System.Net.Http.Json;
-using System.Runtime.CompilerServices;
 
 namespace AquaSolution.Client.Pages.ITSuport.RequestSuport
 {
@@ -22,10 +19,9 @@ namespace AquaSolution.Client.Pages.ITSuport.RequestSuport
         #region Declaration
         [Inject] private HttpClient? Http { get; set; }
 
-        private List<RequestSuportDto> _requestSuport = new();
         private List<RequestSuportDto> _requestSuportFillter = new();
         private HubConnection? _hubConnection;
-        private List<UserContributerDto> _listTechnician = new List<UserContributerDto>();
+        private List<UserContributerDto> _listTechnician = new();
         private readonly HasPermission _hasPermission = new();
         private RequestITSuportDetailModal _requestItSuportDetailModal = new();
         private UserDto? CurrenUser { get; set; }
@@ -36,11 +32,32 @@ namespace AquaSolution.Client.Pages.ITSuport.RequestSuport
         private bool Edit { get; set; }
         private bool Delete { get; set; }
         private Guid PageId { get; set; }
+
+        // Pagination
+        private int _currentPage = 1;
+        private int _pageSize = 10;
+        private int _total = 0;
+
+        // Filter text
+        private string? RequesterName { get; set; }
+        private string? Requesteremail { get; set; }
+        private string? TicketCode { get; set; }
+
+        // Filter multi-select
+        private IEnumerable<string> _selectedStatuses = new List<string>();
+        private IEnumerable<string> _selectedTechnicians = new List<string>();
+
+        // Stats (tổng hợp riêng, không phụ thuộc vào page)
+        private int _statTotal = 0;
+        private int _statOpen = 0;
+        private int _statInProgress = 0;
+        private int _statResolved = 0;
+        private int _statCancel = 0;
         #endregion
-        #region Innit
+
+        #region Init
         protected override async Task OnInitializedAsync()
         {
-            ;
             if (Http != null)
             {
                 var currenUserClass = new CurrenUser(Http, AuthStateProvider);
@@ -48,12 +65,17 @@ namespace AquaSolution.Client.Pages.ITSuport.RequestSuport
             }
 
             await SignalRReload();
-            await LoadData();
-            await LoadStatusOptions();
-            await LoadTechnician();
-            await GetPage();
-            await CheckPermission();
+            await Task.WhenAll(
+                LoadData(),
+                LoadTechnician(),
+                LoadStats(),
+                GetPage(),
+                CheckPermission()
+   
+            );
+            LoadStatusOptions();
         }
+
         private async Task SignalRReload()
         {
             _hubConnection = new HubConnectionBuilder()
@@ -63,59 +85,53 @@ namespace AquaSolution.Client.Pages.ITSuport.RequestSuport
             _hubConnection.On("LoadRequestSuport", async () =>
             {
                 await LoadData();
-                Search();             
+                await LoadStats();
                 await InvokeAsync(StateHasChanged);
             });
 
             await _hubConnection.StartAsync();
         }
+
         private async Task GetPage()
         {
-            var url = "request-it-suport";
-            if (Http != null) PageId = await Http.GetFromJsonAsync<Guid>($"api/Page/GetPageIdByUrl/{url}");
+            if (Http != null)
+                PageId = await Http.GetFromJsonAsync<Guid>($"api/Page/GetPageIdByUrl/request-it-suport");
         }
-        //private async Task LoadData()
-        //{
-        //    Loading = true;
-        //    StateHasChanged();
-        //    _requestSuport = new();
-        //    if (Http != null)
-        //    {
-        //        var data = await Http.GetFromJsonAsync<List<RequestSuportDto>>("api/RequestITSuport/get-all");
-        //        if (data != null)
-        //        {
-        //            if (CurrenUser == null) return;
-        //            if (CurrenUser.Roles.Any(x => x.Name == "IT" || x.Name == "Admin"))
-        //            {
-        //                _requestSuport = data.ToList();
 
-        //            }
-        //            else
-        //            {
-        //                _requestSuport = data.Where(x => x.RequestById == CurrenUser.Id).ToList();
-        //            }
+        private async Task CheckPermission()
+        {
+            if (CurrenUser != null)
+            {
+                Created = await _hasPermission.CheckPermissions(PageId, nameof(PermissionActionType.Add), CurrenUser);
+                Edit = await _hasPermission.CheckPermissions(PageId, nameof(PermissionActionType.Edit), CurrenUser);
+                Delete = await _hasPermission.CheckPermissions(PageId, nameof(PermissionActionType.Delete), CurrenUser);
+            }
+        }
+        #endregion
 
-        //        }
-        //    }
-        //    _requestSuportFillter = _requestSuport.ToList();
-        //    Loading = false;
-        //    StateHasChanged();
-        //}
-        private int _currentPage = 1;
-        private int _pageSize = 10;
-        private int _total = 0;
+        #region LoadData
         private async Task LoadData()
         {
             Loading = true;
             StateHasChanged();
 
+            if (Http == null || CurrenUser == null) return;
+
+            var isITOrAdmin = CurrenUser.Roles.Any(x => x.Name == "IT" || x.Name == "Admin");
+
             var url = $"api/RequestITSuport/get-paged?" +
-              $"page={_currentPage}&pageSize={_pageSize}" +
-              $"&currentUserId={CurrenUser.Id}" +
-              $"&isITOrAdmin={CurrenUser.Roles.Any(x => x.Name == "IT" || x.Name == "Admin")}" +
-              $"&requesterName={RequesterName}" +
-              $"&requesterEmail={Requesteremail}" +
-              $"&ticketCode={TicketCode}";
+                      $"page={_currentPage}&pageSize={_pageSize}" +
+                      $"&currentUserId={CurrenUser.Id}" +
+                      $"&isITOrAdmin={isITOrAdmin}" +
+                      $"&requesterName={Uri.EscapeDataString(RequesterName ?? "")}" +
+                      $"&requesterEmail={Uri.EscapeDataString(Requesteremail ?? "")}" +
+                      $"&ticketCode={Uri.EscapeDataString(TicketCode ?? "")}";
+
+            foreach (var s in _selectedStatuses)
+                url += $"&statuses={Uri.EscapeDataString(s)}";
+
+            foreach (var t in _selectedTechnicians)
+                url += $"&technicianNames={Uri.EscapeDataString(t)}";
 
             var data = await Http.GetFromJsonAsync<PagedResult<RequestSuportDto>>(url);
             if (data != null)
@@ -128,177 +144,95 @@ namespace AquaSolution.Client.Pages.ITSuport.RequestSuport
             StateHasChanged();
         }
 
-
-        private async Task CheckPermission()
+        // Load stats riêng — không bị ảnh hưởng bởi filter/pagination
+        private async Task LoadStats()
         {
+            if (Http == null || CurrenUser == null) return;
 
-            if (CurrenUser != null)
+            var isITOrAdmin = CurrenUser.Roles.Any(x => x.Name == "IT" || x.Name == "Admin");
+            var statsUrl = $"api/RequestITSuport/get-stats?currentUserId={CurrenUser.Id}&isITOrAdmin={isITOrAdmin}";
+            var stats = await Http.GetFromJsonAsync<RequestSuportStatsDto>(statsUrl);
+            if (stats != null)
             {
-                Created = await _hasPermission.CheckPermissions(PageId, nameof(PermissionActionType.Add),
-                    CurrenUser);
-
-                Edit = await _hasPermission.CheckPermissions(PageId, nameof(PermissionActionType.Edit), CurrenUser);
-
-                Delete = await _hasPermission.CheckPermissions(PageId, nameof(PermissionActionType.Delete),
-                    CurrenUser);
+                _statTotal = stats.Total;
+                _statOpen = stats.Open;
+                _statInProgress = stats.InProgress;
+                _statResolved = stats.Resolved;
+                _statCancel = stats.Cancel;
             }
         }
+        private List<string> _statusOptions = new();
+
+  
+        private void LoadStatusOptions()
+        {
+            _statusOptions = Enum.GetNames(typeof(RequestSuportStatusType)).ToList();
+        }
+        private async Task LoadTechnician()
+        {
+            if (Http == null) return;
+            var data = await Http.GetFromJsonAsync<List<UserContributerDto>>("api/user/get-contributer");
+            if (data != null)
+                _listTechnician = data.Where(x => x.DepartmentType == DepartmentType.IT).ToList();
+        }
         #endregion
-        #region Action
+
+        #region Actions
         private async Task CreatedAsync()
         {
             await _requestItSuport.ShowModal(false);
         }
-        private async Task UpdateAsync(RequestSuportDto requestSuportDto)
+
+        private async Task UpdateAsync(RequestSuportDto dto)
         {
-            await _requestItSuport.ShowModal(true, requestSuportDto);
+            await _requestItSuport.ShowModal(true, dto);
         }
+
+        private async Task ViewAsync(RequestSuportDto dto)
+        {
+            await _requestItSuportDetailModal.ShowModal(dto);
+        }
+
         private async Task DeleteAsync(Guid id)
         {
             var confirm = await JS.InvokeAsync<bool>("confirm", "Bạn có chắc chắn muốn xóa không?");
-            if (!confirm)
-                return;
+            if (!confirm) return;
+
             await DeleteFileServer(id);
-            var response = await Http?.DeleteAsync($"api/RequestITSuport/delete/{id}")!;
+            var response = await Http!.DeleteAsync($"api/RequestITSuport/delete/{id}");
 
             if (response.IsSuccessStatusCode)
-            {
-
-                await Message.Success("Delete successfully !");
-            }
+                await Message.Success("Delete successfully!");
             else
-            {
-                await Message.Error("Delete failed !");
-            }
+                await Message.Error("Delete failed!");
+
             await LoadData();
-            await InvokeAsync(StateHasChanged);
+            await LoadStats();
         }
+
         private async Task DeleteFileServer(Guid requestSuportId)
         {
-            _attachment = new();
-            if (Http != null)
-            {
-                var data = await Http.GetFromJsonAsync<List<AttachmentDto>>($"api/RequestITSuport/get-attechment/{requestSuportId}");
-                if (data != null) _attachment = data.ToList();
-            }
-
-            foreach (var item in _attachment)
-            {
-                var url = $"{item.FilePath}";
-                await Http?.DeleteAsync($"api/Common/delete-file-suport?avatarUrl={url}")!;
-            }
-        }
-        private async Task ViewAsync(RequestSuportDto requestSuportDto)
-        {
-            await _requestItSuportDetailModal.ShowModal(requestSuportDto);
+            if (Http == null) return;
+            var data = await Http.GetFromJsonAsync<List<AttachmentDto>>($"api/RequestITSuport/get-attechment/{requestSuportId}");
+            if (data == null) return;
+            foreach (var item in data)
+                await Http.DeleteAsync($"api/Common/delete-file-suport?avatarUrl={item.FilePath}");
         }
         #endregion
-        #region Filter
-        private string? RequesterName { get; set; }
-        private string? Requesteremail { get; set; }
 
-        private string? TicketCode { get; set; }
-
+        #region Filter & Search
+        private void RequesterNameInputChanged(ChangeEventArgs e) => RequesterName = e.Value?.ToString();
+        private void RequesteremailInputChanged(ChangeEventArgs e) => Requesteremail = e.Value?.ToString();
+        private void TicketCodeInputChanged(ChangeEventArgs e) => TicketCode = e.Value?.ToString();
 
         private async Task HandleKeyDown(KeyboardEventArgs e)
         {
-            if (e.Key == "Enter")
-            {
-                await Search();
-            }
-        }
-        TableFilter<string>[] _technicianNameFilter = Array.Empty<TableFilter<string>>();
-        private void RequesterNameInputChanged(ChangeEventArgs e)
-        {
-            RequesterName = e.Value?.ToString();
-        }
-        private void RequesteremailInputChanged(ChangeEventArgs e)
-        {
-            Requesteremail = e.Value?.ToString();
-        }
-        private void TicketCodeInputChanged(ChangeEventArgs e)
-        {
-            TicketCode = e.Value?.ToString();
+            if (e.Key == "Enter") await Search();
         }
 
-        TableFilter<RequestSuportStatusType>[] _statusFilter = Array.Empty<TableFilter<RequestSuportStatusType>>();
-        private async Task LoadTechnician()
-        {
-            _listTechnician = new List<UserContributerDto>();
-            if (Http != null)
-            {
-                var data = await Http.GetFromJsonAsync<List<UserContributerDto>>("api/user/get-contributer");
-                if (data != null) _listTechnician = data.Where(x => x.DepartmentType == DepartmentType.IT).ToList();
-            }
-
-            _technicianNameFilter = _listTechnician
-               .Select(x => new TableFilter<string>
-               {
-                   Text = x.Name,
-                   Value = x.Name,
-                   Selected = false
-               })
-               .ToArray();
-        }
-
-        private Task LoadStatusOptions()
-        {
-            _statusFilter = Enum.GetValues(typeof(RequestSuportStatusType))
-               .Cast<RequestSuportStatusType>()
-               .Select(e => new TableFilter<RequestSuportStatusType>
-               {
-                   Text = EnumHelper.GetDisplayName(e),
-                   Value = e,
-                   Selected = false
-               })
-               .ToArray();
-            return Task.CompletedTask;
-        }
-
-        //private Task Search()
-        //{
-        //    var name = StringHelper.NormalizeText(RequesterName?.Trim());
-        //    var email = StringHelper.NormalizeText(Requesteremail?.Trim());
-        //    var ticketCode = StringHelper.NormalizeText(TicketCode?.Trim());
-        //    var query = _requestSuport.AsEnumerable();
-
-        //    if (!string.IsNullOrWhiteSpace(name))
-        //        query = query.Where(x =>
-        //            !string.IsNullOrWhiteSpace(x.RequestByName) &&
-        //            StringHelper.NormalizeText(x.RequestByName).Contains(name));
-
-        //    if (!string.IsNullOrWhiteSpace(ticketCode))
-        //        query = query.Where(x =>
-        //            !string.IsNullOrWhiteSpace(x.TicketCode) &&
-        //            StringHelper.NormalizeText(x.TicketCode).Contains(ticketCode));
-
-        //    if (!string.IsNullOrWhiteSpace(email))
-        //        query = query.Where(x =>
-        //            !string.IsNullOrWhiteSpace(x.RequestByEmail) &&
-        //            StringHelper.NormalizeText(x.RequestByEmail).Contains(email));
-
-        //    _requestSuportFillter = query.ToList();
-        //    StateHasChanged();        
-        //    return Task.CompletedTask;
-        //}
-
-        //private async Task Reset()
-        //{
-        //    RequesterName = null;
-        //    Requesteremail = null;
-        //    TicketCode = null;
-        //    _requestSuportFillter = _requestSuport.ToList();
-        //    StateHasChanged();        
-        //}
-        private async Task OnTableChange(QueryModel<RequestSuportDto> query)
-        {
-            _currentPage = query.PageIndex;
-            _pageSize = query.PageSize;
-            await LoadData();
-        }
         private async Task Search()
         {
-            _currentPage = 1; 
+            _currentPage = 1;
             await LoadData();
         }
 
@@ -308,10 +242,17 @@ namespace AquaSolution.Client.Pages.ITSuport.RequestSuport
             RequesterName = "";
             Requesteremail = "";
             TicketCode = "";
+            _selectedStatuses = new List<string>();
+            _selectedTechnicians = new List<string>();
             await LoadData();
         }
-        private Table<RequestSuportDto>? _tableRef;
-      
+
+        private async Task OnTableChange(QueryModel<RequestSuportDto> query)
+        {
+            _currentPage = query.PageIndex;
+            _pageSize = query.PageSize;
+            await LoadData();
+        }
         #endregion
     }
 }

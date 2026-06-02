@@ -56,12 +56,19 @@ namespace AquaSolution.Server.Controllers.ITSuport.RequestSuportCategories
             {
                 await _hubContext.Clients.All.SendAsync("LoadRequestSuport");
                 return Ok(new { message = "Created successfully" });
-            }    
+            }
 
             return StatusCode(500, "Error creating category");
         }
 
-
+        [HttpGet("get-stats")]
+        public async Task<IActionResult> GetStats(
+                [FromQuery] Guid? currentUserId,
+                [FromQuery] bool isITOrAdmin)
+        {
+            var result = await _service.GetStatsAsync(currentUserId, isITOrAdmin);
+            return Ok(result);
+        }
         [HttpPut("update")]
         public async Task<IActionResult> Update([FromBody] HandleRequestSuportDto dto)
         {
@@ -84,7 +91,7 @@ namespace AquaSolution.Server.Controllers.ITSuport.RequestSuportCategories
             {
                 await _hubContext.Clients.All.SendAsync("LoadRequestSuport");
                 return Ok(new { message = "Deleted successfully" });
-            }    
+            }
 
             return NotFound("Category not found");
         }
