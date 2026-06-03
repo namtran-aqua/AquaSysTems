@@ -65,11 +65,11 @@ namespace AquaSolution.Client.Pages.ITSuport.RequestSuport
             }
 
             await SignalRReload();
+            await GetPage();
             await Task.WhenAll(
                 LoadData(),
                 LoadTechnician(),
                 LoadStats(),
-                GetPage(),
                 CheckPermission()
    
             );
@@ -102,9 +102,9 @@ namespace AquaSolution.Client.Pages.ITSuport.RequestSuport
         {
             if (CurrenUser != null)
             {
-                Created = await _hasPermission.CheckPermissions(PageId, nameof(PermissionActionType.Add), CurrenUser);
-                Edit = await _hasPermission.CheckPermissions(PageId, nameof(PermissionActionType.Edit), CurrenUser);
-                Delete = await _hasPermission.CheckPermissions(PageId, nameof(PermissionActionType.Delete), CurrenUser);
+                Created = await PermissionService.HasPermissionAsync(PageId, PermissionActionType.Add);
+                Edit = await PermissionService.HasPermissionAsync(PageId, PermissionActionType.Edit);
+                Delete = await PermissionService.HasPermissionAsync(PageId, PermissionActionType.Delete);
             }
         }
         #endregion
@@ -139,7 +139,7 @@ namespace AquaSolution.Client.Pages.ITSuport.RequestSuport
                 _requestSuportFillter = data.Items;
                 _total = data.Total;
             }
-
+            
             Loading = false;
             StateHasChanged();
         }
