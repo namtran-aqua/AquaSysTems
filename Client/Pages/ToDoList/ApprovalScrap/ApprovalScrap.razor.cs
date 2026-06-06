@@ -52,7 +52,7 @@ namespace AquaSolution.Client.Pages.ToDoList.ApprovalScrap
                 .WithUrl(Navigation.ToAbsoluteUri(Navigation.BaseUri + "signalrhub"))
                 .Build();
 
-            _hubConnection.On("LoadRequestSuport", async () =>
+            _hubConnection.On("LoadScrap", async () =>
             {
                 await LoadScraps();
                 await InvokeAsync(StateHasChanged);

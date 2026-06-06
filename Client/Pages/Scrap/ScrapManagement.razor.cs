@@ -50,7 +50,7 @@ namespace AquaSolution.Client.Pages.Scrap
                 .WithUrl(Navigation.ToAbsoluteUri(Navigation.BaseUri + "signalrhub"))
                 .Build();
 
-            _hubConnection.On("LoadRequestSuport", async () =>
+            _hubConnection.On("LoadScrap", async () =>
             {
                 await LoadHistory();
                 await InvokeAsync(StateHasChanged);

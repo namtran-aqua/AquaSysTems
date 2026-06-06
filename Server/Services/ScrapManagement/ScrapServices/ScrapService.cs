@@ -404,9 +404,8 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
             currentStep.ActionDate = now;
             currentStep.Comment = request.Comment;
 
-            // LastAction luôn là người vừa thao tác (approve hoặc reject)
-            scrap.LastActionBy = request.ActionBy;
-            scrap.LastActionDate = now;
+            //// LastAction luôn là người vừa thao tác (approve hoặc reject)
+           
 
             if (!request.IsApproved)
             {
@@ -426,7 +425,7 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
                 {
                     // Còn step tiếp theo → mở step đó, scrap vẫn InterView
                     nextStep.Status = StatusScrap.InterView;
-                    scrap.Status = StatusScrap.InterView;
+                    //scrap.Status = StatusScrap.InterView;
 
                     await _requestApprovalRepository.UpdateAsync(currentStep);
                     await _requestApprovalRepository.UpdateAsync(nextStep);
@@ -435,7 +434,8 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
                 {
                     // Đây là step cuối → phiếu được duyệt hoàn toàn
                     scrap.Status = StatusScrap.Approved;
-
+                    scrap.LastActionBy = request.ActionBy;
+                    scrap.LastActionDate = now;
                     await _requestApprovalRepository.UpdateAsync(currentStep);
                 }
             }
