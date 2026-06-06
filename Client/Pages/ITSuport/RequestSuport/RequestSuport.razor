@@ -223,7 +223,7 @@
                 <div class="its-stat-value">@_statTotal</div>
             </div>
         </div>
-        <div class="its-stat-card">
+        <div class="its-stat-card" @onclick='() => FilterByStatus("Open")'>
             <div class="its-stat-icon-wrap" style="background:#e6f4ff;">
                 <Icon Type="clock-circle" Theme="IconThemeType.Outline" Style="font-size:16px;color:#1677ff;" />
             </div>
@@ -232,7 +232,7 @@
                 <div class="its-stat-value blue">@_statOpen</div>
             </div>
         </div>
-        <div class="its-stat-card">
+     <div class="its-stat-card" @onclick='() => FilterByStatus("InProgress")'>
             <div class="its-stat-icon-wrap" style="background:#fff7e6;">
                 <Icon Type="sync" Theme="IconThemeType.Outline" Style="font-size:16px;color:#fa8c16;" />
             </div>
@@ -241,7 +241,7 @@
                 <div class="its-stat-value orange">@_statInProgress</div>
             </div>
         </div>
-        <div class="its-stat-card">
+        <div class="its-stat-card"  @onclick='() => FilterByStatus("OnHold")'>
             <div class="its-stat-icon-wrap" style="background:#f5f5f5;">
                 <Icon Type="pause-circle" Theme="IconThemeType.Outline" Style="font-size:16px;color:#595959;" />
             </div>
@@ -250,7 +250,7 @@
                 <div class="its-stat-value" style="color:#595959;">@_statOnHold</div>
             </div>
         </div>
-        <div class="its-stat-card">
+        <div class="its-stat-card" @onclick='() => FilterByStatus("Resolved")'>
             <div class="its-stat-icon-wrap" style="background:#f6ffed;">
                 <Icon Type="check-circle" Theme="IconThemeType.Outline" Style="font-size:16px;color:#52c41a;" />
             </div>
@@ -259,7 +259,7 @@
                 <div class="its-stat-value green">@_statResolved</div>
             </div>
         </div>
-        <div class="its-stat-card">
+        <div class="its-stat-card"@onclick='() => FilterByStatus("Cancel")'>
             <div class="its-stat-icon-wrap" style="background:#fff1f0;">
                 <Icon Type="close-circle" Theme="IconThemeType.Outline" Style="font-size:16px;color:#ff4d4f;" />
             </div>

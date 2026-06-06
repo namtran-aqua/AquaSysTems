@@ -76,7 +76,17 @@ namespace AquaSolution.Client.Pages.ITSuport.RequestSuport
             );
             LoadStatusOptions();
         }
+        private async Task FilterByStatus(string status)
+        {
+            if (_selectedStatuses.Contains(status))
+                _selectedStatuses = _selectedStatuses.Where(s => s != status).ToList();
+            else
+                _selectedStatuses = _selectedStatuses.Append(status).ToList();
 
+            _currentPage = 1;
+            await LoadData();
+            _selectedStatuses = new List<string>();
+        }
         private async Task SignalRReload()
         {
             _hubConnection = new HubConnectionBuilder()

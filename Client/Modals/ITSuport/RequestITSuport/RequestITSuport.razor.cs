@@ -231,7 +231,11 @@ namespace AquaSolution.Client.Modals.ITSuport.RequestITSuport
                     return;
                 }
             }
-            await ConvertDataSendEmailRequest(RequestSuport, data.Status);
+            if (data.Status != RequestSuportStatusType.Open)
+            {
+                await ConvertDataSendEmailRequest(RequestSuport, data.Status);
+
+            }
             await UpdateAsync(data);
             IsModalVisible = false;
             await OnSave.InvokeAsync();
