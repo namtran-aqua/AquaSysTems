@@ -118,9 +118,9 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ReportServices
 
             // Table headers
             string[] hDept = { "Phòng ban", "Tổng Số đơn","Tổng số đã Duyệt","Tổng số từ chối","Tổng số chờ","Tổng số hoàn thành", "Số lượng",
-                                "KL Đăng ký (kg)", "KL Nhà rác nhận (kg)", "Tỉ lệ XN (%)", "Trạng thái" };
-            int[] cDept = { 2, 3, 4, 5, 6, 7, 8,9,10,11,12 };
-            double[] wDept = { 22, 10, 20, 20, 20, 20, 12, 20, 24, 14, 16 };
+                                "KL Đăng ký (kg)", "KL Nhà rác nhận (kg)" };
+            int[] cDept = { 2, 3, 4, 5, 6, 7, 8,9,10 };
+            double[] wDept = { 22, 10, 20, 20, 20, 20, 12, 20, 24};
             for (int i = 0; i < hDept.Length; i++)
             {
                 Th(ws, r, cDept[i], hDept[i]);
@@ -147,26 +147,26 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ReportServices
                 TdNum(ws, r, 8, d.TotalQuantity, alt, "#,##0");
                 TdNum(ws, r, 9, d.TotalWeight, alt, "#,##0.0");
                 TdNum(ws, r, 10, d.ConfirmedWeight, alt, "#,##0.0");
-                // Tỉ lệ xác nhận — formula
-                var rc = ws.Cell(r, 10);
-                rc.FormulaA1 = $"=IFERROR(J{r}/I{r},0)";
-                rc.Style.NumberFormat.Format = "0.0%";
-                rc.Style.Fill.BackgroundColor = alt ? CAltRow : XLColor.White;
-                rc.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-                rc.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
-                rc.Style.Font.FontName = "Arial";
-                rc.Style.Font.FontSize = 10;
-                Border(rc.AsRange());
+                //// Tỉ lệ xác nhận — formula
+                //var rc = ws.Cell(r, 10);
+                //rc.FormulaA1 = $"=IFERROR(J{r}/I{r},0)";
+                //rc.Style.NumberFormat.Format = "0.0%";
+                //rc.Style.Fill.BackgroundColor = alt ? CAltRow : XLColor.White;
+                //rc.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                //rc.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+                //rc.Style.Font.FontName = "Arial";
+                //rc.Style.Font.FontSize = 10;
+                //Border(rc.AsRange());
 
-                // Trạng thái
-                var sc = ws.Cell(r, 11);
-                sc.Style.Fill.BackgroundColor = alt ? CAltRow : XLColor.White;
-                sc.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                sc.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
-                sc.Style.Font.FontName = "Arial";
-                sc.Style.Font.FontSize = 10;
-                sc.Style.Font.Bold = true;
-                Border(sc.AsRange());
+                //// Trạng thái
+                //var sc = ws.Cell(r, 11);
+                //sc.Style.Fill.BackgroundColor = alt ? CAltRow : XLColor.White;
+                //sc.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                //sc.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+                //sc.Style.Font.FontName = "Arial";
+                //sc.Style.Font.FontSize = 10;
+                //sc.Style.Font.Bold = true;
+                //Border(sc.AsRange());
 
                 r++;
             }
@@ -187,7 +187,7 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ReportServices
             TotalFormula(ws, r, 8, $"=SUM(H{deptStart}:H{last})", "#,##0");
             TotalFormula(ws, r, 9, $"=SUM(I{deptStart}:I{last})", "#,##0.0");
             TotalFormula(ws, r, 10, $"=SUM(J{deptStart}:J{last})", "#,##0.0");
-            TotalFormula(ws, r, 11, $"=IFERROR(J{r}/I{r},0)", "0.0%");
+            //TotalFormula(ws, r, 11, $"=IFERROR(J{r}/I{r},0)", "0.0%");
         }
 
         // ═══════════════════════════════════════════════════════════════════
@@ -371,8 +371,8 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ReportServices
             MergeTitle(ws, r, 2, 8, "PIPELINE PHÊ DUYỆT (20 ĐƠN GẦN NHẤT)", CSubHdrBg, 11, height: 20);
             r++;
 
-            string[] hPl = { "Tiêu đề đơn", "Phòng ban", "Bước", "Người duyệt", "Ngày tạo", "Trạng thái" };
-            double[] wPl = { 32, 16, 10, 18, 14, 14 };
+            string[] hPl = { "Tiêu đề đơn", "Phòng ban","Người duyệt", "Ngày tạo", "Trạng thái" };
+            double[] wPl = { 32, 16,18, 22, 14 };
             for (int i = 0; i < hPl.Length; i++)
             {
                 Th(ws, r, i + 2, hPl[i]);
@@ -389,7 +389,7 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ReportServices
                 Td(ws, r, 2, p.v.Title, alt, bold: true);
                 Td(ws, r, 3, p.v.DepartmentName, alt, align: XLAlignmentHorizontalValues.Center);
                 Td(ws, r, 5, p.v.DecisionMakerName, alt);
-                Td(ws, r, 6, p.v.CreatedDate.ToString("dd/MM/yyyy"), alt, align: XLAlignmentHorizontalValues.Center);
+                Td(ws, r, 6, p.v.CreatedDate.ToString("dd/MM/yyyy HH:mm"), alt, align: XLAlignmentHorizontalValues.Center);
 
                 var statusText = p.v.Status switch
                 {
