@@ -15,7 +15,6 @@ using System.Threading.Tasks;
 
 namespace AquaSolution.Server.Services.ScrapManagetment.ReportServices
 {
-
     public class ReportService : IReportService
     {
         private readonly IRepository<HistoryScrap> _scrapRepo;
@@ -25,16 +24,13 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ReportServices
         private readonly IRepository<User> _userRepo;
         private readonly IRepository<Department> _departmentRepo;
 
-        // Inject thêm repo Department / Factory / User nếu project có
-        // private readonly IRepository<Department> _deptRepo;
-
         public ReportService(
             IRepository<HistoryScrap> scrapRepo,
             IRepository<HistoryScrapDetail> detailRepo,
             IRepository<RequestApproval> approvalRepo,
             IRepository<FlowApprovalScrap> flowRepo,
             IRepository<User> userRepo,
-             IRepository<Department> departmentRepo)
+            IRepository<Department> departmentRepo)
         {
             _scrapRepo = scrapRepo;
             _detailRepo = detailRepo;
@@ -44,21 +40,18 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ReportServices
             _departmentRepo = departmentRepo;
         }
 
+        // ─── ApplyFilter — tất cả lọc theo HistoryScrap.CreatedDate ─────────
         private IQueryable<HistoryScrap> ApplyFilter(IQueryable<HistoryScrap> query, ReportFilterDto filter)
         {
-            // Factory
             if (filter.FactoryId.HasValue)
                 query = query.Where(x => x.FactoryId == filter.FactoryId.Value);
 
-            // Thời gian — luôn dựa vào CreatedDate của HistoryScrap (bảng master)
             switch (filter.Period)
             {
                 case FilterPeriod.Week:
-                    {
-                        var (start, end) = GetIsoWeekRange(filter.Year, filter.Week ?? 1);
-                        query = query.Where(x => x.CreatedDate >= start && x.CreatedDate < end);
-                        break;
-                    }
+                    var (start, end) = GetIsoWeekRange(filter.Year, filter.Week ?? 1);
+                    query = query.Where(x => x.CreatedDate >= start && x.CreatedDate < end);
+                    break;
 
                 case FilterPeriod.Month:
                     query = query.Where(x =>
@@ -74,7 +67,7 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ReportServices
             return query;
         }
 
-        // ─── Helper: kỳ trước ───────────────────────────────────────────────
+        // ─── Kỳ trước ────────────────────────────────────────────────────────
         private static ReportFilterDto PreviousPeriod(ReportFilterDto filter)
         {
             var prev = new ReportFilterDto
@@ -92,12 +85,10 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ReportServices
                     if (filter.Week <= 1) { prev.Week = 52; prev.Year--; }
                     else prev.Week = filter.Week - 1;
                     break;
-
                 case FilterPeriod.Month:
                     if (filter.Month <= 1) { prev.Month = 12; prev.Year--; }
                     else prev.Month = filter.Month - 1;
                     break;
-
                 case FilterPeriod.Year:
                     prev.Year--;
                     break;
@@ -106,36 +97,18 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ReportServices
             return prev;
         }
 
+        // ─── GetIsoWeekRange — dùng ISOWeek built-in, KHÔNG tính offset thủ công ──
+        private static (DateTime Start, DateTime End) GetIsoWeekRange(int year, int week)
+        {
+            // ISOWeek.ToDateTime xử lý đúng mọi năm kể cả năm 53 tuần (2026, 2032...)
+            DateTime start = ISOWeek.ToDateTime(year, week, DayOfWeek.Monday);
+            DateTime end = start.AddDays(7); // exclusive
+            return (start, end);
+        }
 
-        // ────────────────────────────────────────────────────────────────────────────
-        // GIẢI THÍCH GetIsoWeekRange
-        // ────────────────────────────────────────────────────────────────────────────
-        // Ngày 08/06/2026 (hôm nay) là tuần ISO 24 của năm 2026.
-        //
-        // Kiểm tra nhanh trong C#:
-        //   ISOWeek.GetWeekOfYear(new DateTime(2026, 6, 8))  → 24
-        //
-        // GetIsoWeekRange(2026, 24) trả về:
-        //   Start = 2026-06-08 (Thứ Hai)
-        //   End   = 2026-06-15 (exclusive — không lấy)
-        //
-        // Filter: WHERE CreatedDate >= '2026-06-08' AND CreatedDate < '2026-06-15'
-        // → Lấy đúng các đơn tạo trong tuần 24 (08/06 → 14/06/2026)
-        // ────────────────────────────────────────────────────────────────────────────
-
-        // ── Thêm vào ReportFilterDto (nếu chưa có) ───────────────────────────────────
-        // public int? Week { get; set; }   ← số thứ tự tuần ISO, ví dụ: 24
-
-        // ── Client gửi lên khi chọn filter Tuần ──────────────────────────────────────
-        // api/report/page?Period=Week&Year=2026&Week=24
-        //
-        // Cách lấy số tuần hiện tại trong Blazor (razor.cs):
-        //   using System.Globalization;
-        //   int currentWeek = ISOWeek.GetWeekOfYear(DateTime.Today);  // → 24
-
+        // ─── GetReportPageAsync ───────────────────────────────────────────────
         public async Task<ReportPageDto> GetReportPageAsync(ReportFilterDto filter)
         {
-     
             var summary = await GetSummaryAsync(filter);
             var dept = await GetDepartmentReportAsync(filter);
             var material = await GetMaterialReportAsync(filter);
@@ -153,7 +126,8 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ReportServices
                 Pipeline = pipeline
             };
         }
-        // ─── Summary ────────────────────────────────────────────────────────
+
+        // ─── Summary ─────────────────────────────────────────────────────────
         public async Task<ReportSummaryDto> GetSummaryAsync(ReportFilterDto filter)
         {
             try
@@ -167,7 +141,6 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ReportServices
                 var totalOrders = scraps.Count;
                 var totalWeight = scraps.Sum(x => x.TotalAmount ?? 0);
                 var confirmedWeight = scraps.Sum(x => x.ConfirmAmount ?? 0);
-
                 var nowPending = scraps.Count(x => x.Status == StatusScrap.Pending);
                 var overdue = scraps.Count(x =>
                     x.Status == StatusScrap.Pending &&
@@ -187,21 +160,16 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ReportServices
                     TotalWeightChange = prevWeight == 0 ? 0 : Math.Round((double)((totalWeight - prevWeight) / prevWeight) * 100, 1)
                 };
             }
-            catch (Exception ex) 
-            {
-                throw ex;
-            }
-            
+            catch (Exception ex) { throw ex; }
         }
 
-        // ─── Department Report ───────────────────────────────────────────────
+        // ─── Department Report ────────────────────────────────────────────────
         public async Task<List<DepartmentReportDto>> GetDepartmentReportAsync(ReportFilterDto filter)
         {
             try
             {
                 var query = ApplyFilter(_scrapRepo.Query(), filter);
 
-                // Group theo DepartmentId
                 var grouped = await query
                     .GroupBy(x => x.DepartmentId)
                     .Select(g => new
@@ -213,42 +181,49 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ReportServices
                     })
                     .ToListAsync();
 
-                // Lấy chi tiết để tính TotalQuantity
                 var scrapIds = await query.Select(x => x.Id).ToListAsync();
-                var details = await _detailRepo.Query()
+                var detailQty = await _detailRepo.Query()
                     .Where(d => scrapIds.Contains(d.ScrapHistoryId))
                     .GroupBy(d => d.ScrapHistoryId)
+                    .Select(g => new { ScrapId = g.Key, TotalQty = g.Sum(x => x.Quantity) })
                     .ToListAsync();
-                var department = _departmentRepo.Query();
-                // Map sang DTO — tên phòng ban cần join thêm nếu có DepartmentRepo
-                var result = grouped.Select(g => new DepartmentReportDto
+
+                // Lấy tên phòng ban
+                var deptIds = grouped.Select(g => g.DepartmentId).Distinct().ToList();
+                var deptNames = await _departmentRepo.Query()
+                    .Where(d => deptIds.Contains(d.Id))
+                    .Select(d => new { d.Id, d.Name })
+                    .ToListAsync();
+
+                var result = grouped.Select(g =>
                 {
-                    DepartmentId = g.DepartmentId,
-                    DepartmentName = department.FirstOrDefault(x=>x.Id==g.DepartmentId).Name, 
-                    TotalQuantity = 0, // tính bên dưới
-                    TotalWeight = g.TotalWeight,
-                    ConfirmedWeight = g.ConfirmedWeight,
-                    StatusLabel = g.ConfirmedWeight / (g.TotalWeight == 0 ? 1 : g.TotalWeight) < 0.75m
-                        ? "Cần xem xét" : "Bình thường"
+                    var deptName = deptNames.FirstOrDefault(d => d.Id == g.DepartmentId)?.Name ?? g.DepartmentId.ToString()[..8];
+                    return new DepartmentReportDto
+                    {
+                        DepartmentId = g.DepartmentId,
+                        DepartmentName = deptName,
+                        TotalOrders = g.TotalOrders,
+                        TotalQuantity = 0,
+                        TotalWeight = g.TotalWeight,
+                        ConfirmedWeight = g.ConfirmedWeight
+                        //StatusLabel = g.ConfirmedWeight / (g.TotalWeight == 0 ? 1 : g.TotalWeight) < 0.75m
+                        //    ? "Cần xem xét" : "Bình thường"
+                    };
                 }).ToList();
 
                 return result;
             }
-            catch (Exception ex) 
-            {
-                throw ex;
-            }
-           
+            catch (Exception ex) { throw ex; }
         }
 
-        // ─── Material Report ─────────────────────────────────────────────────
+        // ─── Material Report ──────────────────────────────────────────────────
         public async Task<List<MaterialReportDto>> GetMaterialReportAsync(ReportFilterDto filter)
         {
             try
             {
                 var query = ApplyFilter(_scrapRepo.Query(), filter);
-                var scrapIds = await query.Select(x => x.Id).ToListAsync();
 
+                var scrapIds = await query.Select(x => x.Id).ToListAsync();
 
                 var confirmedScrapIds = await query
                     .Where(x => x.Status == StatusScrap.Done)
@@ -259,7 +234,9 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ReportServices
                     .Where(d => scrapIds.Contains(d.ScrapHistoryId))
                     .ToListAsync();
 
-                var confirmedDetails = details.Where(d => confirmedScrapIds.Contains(d.ScrapHistoryId)).ToList();
+                var confirmedDetails = details
+                    .Where(d => confirmedScrapIds.Contains(d.ScrapHistoryId))
+                    .ToList();
 
                 var grouped = details
                     .GroupBy(d => new { d.MaterialId, d.Code, d.Name, d.TYPE, d.Unit })
@@ -281,14 +258,10 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ReportServices
 
                 return grouped;
             }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-           
+            catch (Exception ex) { throw ex; }
         }
 
-        // ─── Trend ──────────────────────────────────────────────────────────
+        // ─── Trend ───────────────────────────────────────────────────────────
         public async Task<List<TrendPointDto>> GetTrendAsync(ReportFilterDto filter)
         {
             try
@@ -297,85 +270,73 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ReportServices
                 if (filter.FactoryId.HasValue)
                     baseQuery = baseQuery.Where(x => x.FactoryId == filter.FactoryId.Value);
 
-                List<TrendPointDto> result = new();
+                var result = new List<TrendPointDto>();
 
                 switch (filter.Period)
                 {
                     case FilterPeriod.Week:
                         {
-                            // 7 ngày trong tuần
-                            //for (int d = 0; d < 7; d++)
-                            //{
-                            //    var day = ISOWeek.ToDateTime(filter.Year, filter.Week!.Value, (DayOfWeek)(d + 1 > 6 ? 0 : d + 1));
-                            //    var data = await baseQuery
-                            //        .Where(x => x.CreatedDate.Date == day.Date)
-                            //        .ToListAsync();
-                            //    result.Add(new TrendPointDto
-                            //    {
-                            //        Label = day.ToString("ddd dd/MM"),
-                            //        TotalOrders = data.Count,
-                            //        TotalWeight = data.Sum(x => x.TotalAmount ?? 0),
-                            //        ConfirmedWeight = data.Sum(x => x.ConfirmAmount ?? 0)
-                            //    });
-                            //}
+                            // Lấy toàn bộ data của tuần 1 lần, tránh 7 round-trip DB
+                            var (weekStart, weekEnd) = GetIsoWeekRange(filter.Year, filter.Week ?? 1);
+                            var weekData = await baseQuery
+                                .Where(x => x.CreatedDate >= weekStart && x.CreatedDate < weekEnd)
+                                .ToListAsync();
 
-                            var week = filter.Week ?? 1;
-
-                            for (int d = 0; d < 7; d++)
+                            // Chia theo từng ngày trong tuần (Thứ Hai → Chủ Nhật)
+                            for (int d = 1; d <= 7; d++)
                             {
-                                var day = ISOWeek.ToDateTime(
-                                    filter.Year,
-                                    week,
-                                    (DayOfWeek)(d + 1 > 6 ? 0 : d + 1)
-                                );
-
-                                var data = await baseQuery
-                                    .Where(x => x.CreatedDate.Date == day.Date)
-                                    .ToListAsync();
+                                // ISOWeek day: 1=Monday ... 7=Sunday
+                                var day = ISOWeek.ToDateTime(filter.Year, filter.Week ?? 1, (DayOfWeek)(d % 7));
+                                var dayData = weekData.Where(x => x.CreatedDate.Date == day.Date).ToList();
 
                                 result.Add(new TrendPointDto
                                 {
                                     Label = day.ToString("ddd dd/MM"),
-                                    TotalOrders = data.Count,
-                                    TotalWeight = data.Sum(x => x.TotalAmount ?? 0),
-                                    ConfirmedWeight = data.Sum(x => x.ConfirmAmount ?? 0)
+                                    TotalOrders = dayData.Count,
+                                    TotalWeight = dayData.Sum(x => x.TotalAmount ?? 0),
+                                    ConfirmedWeight = dayData.Sum(x => x.ConfirmAmount ?? 0)
                                 });
                             }
-
                             break;
                         }
+
                     case FilterPeriod.Month:
                         {
-                            // 12 tháng của năm
+                            // Lấy toàn bộ data của năm 1 lần
+                            var yearData = await baseQuery
+                                .Where(x => x.CreatedDate.Year == filter.Year)
+                                .ToListAsync();
+
                             for (int m = 1; m <= 12; m++)
                             {
-                                var data = await baseQuery
-                                    .Where(x => x.CreatedDate.Year == filter.Year && x.CreatedDate.Month == m)
-                                    .ToListAsync();
+                                var mData = yearData.Where(x => x.CreatedDate.Month == m).ToList();
                                 result.Add(new TrendPointDto
                                 {
                                     Label = $"T{m}",
-                                    TotalOrders = data.Count,
-                                    TotalWeight = data.Sum(x => x.TotalAmount ?? 0),
-                                    ConfirmedWeight = data.Sum(x => x.ConfirmAmount ?? 0)
+                                    TotalOrders = mData.Count,
+                                    TotalWeight = mData.Sum(x => x.TotalAmount ?? 0),
+                                    ConfirmedWeight = mData.Sum(x => x.ConfirmAmount ?? 0)
                                 });
                             }
                             break;
                         }
+
                     case FilterPeriod.Year:
                         {
-                            // 5 năm gần nhất
-                            for (int y = filter.Year - 4; y <= filter.Year; y++)
+                            int fromYear = filter.Year - 4;
+                            var rangeData = await baseQuery
+                                .Where(x => x.CreatedDate.Year >= fromYear && x.CreatedDate.Year <= filter.Year)
+                                .ToListAsync();
+
+                            for (int y = fromYear; y <= filter.Year; y++)
                             {
-                                var data = await baseQuery
-                                    .Where(x => x.CreatedDate.Year == y)
-                                    .ToListAsync();
+                                var yData = rangeData.Where(x => x.CreatedDate.Year == y).ToList();
                                 result.Add(new TrendPointDto
                                 {
                                     Label = y.ToString(),
-                                    TotalOrders = data.Count,
-                                    TotalWeight = data.Sum(x => x.TotalAmount ?? 0),
-                                    ConfirmedWeight = data.Sum(x => x.ConfirmAmount ?? 0)
+                                    TotalOrders = yData.Count,
+                                    TotalWeight = yData.Sum(x => x.TotalAmount ?? 0),
+                                    ConfirmedWeight = yData.Sum(x => x.ConfirmAmount ?? 0)
                                 });
                             }
                             break;
@@ -384,14 +345,10 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ReportServices
 
                 return result;
             }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-          
+            catch (Exception ex) { throw ex; }
         }
 
-        // ─── Approval Status ─────────────────────────────────────────────────
+        // ─── Approval Status ──────────────────────────────────────────────────
         public async Task<ApprovalStatusDto> GetApprovalStatusAsync(ReportFilterDto filter)
         {
             try
@@ -406,23 +363,20 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ReportServices
                     Rejected = scraps.Count(x => x.Status == StatusScrap.Rejected)
                 };
             }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-           
+            catch (Exception ex) { throw ex; }
         }
 
-        // ─── Pipeline ────────────────────────────────────────────────────────
+        // ─── Pipeline ─────────────────────────────────────────────────────────
         public async Task<List<ApprovalPipelineDto>> GetPipelineAsync(ReportFilterDto filter)
         {
             try
             {
                 var query = ApplyFilter(_scrapRepo.Query(), filter);
 
-                // Lấy các đơn đang pending hoặc mới nhất
                 var scraps = await query
-                    .Where(x => x.Status == StatusScrap.Pending || x.Status == StatusScrap.Approved || x.Status == StatusScrap.Rejected)
+                    .Where(x => x.Status == StatusScrap.Pending
+                             || x.Status == StatusScrap.Approved
+                             || x.Status == StatusScrap.Rejected)
                     .OrderByDescending(x => x.CreatedDate)
                     .Take(20)
                     .ToListAsync();
@@ -432,8 +386,24 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ReportServices
                     .Where(a => scrapIds.Contains(a.HistoryScrapId))
                     .ToListAsync();
 
+                var factoryIds = scraps.Select(s => s.FactoryId).Distinct().ToList();
                 var flows = await _flowRepo.Query()
-                    .Where(f => scraps.Select(s => s.FactoryId).Contains(f.FactoryId))
+                    .Where(f => factoryIds.Contains(f.FactoryId))
+                    .ToListAsync();
+
+                // Load user & department 1 lần, tránh N+1
+                var decisionMakerIds = approvals
+                    .Select(a => a.DecisionMaker)
+                    .Distinct().ToList();
+                var users = await _userRepo.Query()
+                    .Where(u => decisionMakerIds.Contains(u.Id))
+                    .Select(u => new { u.Id, u.FullName })
+                    .ToListAsync();
+
+                var deptIds = scraps.Select(s => s.DepartmentId).Distinct().ToList();
+                var depts = await _departmentRepo.Query()
+                    .Where(d => deptIds.Contains(d.Id))
+                    .Select(d => new { d.Id, d.Name })
                     .ToListAsync();
 
                 return scraps.Select(s =>
@@ -441,40 +411,26 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ReportServices
                     var scrapApprovals = approvals.Where(a => a.HistoryScrapId == s.Id).ToList();
                     var currentApproval = scrapApprovals.OrderByDescending(a => a.Step).FirstOrDefault();
                     var totalSteps = flows.Count(f => f.FactoryId == s.FactoryId && f.DepartmentId == s.DepartmentId);
-                    var user = _userRepo.Query().FirstOrDefault(x=>x.Id == currentApproval.DecisionMaker);
-                    var department = _departmentRepo.Query().FirstOrDefault(x => x.Id == s.DepartmentId);
+
+                    var userName = currentApproval != null
+                        ? users.FirstOrDefault(u => u.Id == currentApproval.DecisionMaker)?.FullName ?? ""
+                        : "";
+                    var deptName = depts.FirstOrDefault(d => d.Id == s.DepartmentId)?.Name ?? "";
+
                     return new ApprovalPipelineDto
                     {
                         ScrapId = s.Id,
                         Title = s.Title,
-                        DepartmentName = department.Name ?? "", // thay bằng tên thật
+                        DepartmentName = deptName,
                         CurrentStep = currentApproval?.Step ?? 0,
                         TotalSteps = totalSteps == 0 ? 1 : totalSteps,
-                        DecisionMakerName = user.FullName ??"", 
+                        DecisionMakerName = userName,
                         CreatedDate = s.CreatedDate,
                         Status = s.Status
                     };
                 }).ToList();
             }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-            
-        }
-        // ── Helper tính ngày đầu/cuối tuần ISO 8601 (Thứ Hai → Chủ Nhật) ─────────────
-        private static (DateTime Start, DateTime End) GetIsoWeekRange(int year, int week)
-        {
-            // Ngày 4/1 luôn thuộc tuần ISO 1 của năm đó
-            var jan4 = new DateTime(year, 1, 4);
-            int offset = DayOfWeek.Monday - jan4.DayOfWeek; 
-            var week1Start = jan4.AddDays(offset).Date;
-
-            DateTime start = week1Start.AddDays((week - 1) * 7);
-            DateTime end = start.AddDays(7); 
-            return (start, end);
+            catch (Exception ex) { throw ex; }
         }
     }
-
 }
-

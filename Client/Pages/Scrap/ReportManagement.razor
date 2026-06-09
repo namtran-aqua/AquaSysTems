@@ -7,199 +7,161 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @inject AuthenticationStateProvider AuthStateProvider
 @inject PermissionService permissionService
- <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
+    const _charts = {};
 
-        const _charts = {};
+    function destroyChart(id) {
+        if (_charts[id]) { _charts[id].destroy(); delete _charts[id]; }
+    }
+    window.destroyAllCharts = function () { Object.keys(_charts).forEach(destroyChart); };
 
-        function destroyChart(id) {
-            if (_charts[id]) {
-                _charts[id].destroy();
-                delete _charts[id];
+    const COLORS       = ['#378ADD','#1D9E75','#BA7517','#D85A30','#7F77DD','#D4537E','#639922'];
+    const STATUS_COLORS = ['#639922','#EF9F27','#E24B4A'];
+    function kFmt(v) { return v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v; }
+
+    function safeCreate(id, config) {
+        destroyChart(id);
+        const canvas = document.getElementById(id);
+        if (!canvas) return null;
+        const chart = new Chart(canvas, config);
+        _charts[id] = chart;
+        return chart;
+    }
+
+    window.renderPieChart = function (canvasId, labels, data) {
+        safeCreate(canvasId, {
+            type: 'pie',
+            data: { labels, datasets: [{ data, backgroundColor: COLORS, borderWidth: 2, borderColor: '#fff' }] },
+            options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } } }
+        });
+    };
+
+    window.renderCompareBarChart = function (canvasId, labels, registered, confirmed) {
+        safeCreate(canvasId, {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [
+                    { label: 'Đăng ký (kg)',      data: registered, backgroundColor: '#378ADD', borderRadius: 3 },
+                    { label: 'Nhà rác nhận (kg)', data: confirmed,  backgroundColor: '#1D9E75', borderRadius: 3 }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } },
+                scales: { x: { ticks: { font: { size: 11 } } }, y: { ticks: { font: { size: 11 }, callback: kFmt } } }
             }
-        }
+        });
+    };
 
-        window.destroyAllCharts = function () {
-            Object.keys(_charts).forEach(destroyChart);
-        };
+    window.renderHBarChart = function (canvasId, labels, data) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        const h = Math.max(200, labels.length * 38 + 60);
+        if (canvas.parentElement) canvas.parentElement.style.height = h + 'px';
+        safeCreate(canvasId, {
+            type: 'bar',
+            data: { labels, datasets: [{ label: 'Khối lượng (kg)', data, backgroundColor: COLORS, borderRadius: 3 }] },
+            options: {
+                indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { x: { ticks: { font: { size: 10 }, callback: kFmt } }, y: { ticks: { font: { size: 11 } } } }
+            }
+        });
+    };
 
-        const COLORS = ['#378ADD', '#1D9E75', '#BA7517', '#D85A30', '#7F77DD', '#D4537E', '#639922'];
-        const STATUS_COLORS = ['#639922', '#EF9F27', '#E24B4A'];
+    window.renderLineChart = function (canvasId, labels, data) {
+        safeCreate(canvasId, {
+            type: 'line',
+            data: { labels, datasets: [{ label: 'Số đơn', data, borderColor: '#7F77DD', backgroundColor: 'rgba(127,119,221,0.12)', fill: true, tension: 0.4, pointRadius: 4 }] },
+            options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { ticks: { font: { size: 11 } } }, y: { ticks: { font: { size: 11 } } } } }
+        });
+    };
 
-        function kFmt(v) {
-            return v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v;
-        }
+    window.renderDoughnutChart = function (canvasId, labels, data) {
+        safeCreate(canvasId, {
+            type: 'doughnut',
+            data: { labels, datasets: [{ data, backgroundColor: STATUS_COLORS, borderWidth: 2, borderColor: '#fff' }] },
+            options: { responsive: true, cutout: '65%', plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } } }
+        });
+    };
 
-        window.renderPieChart = function (canvasId, labels, data) {
-            destroyChart(canvasId);
-            const ctx = document.getElementById(canvasId);
-            if (!ctx) return;
-            _charts[canvasId] = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels,
-                    datasets: [{ data, backgroundColor: COLORS, borderWidth: 2, borderColor: '#fff' }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } }
-                }
-            });
-        };
-
-        window.renderCompareBarChart = function (canvasId, labels, registered, confirmed) {
-            destroyChart(canvasId);
-            const ctx = document.getElementById(canvasId);
-            if (!ctx) return;
-            _charts[canvasId] = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels,
-                    datasets: [
-                        { label: 'Đăng ký (kg)', data: registered, backgroundColor: '#378ADD', borderRadius: 3 },
-                        { label: 'Nhà rác nhận (kg)', data: confirmed, backgroundColor: '#1D9E75', borderRadius: 3 }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } },
-                    scales: {
-                        x: { ticks: { font: { size: 11 } } },
-                        y: { ticks: { font: { size: 11 }, callback: kFmt } }
-                    }
-                }
-            });
-        };
-
-        window.renderHBarChart = function (canvasId, labels, data) {
-            destroyChart(canvasId);
-            const ctx = document.getElementById(canvasId);
-            if (!ctx) return;
-            const height = Math.max(200, labels.length * 38 + 60);
-            ctx.parentElement.style.height = height + 'px';
-            _charts[canvasId] = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels,
-                    datasets: [{ label: 'Khối lượng (kg)', data, backgroundColor: COLORS, borderRadius: 3 }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { ticks: { font: { size: 10 }, callback: kFmt } },
-                        y: { ticks: { font: { size: 11 } } }
-                    }
-                }
-            });
-        };
-
-        window.renderLineChart = function (canvasId, labels, data) {
-            destroyChart(canvasId);
-            const ctx = document.getElementById(canvasId);
-            if (!ctx) return;
-            _charts[canvasId] = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels,
-                    datasets: [{
-                        label: 'Số đơn',
-                        data,
-                        borderColor: '#7F77DD',
-                        backgroundColor: 'rgba(127,119,221,0.12)',
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { ticks: { font: { size: 11 } } },
-                        y: { ticks: { font: { size: 11 } } }
-                    }
-                }
-            });
-        };
-
-        window.renderDoughnutChart = function (canvasId, labels, data) {
-            destroyChart(canvasId);
-            const ctx = document.getElementById(canvasId);
-            if (!ctx) return;
-            _charts[canvasId] = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels,
-                    datasets: [{ data, backgroundColor: STATUS_COLORS, borderWidth: 2, borderColor: '#fff' }]
-                },
-                options: {
-                    responsive: true,
-                    cutout: '65%',
-                    plugins: {
-                        legend: { position: 'bottom', labels: { font: { size: 11 } } }
-                    }
-                }
-            });
-        };
-
-        // Utility: trigger file download from byte array
-        window.downloadFile = function (fileName, mimeType, bytes) {
-            const blob = new Blob([new Uint8Array(bytes)], { type: mimeType });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = fileName;
-            a.click();
-            URL.revokeObjectURL(url);
-        };
-
+    window.downloadFile = function (fileName, mimeType, bytes) {
+        const blob = new Blob([new Uint8Array(bytes)], { type: mimeType });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href = url; a.download = fileName;
+        document.body.appendChild(a); a.click();
+        document.body.removeChild(a); URL.revokeObjectURL(url);
+    };
 </script>
-<div class="report-page"style="height:100vh; overflow:auto">
+
+<div class="report-page" style="height:100vh; overflow:auto">
 
     @* ── Topbar ── *@
-    <div class="report-topbar" >
+    <div class="report-topbar">
         <div class="topbar-left">
-            <span class="page-title">
-                <i class="ti ti-recycle"></i> Báo cáo Scrap
-            </span>
+            <span class="page-title"><i class="ti ti-recycle"></i> Báo cáo Scrap</span>
 
             <Select TItem="FactoryDto"
-                              TItemValue="Guid?"
-                              DataSource="_factories"
-                              @bind-Value="_filter.FactoryId"
-                              ValueName="@nameof(FactoryDto.Id)"
-                              LabelName="@nameof(FactoryDto.Name)"
-                              Placeholder="Tất cả nhà máy"
-                              AllowClear
-                              Style="min-width:200px"
-                              OnSelectedItemChanged="OnFactoryChanged">
+                    TItemValue="Guid?"
+                    DataSource="_factories"
+                    @bind-Value="_filter.FactoryId"
+                    ValueName="@nameof(FactoryDto.Id)"
+                    LabelName="@nameof(FactoryDto.Name)"
+                    Placeholder="Tất cả nhà máy"
+                    AllowClear
+                    Style="min-width:200px"
+                    OnSelectedItemChanged="OnFactoryChanged">
             </Select>
         </div>
 
         <div class="topbar-right">
-            <RadioGroup @bind-Value="_filter.Period" ButtonStyle="@RadioButtonStyle.Solid"OnChange="@( (FilterPeriod value) => OnFilterChangedFilter(value) )">
+            <RadioGroup @bind-Value="_filter.Period"
+                        ButtonStyle="@RadioButtonStyle.Solid"
+                        OnChange="@((FilterPeriod value) => OnFilterChangedFilter(value))">
                 <Radio Value="@FilterPeriod.Week">Tuần</Radio>
                 <Radio Value="@FilterPeriod.Month">Tháng</Radio>
                 <Radio Value="@FilterPeriod.Year">Năm</Radio>
             </RadioGroup>
 
-            @if (_filter.Period == FilterPeriod.Month)
+            @* Dropdown tuần — chỉ hiện khi chọn filter Tuần *@
+            @if (_filter.Period == FilterPeriod.Week)
             {
-                              <Select TItem="OptionItem" TItemValue="int"
-                                        DataSource="_months"
-                                        @bind-Value="_monthVal"
-                                        LabelName="Label"
-                                        ValueName="Value"
-                                        Style="width:110px"
-                                        OnSelectedItemChanged="OnFilterChanged" />
+                <Select TItem="WeekItem"
+                        TItemValue="int"
+                        DataSource="_weeks"
+                        @bind-Value="_weekVal"
+                        LabelName="Label"
+                        ValueName="Value"
+                        Style="width:210px"
+                        OnSelectedItemChanged="OnWeekChanged">
+                </Select>
             }
 
-            <Select TItem="int" TItemValue="int" DataSource="_years"
-                              @bind-Value="_filter.Year"
-                              Style="width:90px" OnSelectedItemChanged="OnFilterChanged" />
+            @* Dropdown tháng — chỉ hiện khi chọn filter Tháng *@
+            @if (_filter.Period == FilterPeriod.Month)
+            {
+                <Select TItem="OptionItem"
+                        TItemValue="int"
+                        DataSource="_months"
+                        @bind-Value="_monthVal"
+                        LabelName="Label"
+                        ValueName="Value"
+                        Style="width:110px"
+                        OnSelectedItemChanged="OnFilterChanged">
+                </Select>
+            }
+
+            <Select TItem="int"
+                    TItemValue="int"
+                    DataSource="_years"
+                    @bind-Value="_filter.Year"
+                    Style="width:90px"
+                    OnSelectedItemChanged="OnFilterChanged">
+            </Select>
 
             <Button Icon="download" OnClick="ExportReport" Loading="_exporting">Xuất</Button>
         </div>
@@ -224,7 +186,7 @@
             </div>
             <div class="kpi-card">
                 <div class="kpi-label"><i class="ti ti-weight"></i> Tổng khối lượng (kg)</div>
-                <div class="kpi-value">@_data.Summary.TotalWeight.ToString("N0")</div>
+                <div class="kpi-value">@_data.Summary.TotalWeight.ToString("0.####")</div>
                 <div class="kpi-sub">
                     <span class="badge @(_data.Summary.TotalWeightChange >= 0 ? "badge-up" : "badge-dn")">
                         @(_data.Summary.TotalWeightChange >= 0 ? "↑" : "↓") @Math.Abs(_data.Summary.TotalWeightChange)%
@@ -233,7 +195,7 @@
             </div>
             <div class="kpi-card">
                 <div class="kpi-label"><i class="ti ti-check-circle"></i> Nhà rác nhận (kg)</div>
-                <div class="kpi-value">@_data.Summary.ConfirmedWeight.ToString("N0")</div>
+                <div class="kpi-value">@_data.Summary.ConfirmedWeight.ToString("0.####")</div>
                 <div class="kpi-sub">Tỉ lệ xác nhận <strong class="text-green">@_data.Summary.ConfirmRate%</strong></div>
             </div>
             <div class="kpi-card">
@@ -242,8 +204,6 @@
                 <div class="kpi-sub text-amber">@_data.Summary.OverduePendingOrders đơn chờ &gt; 3 ngày</div>
             </div>
         </div>
-
-       
 
         @* ── Biểu đồ hàng 1 ── *@
         <div class="chart-row-2">
@@ -256,22 +216,28 @@
                 <canvas id="compareBarChart"></canvas>
             </div>
         </div>
-         @* ── Bảng 1: Phòng ban ── *@
+
+        @* ── Bảng 1: Phòng ban ── *@
         <div class="section">
             <div class="section-title"><i class="ti ti-building"></i> Báo cáo theo phòng ban</div>
             <Table TItem="DepartmentReportDto"
-                             DataSource="@_data.DepartmentReport"
-                             Bordered Size="TableSize.Small"
-                             HidePagination>
+                   DataSource="@_data.DepartmentReport"
+                   Bordered Size="TableSize.Small"
+                   HidePagination>
                 <ColumnDefinitions Context="row">
-                <PropertyColumn Width="100px" Title="Department" Property="c => c.DepartmentName" />
-                <PropertyColumn Width="100px" Title="TotalOrders" Property="c => c.TotalOrders" />
-                <PropertyColumn Width="100px" Title="TotalQuantity" Property="c => c.TotalQuantity" />
-                <PropertyColumn Width="100px" Title="TotalWeight" Property="c => c.TotalWeight" />
-                <PropertyColumn Width="100px" Title="ConfirmedWeight" Property="c => c.ConfirmedWeight" />
-                <PropertyColumn Width="100px" Title="ConfirmRate" Property="c => c.ConfirmRate" />
-                <PropertyColumn Width="100px" Title="StatusLabel" Property="c => c.StatusLabel" />
-
+                    <PropertyColumn Width="auto"  Title="Phòng ban"          Property="c => c.DepartmentName" />
+                    <PropertyColumn Width="90px"  Title="Số đơn"             Property="c => c.TotalOrders" />
+                    <PropertyColumn Width="110px" Title="Số lượng"           Property="c => c.TotalQuantity"   Format="N0" Align="ColumnAlign.Right" />
+                    <PropertyColumn Width="150px" Title="KL Đăng ký (kg)"    Property="c => c.TotalWeight"     Format="0.####" Align="ColumnAlign.Right" />
+                    <PropertyColumn Width="170px" Title="Nhà rác nhận (kg)"  Property="c => c.ConfirmedWeight" Format="0.####" Align="ColumnAlign.Right" />
+                    <PropertyColumn Width="130px" Title="Tỉ lệ XN (%)"       Property="c => c.ConfirmRate"     Format="N1" Align="ColumnAlign.Right" />
+                   @*  <PropertyColumn Width="120px" Title="Trạng thái"         Property="c => c.StatusLabel">
+                        <Template>
+                            <Tag Color="@(row.StatusLabel == "Bình thường" ? "green" : "orange")">
+                                @row.StatusLabel
+                            </Tag>
+                        </Template>
+                    </PropertyColumn> *@
                 </ColumnDefinitions>
             </Table>
         </div>
@@ -280,28 +246,28 @@
         <div class="section">
             <div class="section-title"><i class="ti ti-package"></i> Báo cáo theo vật liệu</div>
             <Table TItem="MaterialReportDto"
-                             DataSource="@_data.MaterialReport"
-                             Bordered Size="TableSize.Small"
-                             HidePagination>
+                   DataSource="@_data.MaterialReport"
+                   Bordered Size="TableSize.Small"
+                   HidePagination>
                 <ColumnDefinitions Context="row">
-                     <PropertyColumn Width="100px" Title="Code" Property="c => c.Code" />
-                     <PropertyColumn Width="auto"  Title="Name" Property="c => c.Name" />
-                     <PropertyColumn Width="100px" Title="Type" Property="c => c.Type" />
-                     <PropertyColumn Width="100px" Title="Unit" Property="c => c.Unit" />
-                     <PropertyColumn Width="100px" Title="TotalQuantity" Property="c => c.TotalQuantity"  Format="N0" Align="ColumnAlign.Right"/>
-                     <PropertyColumn Width="100px" Title="TotalWeight" Property="c => c.TotalWeight" Format="N0" Align="ColumnAlign.Right"/>
-                     <PropertyColumn Width="100px" Title="ConfirmedWeight" Property="c => c.ConfirmedWeight"  Format="N0" Align="ColumnAlign.Right"/>
-                          <PropertyColumn Title="Difference"Property="c => c.Difference" Align="ColumnAlign.Right">
+                    <PropertyColumn Width="110px" Title="Mã vật liệu"        Property="c => c.Code" />
+                    <PropertyColumn Width="auto"  Title="Tên vật liệu"       Property="c => c.Name" />
+                    <PropertyColumn Width="100px" Title="Loại"               Property="c => c.Type" />
+                    <PropertyColumn Width="70px"  Title="ĐVT"                Property="c => c.Unit" />
+                    <PropertyColumn Width="110px" Title="Số lượng"           Property="c => c.TotalQuantity"   Format="N0" Align="ColumnAlign.Right" />
+                    <PropertyColumn Width="150px" Title="KL Đăng ký (kg)"    Property="c => c.TotalWeight"     Format="N0" Align="ColumnAlign.Right" />
+                    <PropertyColumn Width="170px" Title="Nhà rác nhận (kg)"  Property="c => c.ConfirmedWeight" Format="N0" Align="ColumnAlign.Right" />
+                    <PropertyColumn Width="140px" Title="Chênh lệch (kg)"    Property="c => c.Difference"      Align="ColumnAlign.Right">
                         <Template>
                             <span style="color:@(row.Difference < 0 ? "#a32d2d" : "#3b6d11")">
                                 @row.Difference.ToString("N0")
                             </span>
                         </Template>
-                    </PropertyColumn> 
-            
+                    </PropertyColumn>
                 </ColumnDefinitions>
             </Table>
         </div>
+
         @* ── Biểu đồ hàng 2 ── *@
         <div class="chart-row-3">
             <div class="chart-card">
@@ -322,35 +288,30 @@
         <div class="section">
             <div class="section-title"><i class="ti ti-list-check"></i> Đơn đang trong luồng duyệt</div>
             <Table TItem="ApprovalPipelineDto"
-                             DataSource="@_data.Pipeline"
-                             Bordered Size="@TableSize.Small">
-                 <ColumnDefinitions Context="row">
-                     <PropertyColumn Width="auto" Title="Title" Property="c => c.Title" />
-                     <PropertyColumn Width="80px" Title="Department" Property="c => c.DepartmentName" />
-                     <PropertyColumn Width="80px" Title="CurrentStep" Property="c => c.CurrentStep" >
-                           <Template >
-                            Step @row.CurrentStep / @row.TotalSteps
-                        </Template>
-                     </PropertyColumn>
-                     <PropertyColumn Width="200px" Title="DecisionMakerName" Property="c => c.DecisionMakerName" />
-                     <PropertyColumn Width="100px" Title="CreatedDate" Property="c => c.CreatedDate" Format="dd/MM/yyyy HH:mm" />
-                     <PropertyColumn Width="50px" Title="Status" Property="c => c.Status" >
-
-                          <ChildContent >
+                   DataSource="@_data.Pipeline"
+                   Bordered Size="@TableSize.Small">
+                <ColumnDefinitions Context="row">
+                    <PropertyColumn Width="auto"  Title="Tiêu đề"      Property="c => c.Title" />
+                    <PropertyColumn Width="120px" Title="Phòng ban"     Property="c => c.DepartmentName" />
+                    <PropertyColumn Width="90px"  Title="Bước"         Property="c => c.CurrentStep">
+                        <Template>Bước @row.CurrentStep / @row.TotalSteps</Template>
+                    </PropertyColumn>
+                    <PropertyColumn Width="160px" Title="Người duyệt"  Property="c => c.DecisionMakerName" />
+                    <PropertyColumn Width="130px" Title="Ngày tạo"     Property="c => c.CreatedDate" Format="dd/MM/yyyy HH:mm" />
+                    <PropertyColumn Width="100px" Title="Trạng thái"   Property="c => c.Status">
+                        <Template>
                             @{
                                 var (color, label) = row.Status switch
                                 {
-                                    StatusScrap.Approved => ("green", "Đã duyệt"),
-                                    StatusScrap.Pending  => ("orange", "Chờ duyệt"),
-                                    StatusScrap.Rejected => ("red", "Từ chối"),
+                                    StatusScrap.Approved => ("green",   "Đã duyệt"),
+                                    StatusScrap.Pending  => ("orange",  "Chờ duyệt"),
+                                    StatusScrap.Rejected => ("red",     "Từ chối"),
                                     _                    => ("default", row.Status.ToString())
                                 };
                             }
                             <Tag Color="@color">@label</Tag>
-                        </ChildContent>
-                     </PropertyColumn>
-
-                
+                        </Template>
+                    </PropertyColumn>
                 </ColumnDefinitions>
             </Table>
         </div>
@@ -358,32 +319,29 @@
 </div>
 
 <style>
-    .report-page { padding: 16px 0; }
+    .report-page   { padding: 16px 0; }
     .report-topbar { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:20px; }
-    .topbar-left { display:flex; align-items:center; gap:12px; }
-    .topbar-right { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-    .page-title { font-size:18px; font-weight:500; }
-    .kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+    .topbar-left   { display:flex; align-items:center; gap:12px; }
+    .topbar-right  { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .page-title    { font-size:18px; font-weight:500; }
+    .kpi-row  { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
     .kpi-card { background:var(--color-background-secondary,#f5f5f5); border-radius:8px; padding:14px 16px; }
     .kpi-label { font-size:12px; color:gray; margin-bottom:4px; }
     .kpi-value { font-size:22px; font-weight:500; }
-    .kpi-sub { font-size:12px; color:gray; margin-top:4px; }
-    .badge { font-size:11px; padding:2px 7px; border-radius:20px; }
-    .badge-up { background:#eaf3de; color:#3b6d11; }
-    .badge-dn { background:#fcebeb; color:#a32d2d; }
+    .kpi-sub   { font-size:12px; color:gray; margin-top:4px; }
+    .badge     { font-size:11px; padding:2px 7px; border-radius:20px; }
+    .badge-up  { background:#eaf3de; color:#3b6d11; }
+    .badge-dn  { background:#fcebeb; color:#a32d2d; }
     .text-green { color:#3b6d11; }
     .text-amber { color:#854f0b; }
-    .section { margin-bottom:20px; }
+    .section       { margin-bottom:20px; }
     .section-title { font-size:14px; font-weight:500; margin-bottom:10px; }
-    .prog-wrap { display:flex; align-items:center; gap:8px; }
-    .prog-bar { flex:1; height:5px; background:#e0e0e0; border-radius:3px; overflow:hidden; }
-    .prog-fill { height:100%; border-radius:3px; background:#3b6d11; }
     .chart-row-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px; }
     .chart-row-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:20px; }
-    .chart-card { background:#fff; border:0.5px solid #e0e0e0; border-radius:12px; padding:25px;height:55vh }
+    .chart-card  { background:#fff; border:0.5px solid #e0e0e0; border-radius:12px; padding:25px; height:55vh; }
     .chart-title { font-size:13px; font-weight:500; margin-bottom:10px; }
     @@media (max-width:900px) {
-        .kpi-row { grid-template-columns:repeat(2,1fr); }
-        .chart-row-2, .chart-row-3 { grid-template-columns:1fr; }
+        .kpi-row                    { grid-template-columns:repeat(2,1fr); }
+        .chart-row-2, .chart-row-3  { grid-template-columns:1fr; }
     }
 </style>

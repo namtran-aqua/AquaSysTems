@@ -156,14 +156,12 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ReportServices
 
                 // Trạng thái
                 var sc = ws.Cell(r, 8);
-                sc.Value = d.StatusLabel;
                 sc.Style.Fill.BackgroundColor = alt ? CAltRow : XLColor.White;
                 sc.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                 sc.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
                 sc.Style.Font.FontName = "Arial";
                 sc.Style.Font.FontSize = 10;
                 sc.Style.Font.Bold = true;
-                sc.Style.Font.FontColor = d.StatusLabel == "Bình thường" ? CGreen : COrange;
                 Border(sc.AsRange());
 
                 r++;

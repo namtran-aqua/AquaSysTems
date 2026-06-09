@@ -15,6 +15,6 @@ namespace AquaSolution.Shared.ReportDto
         public decimal TotalWeight { get; set; }
         public decimal ConfirmedWeight { get; set; }
         public double ConfirmRate => TotalWeight == 0 ? 0 : Math.Round((double)(ConfirmedWeight / TotalWeight) * 100, 1);
-        public string StatusLabel { get; set; } = "Normal";
+        //public string StatusLabel { get; set; } = "Normal";
     }
 }

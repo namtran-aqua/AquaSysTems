@@ -15,6 +15,7 @@ namespace AquaSolution.Client.Pages.Scrap
         [Inject] private IJSRuntime JS { get; set; } = default!;
         [Inject] private IMessageService Message { get; set; } = default!;
 
+        // ─── Filter state ─────────────────────────────────────────────────────
         private ReportFilterDto _filter = new()
         {
             Period = FilterPeriod.Month,
@@ -26,38 +27,42 @@ namespace AquaSolution.Client.Pages.Scrap
         private ReportPageDto? _data;
         private bool _loading;
         private bool _exporting;
-
-        // Flag: charts đã được render vào DOM chưa (lần đầu sau khi có data)
         private bool _domReady;
 
+        // ─── Source lists ─────────────────────────────────────────────────────
         private List<FactoryDto> _factories = new();
         private List<int> _years = Enumerable.Range(DateTime.Now.Year - 4, 5).Reverse().ToList();
 
+        // Tháng
         public class OptionItem
         {
             public int Value { get; set; }
             public string Label { get; set; } = string.Empty;
         }
-
         private List<OptionItem> _months = Enumerable.Range(1, 12)
             .Select(m => new OptionItem { Value = m, Label = $"Tháng {m}" })
             .ToList();
-
         private int _monthVal = DateTime.Now.Month;
 
-        // ─── Lifecycle ───────────────────────────────────────────────────────
+        // Tuần
+        public class WeekItem
+        {
+            public int Value { get; set; }
+            public string Label { get; set; } = string.Empty;
+        }
+        private List<WeekItem> _weeks = new();
+        private int _weekVal = ISOWeek.GetWeekOfYear(DateTime.Today);
 
+        // ─── Lifecycle ────────────────────────────────────────────────────────
         protected override async Task OnInitializedAsync()
         {
+            BuildWeekList(); // khởi tạo danh sách tuần ngay từ đầu
             await LoadFactoriesAsync();
             await LoadReportAsync();
         }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
-            // _domReady = true sau render đầu tiên có data
-            // Chỉ dùng để vẽ chart lần đầu tiên (OnInitializedAsync)
-            // Các lần sau chart được vẽ lại trực tiếp từ LoadReportAsync
             if (_data is not null && !_domReady)
             {
                 _domReady = true;
@@ -65,8 +70,25 @@ namespace AquaSolution.Client.Pages.Scrap
             }
         }
 
-        // ─── Data loading ────────────────────────────────────────────────────
+        // ─── Build danh sách tuần theo năm ───────────────────────────────────
+        private void BuildWeekList()
+        {
+            // Ngày 28/12 luôn thuộc tuần cuối cùng của năm ISO
+            int totalWeeks = ISOWeek.GetWeekOfYear(new DateTime(_filter.Year, 12, 28));
 
+            _weeks = Enumerable.Range(1, totalWeeks).Select(w =>
+            {
+                var start = ISOWeek.ToDateTime(_filter.Year, w, DayOfWeek.Monday);
+                var end = start.AddDays(6); // inclusive end (Chủ Nhật)
+                return new WeekItem
+                {
+                    Value = w,
+                    Label = $"Tuần {w}  ({start:dd/MM} – {end:dd/MM})"
+                };
+            }).ToList();
+        }
+
+        // ─── Data loading ─────────────────────────────────────────────────────
         private async Task LoadFactoriesAsync()
         {
             try
@@ -87,8 +109,11 @@ namespace AquaSolution.Client.Pages.Scrap
 
             try
             {
+                // Sync từ picker về filter trước khi build query
                 if (_filter.Period == FilterPeriod.Month)
                     _filter.Month = _monthVal;
+                if (_filter.Period == FilterPeriod.Week)
+                    _filter.Week = _weekVal;
 
                 var query = BuildQueryString();
                 _data = await Http.GetFromJsonAsync<ReportPageDto>($"api/report/page?{query}");
@@ -103,12 +128,8 @@ namespace AquaSolution.Client.Pages.Scrap
                 StateHasChanged();
             }
 
-            // Nếu DOM đã sẵn sàng (không phải lần load đầu tiên),
-            // destroy chart cũ rồi vẽ lại ngay — không cần chờ OnAfterRenderAsync
             if (_domReady && _data is not null)
-            {
                 await RenderChartsAsync();
-            }
         }
 
         private string BuildQueryString()
@@ -131,8 +152,7 @@ namespace AquaSolution.Client.Pages.Scrap
             return string.Join("&", parts);
         }
 
-        // ─── Event handlers ──────────────────────────────────────────────────
-
+        // ─── Event handlers ───────────────────────────────────────────────────
         private async Task OnFactoryChanged(FactoryDto? factory)
         {
             _filter.FactoryId = factory?.Id;
@@ -143,13 +163,35 @@ namespace AquaSolution.Client.Pages.Scrap
         {
             _filter.Period = value;
 
-            if (value == FilterPeriod.Week && !_filter.Week.HasValue)
-                _filter.Week = ISOWeek.GetWeekOfYear(DateTime.Today);
+            if (value == FilterPeriod.Week)
+            {
+                BuildWeekList();
+                // Nếu tuần hiện tại vượt quá tổng tuần của năm → về tuần 1
+                if (_weekVal > _weeks.Count)
+                    _weekVal = 1;
+                _filter.Week = _weekVal;
+            }
 
             await LoadReportAsync();
         }
+
+        private async Task OnWeekChanged()
+        {
+            _filter.Week = _weekVal;
+            await LoadReportAsync();
+        }
+
         private async Task OnFilterChanged()
         {
+            // Khi đổi năm mà đang ở tab Tuần → rebuild danh sách tuần của năm mới
+            if (_filter.Period == FilterPeriod.Week)
+            {
+                BuildWeekList();
+                if (_weekVal > _weeks.Count)
+                    _weekVal = 1;
+                _filter.Week = _weekVal;
+            }
+
             await LoadReportAsync();
         }
 
@@ -158,21 +200,17 @@ namespace AquaSolution.Client.Pages.Scrap
             _exporting = true;
             try
             {
-                // Lấy tên nhà máy đang chọn (nếu chưa chọn thì "Tất cả nhà máy")
                 var factoryName = _filter.FactoryId.HasValue
                     ? _factories.FirstOrDefault(f => f.Id == _filter.FactoryId)?.Name ?? "Tất cả nhà máy"
                     : "Tất cả nhà máy";
 
                 var query = BuildQueryString();
                 var encodedName = Uri.EscapeDataString(factoryName);
-
                 var response = await Http.GetAsync($"api/report/export?{query}&factoryName={encodedName}");
 
                 if (response.IsSuccessStatusCode)
                 {
                     var bytes = await response.Content.ReadAsByteArrayAsync();
-
-                    // Lấy tên file từ Content-Disposition header nếu có, không thì tự đặt
                     var fileName = response.Content.Headers.ContentDisposition?.FileNameStar
                                 ?? response.Content.Headers.ContentDisposition?.FileName
                                 ?? $"BaoCaoScrap_{DateTime.Now:yyyyMMdd_HHmm}.xlsx";
@@ -197,39 +235,32 @@ namespace AquaSolution.Client.Pages.Scrap
                 _exporting = false;
             }
         }
-        // ─── Charts ──────────────────────────────────────────────────────────
 
+        // ─── Charts ───────────────────────────────────────────────────────────
         private async Task RenderChartsAsync()
         {
             if (_data is null) return;
 
-            // Destroy tất cả chart cũ trước khi vẽ lại
-            // Quan trọng: tránh lỗi "Canvas is already in use"
             try { await JS.InvokeVoidAsync("destroyAllCharts"); } catch { }
 
-            // Dept Pie
             var deptLabels = _data.DepartmentReport.Select(x => x.DepartmentName).ToArray();
             var deptWeights = _data.DepartmentReport.Select(x => (double)x.TotalWeight).ToArray();
             await JS.InvokeVoidAsync("renderPieChart", "deptPieChart", deptLabels, deptWeights);
 
-            // Compare Bar (Trend: đăng ký vs xác nhận)
             var trendLabels = _data.Trend.Select(x => x.Label).ToArray();
             var trendWeight = _data.Trend.Select(x => (double)x.TotalWeight).ToArray();
             var trendConfirm = _data.Trend.Select(x => (double)x.ConfirmedWeight).ToArray();
             await JS.InvokeVoidAsync("renderCompareBarChart", "compareBarChart",
                 trendLabels, trendWeight, trendConfirm);
 
-            // Material Horizontal Bar (top 5)
             var top5 = _data.MaterialReport.Take(5).ToList();
             var matLabels = top5.Select(x => x.Name).ToArray();
             var matWeights = top5.Select(x => (double)x.TotalWeight).ToArray();
             await JS.InvokeVoidAsync("renderHBarChart", "matBarChart", matLabels, matWeights);
 
-            // Trend Line (số đơn)
             var trendOrders = _data.Trend.Select(x => (double)x.TotalOrders).ToArray();
             await JS.InvokeVoidAsync("renderLineChart", "trendLineChart", trendLabels, trendOrders);
 
-            // Status Doughnut
             await JS.InvokeVoidAsync("renderDoughnutChart", "statusDoughnutChart",
                 new[] { "Đã duyệt", "Đang duyệt", "Từ chối" },
                 new[] { _data.ApprovalStatus.Approved, _data.ApprovalStatus.Pending, _data.ApprovalStatus.Rejected });
