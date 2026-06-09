@@ -82,6 +82,7 @@ namespace AquaSolution.Server.Services.Administration.MenusService
                         Url = p.Url,
                         Order = p.Order,
                         Icon = p.Icon,
+                        DesCription = p.Description,
                         Permissions = permissions
                             .Where(per => per.PageId == p.Id)
                             .Select(per => per.Action.ToString())
@@ -122,6 +123,7 @@ namespace AquaSolution.Server.Services.Administration.MenusService
                         Url = p.Url,
                         Order = p.Order,
                         Icon = p.Icon,
+                        DesCription = p.Description,
                         Permissions = permissions
                             .Where(per => per.PageId == p.Id)
                             .Select(per => per.Action.ToString())

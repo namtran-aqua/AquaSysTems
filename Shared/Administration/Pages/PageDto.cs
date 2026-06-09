@@ -16,6 +16,7 @@ namespace AquaSolution.Shared.Pages
         public string? Icon { get; set; }
         public List<string> Permissions { get; set; } = new ();
         public string? JoinPermissions { get; set; }
+        public string ? DesCription { get; set; }
         public  List<HandlePermissionDto>? HandlePermissionDtos { get; set; }
     }
 }
