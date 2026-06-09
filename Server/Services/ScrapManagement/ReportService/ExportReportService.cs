@@ -117,10 +117,10 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ReportServices
             r++;
 
             // Table headers
-            string[] hDept = { "Phòng ban", "Số đơn", "Số lượng",
+            string[] hDept = { "Phòng ban", "Tổng Số đơn","Tổng số đã Duyệt","Tổng số từ chối","Tổng số chờ","Tổng số hoàn thành", "Số lượng",
                                 "KL Đăng ký (kg)", "KL Nhà rác nhận (kg)", "Tỉ lệ XN (%)", "Trạng thái" };
-            int[] cDept = { 2, 3, 4, 5, 6, 7, 8 };
-            double[] wDept = { 22, 10, 12, 20, 24, 14, 16 };
+            int[] cDept = { 2, 3, 4, 5, 6, 7, 8,9,10,11,12 };
+            double[] wDept = { 22, 10, 20, 20, 20, 20, 12, 20, 24, 14, 16 };
             for (int i = 0; i < hDept.Length; i++)
             {
                 Th(ws, r, cDept[i], hDept[i]);
@@ -139,13 +139,17 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ReportServices
 
                 Td(ws, r, 2, d.DepartmentName, alt, bold: true);
                 TdNum(ws, r, 3, d.TotalOrders, alt, "#,##0");
-                TdNum(ws, r, 4, d.TotalQuantity, alt, "#,##0");
-                TdNum(ws, r, 5, d.TotalWeight, alt, "#,##0.0");
-                TdNum(ws, r, 6, d.ConfirmedWeight, alt, "#,##0.0");
+                TdNum(ws, r, 4, d.TotalOrderApproval, alt, "#,##0");
+                TdNum(ws, r, 5, d.TotalOrderReject, alt, "#,##0");
+                TdNum(ws, r, 6, d.TotalOrderPending, alt, "#,##0");
+                TdNum(ws, r, 7, d.TotalOrderDone, alt, "#,##0");
 
+                TdNum(ws, r, 8, d.TotalQuantity, alt, "#,##0");
+                TdNum(ws, r, 9, d.TotalWeight, alt, "#,##0.0");
+                TdNum(ws, r, 10, d.ConfirmedWeight, alt, "#,##0.0");
                 // Tỉ lệ xác nhận — formula
-                var rc = ws.Cell(r, 7);
-                rc.FormulaA1 = $"=IFERROR(F{r}/E{r},0)";
+                var rc = ws.Cell(r, 10);
+                rc.FormulaA1 = $"=IFERROR(J{r}/I{r},0)";
                 rc.Style.NumberFormat.Format = "0.0%";
                 rc.Style.Fill.BackgroundColor = alt ? CAltRow : XLColor.White;
                 rc.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
@@ -155,7 +159,7 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ReportServices
                 Border(rc.AsRange());
 
                 // Trạng thái
-                var sc = ws.Cell(r, 8);
+                var sc = ws.Cell(r, 11);
                 sc.Style.Fill.BackgroundColor = alt ? CAltRow : XLColor.White;
                 sc.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                 sc.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
@@ -176,9 +180,14 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ReportServices
 
             TotalFormula(ws, r, 3, $"=SUM(C{deptStart}:C{last})", "#,##0");
             TotalFormula(ws, r, 4, $"=SUM(D{deptStart}:D{last})", "#,##0");
-            TotalFormula(ws, r, 5, $"=SUM(E{deptStart}:E{last})", "#,##0.0");
-            TotalFormula(ws, r, 6, $"=SUM(F{deptStart}:F{last})", "#,##0.0");
-            TotalFormula(ws, r, 7, $"=IFERROR(F{r}/E{r},0)", "0.0%");
+            TotalFormula(ws, r, 5, $"=SUM(E{deptStart}:E{last})", "#,##0");
+            TotalFormula(ws, r, 6, $"=SUM(F{deptStart}:F{last})", "#,##0");
+            TotalFormula(ws, r, 7, $"=SUM(G{deptStart}:G{last})", "#,##0");
+
+            TotalFormula(ws, r, 8, $"=SUM(H{deptStart}:H{last})", "#,##0");
+            TotalFormula(ws, r, 9, $"=SUM(I{deptStart}:I{last})", "#,##0.0");
+            TotalFormula(ws, r, 10, $"=SUM(J{deptStart}:J{last})", "#,##0.0");
+            TotalFormula(ws, r, 11, $"=IFERROR(J{r}/I{r},0)", "0.0%");
         }
 
         // ═══════════════════════════════════════════════════════════════════
@@ -379,7 +388,6 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ReportServices
 
                 Td(ws, r, 2, p.v.Title, alt, bold: true);
                 Td(ws, r, 3, p.v.DepartmentName, alt, align: XLAlignmentHorizontalValues.Center);
-                Td(ws, r, 4, $"{p.v.CurrentStep}/{p.v.TotalSteps}", alt, align: XLAlignmentHorizontalValues.Center);
                 Td(ws, r, 5, p.v.DecisionMakerName, alt);
                 Td(ws, r, 6, p.v.CreatedDate.ToString("dd/MM/yyyy"), alt, align: XLAlignmentHorizontalValues.Center);
 
