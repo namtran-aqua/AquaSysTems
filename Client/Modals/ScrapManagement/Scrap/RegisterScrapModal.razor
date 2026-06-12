@@ -295,6 +295,7 @@
                                     TItemValue="Guid"
                                     DataSource="@_materials"
                                     Value="context.MaterialId"
+                                    EnableSearch
                                     ValueChanged="(val) => OnMaterialIdChanged(context, val)"
                                     ValueName="@nameof(MaterialDto.Id)"
                                     LabelName="@nameof(MaterialDto.Code)"
