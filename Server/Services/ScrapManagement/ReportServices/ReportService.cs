@@ -170,6 +170,7 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ReportServices
             {
                 var query = ApplyFilter(_scrapRepo.Query(), filter);
 
+                // ── B1: Group HistoryScrap theo phòng ban ─────────────────────────────
                 var grouped = await query
                     .GroupBy(x => x.DepartmentId)
                     .Select(g => new
@@ -182,45 +183,73 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ReportServices
                         TotalOrderApproval = g.Count(x => x.Status == StatusScrap.Approved),
                         TotalOrderReject = g.Count(x => x.Status == StatusScrap.Rejected),
                         TotalOrderPending = g.Count(x => x.Status == StatusScrap.Pending),
-                        TotalOrderDone = g.Count(x => x.Status == StatusScrap.Done)
+                        TotalOrderDone = g.Count(x => x.Status == StatusScrap.Done),
 
+                        // Lấy ScrapIds theo từng nhóm status để join Detail sau
+                        AllScrapIds = g.Select(x => x.Id).ToList(),
+                        ApprovedScrapIds = g.Where(x => x.Status == StatusScrap.Approved).Select(x => x.Id).ToList(),
+                        RejectedScrapIds = g.Where(x => x.Status == StatusScrap.Rejected).Select(x => x.Id).ToList(),
+                        DoneScrapIds = g.Where(x => x.Status == StatusScrap.Done).Select(x => x.Id).ToList(),
+                        PendingScrapIds = g.Where(x => x.Status == StatusScrap.Pending).Select(x => x.Id).ToList(),
                     })
                     .ToListAsync();
 
-                var scrapIds = await query.Select(x => x.Id).ToListAsync();
-                var detailQty = await _detailRepo.Query()
-                    .Where(d => scrapIds.Contains(d.ScrapHistoryId))
+                // ── B2: Load tất cả Detail 1 lần, group theo ScrapHistoryId ──────────
+                var allScrapIds = grouped.SelectMany(g => g.AllScrapIds).Distinct().ToList();
+
+                var detailQtyMap = await _detailRepo.Query()
+                    .Where(d => allScrapIds.Contains(d.ScrapHistoryId))
                     .GroupBy(d => d.ScrapHistoryId)
-                    .Select(g => new { ScrapId = g.Key, TotalQty = g.Sum(x => x.Quantity) })
+                    .Select(g => new
+                    {
+                        ScrapId = g.Key,
+                        TotalQty = g.Sum(x => x.Quantity)
+                    })
                     .ToListAsync();
 
-                // Lấy tên phòng ban
+                // Tạo dictionary ScrapId → Qty để lookup nhanh O(1)
+                var qtyByScrap = detailQtyMap.ToDictionary(x => x.ScrapId, x => x.TotalQty);
+
+                // Helper: tính tổng qty của 1 danh sách ScrapId
+                decimal SumQty(List<Guid> ids) =>
+                    ids.Sum(id => qtyByScrap.TryGetValue(id, out var qty) ? qty : 0);
+
+                // ── B3: Lấy tên phòng ban ─────────────────────────────────────────────
                 var deptIds = grouped.Select(g => g.DepartmentId).Distinct().ToList();
                 var deptNames = await _departmentRepo.Query()
                     .Where(d => deptIds.Contains(d.Id))
                     .Select(d => new { d.Id, d.Name })
+                    .AsNoTracking()
                     .ToListAsync();
+                var deptNameMap = deptNames.ToDictionary(d => d.Id, d => d.Name);
 
+                // ── B4: Map kết quả ───────────────────────────────────────────────────
                 var result = grouped.Select(g =>
                 {
-                    var deptName = deptNames.FirstOrDefault(d => d.Id == g.DepartmentId)?.Name ?? g.DepartmentId.ToString()[..8];
+                    var deptName = deptNameMap.TryGetValue(g.DepartmentId, out var n)
+                        ? n : g.DepartmentId.ToString()[..8];
+
                     return new DepartmentReportDto
                     {
                         DepartmentId = g.DepartmentId,
                         DepartmentName = deptName,
+
                         TotalOrders = g.TotalOrders,
-                        TotalQuantity = detailQty.Sum(x=>x.TotalQty),
                         TotalWeight = g.TotalWeight,
                         ConfirmedWeight = g.ConfirmedWeight,
 
+                        // ✅ Số lượng ĐÚNG theo phòng ban — chỉ sum ScrapId thuộc nhóm này
+                        TotalQuantity = SumQty(g.AllScrapIds),
+                        TotalQuantityApproval = SumQty(g.ApprovedScrapIds),
+                        TotalQuantityReject = SumQty(g.RejectedScrapIds),
+                        TotalQuantityDone = SumQty(g.DoneScrapIds),
+                        TotalQuantityPending = SumQty(g.PendingScrapIds),
+
+                        // Số đơn theo trạng thái
                         TotalOrderApproval = g.TotalOrderApproval,
                         TotalOrderReject = g.TotalOrderReject,
                         TotalOrderPending = g.TotalOrderPending,
-                        TotalOrderDone = g.TotalOrderDone
-
-
-                        //StatusLabel = g.ConfirmedWeight / (g.TotalWeight == 0 ? 1 : g.TotalWeight) < 0.75m
-                        //    ? "Cần xem xét" : "Bình thường"
+                        TotalOrderDone = g.TotalOrderDone,
                     };
                 }).ToList();
 
@@ -228,6 +257,70 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ReportServices
             }
             catch (Exception ex) { throw ex; }
         }
+        //public async Task<List<DepartmentReportDto>> GetDepartmentReportAsync(ReportFilterDto filter)
+        //{
+        //    try
+        //    {
+        //        var query = ApplyFilter(_scrapRepo.Query(), filter);
+
+        //        var grouped = await query
+        //            .GroupBy(x => x.DepartmentId)
+        //            .Select(g => new
+        //            {
+        //                DepartmentId = g.Key,
+        //                TotalOrders = g.Count(),
+        //                TotalWeight = g.Sum(x => x.TotalAmount ?? 0),
+        //                ConfirmedWeight = g.Sum(x => x.ConfirmAmount ?? 0),
+
+        //                TotalOrderApproval = g.Count(x => x.Status == StatusScrap.Approved),
+        //                TotalOrderReject = g.Count(x => x.Status == StatusScrap.Rejected),
+        //                TotalOrderPending = g.Count(x => x.Status == StatusScrap.Pending),
+        //                TotalOrderDone = g.Count(x => x.Status == StatusScrap.Done)
+
+        //            })
+        //            .ToListAsync();
+
+        //        var scrapIds = await query.Select(x => x.Id).ToListAsync();
+        //        var detailQty = await _detailRepo.Query()
+        //            .Where(d => scrapIds.Contains(d.ScrapHistoryId))
+        //            .GroupBy(d => d.ScrapHistoryId)
+        //            .Select(g => new { ScrapId = g.Key, TotalQty = g.Sum(x => x.Quantity) })
+        //            .ToListAsync();
+
+        //        // Lấy tên phòng ban
+        //        var deptIds = grouped.Select(g => g.DepartmentId).Distinct().ToList();
+        //        var deptNames = await _departmentRepo.Query()
+        //            .Where(d => deptIds.Contains(d.Id))
+        //            .Select(d => new { d.Id, d.Name })
+        //            .ToListAsync();
+
+        //        var result = grouped.Select(g =>
+        //        {
+        //            var deptName = deptNames.FirstOrDefault(d => d.Id == g.DepartmentId)?.Name ?? g.DepartmentId.ToString()[..8];
+        //            return new DepartmentReportDto
+        //            {
+        //                DepartmentId = g.DepartmentId,
+        //                DepartmentName = deptName,
+        //                TotalOrders = g.TotalOrders,
+        //                TotalQuantity = detailQty.Sum(x=>x.TotalQty),
+        //                TotalWeight = g.TotalWeight,
+        //                ConfirmedWeight = g.ConfirmedWeight,
+
+        //                TotalOrderApproval = g.TotalOrderApproval,
+        //                TotalOrderReject = g.TotalOrderReject,
+        //                TotalOrderPending = g.TotalOrderPending,
+        //                TotalOrderDone = g.TotalOrderDone
+
+
+        //                //StatusLabel = g.ConfirmedWeight / (g.TotalWeight == 0 ? 1 : g.TotalWeight) < 0.75m
+        //                //    ? "Cần xem xét" : "Bình thường"
+        //            };
+        //        }).ToList();
+
+        //        return result;
+        //    }
+        //    catch (Exception ex) { throw ex; }
+        //}
 
         // ─── Material Report ──────────────────────────────────────────────────
         public async Task<List<MaterialReportDto>> GetMaterialReportAsync(ReportFilterDto filter)
@@ -253,7 +346,7 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ReportServices
 
                 var grouped = details
                     .GroupBy(d => new { d.MaterialId, d.Code, d.Name, d.TYPE, d.Unit })
-                    .Select(g => new MaterialReportDto
+                    .Select(g  => new MaterialReportDto
                     {
                         MaterialId = g.Key.MaterialId,
                         Code = g.Key.Code,
@@ -266,7 +359,7 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ReportServices
                             .Where(x => x.MaterialId == g.Key.MaterialId)
                             .Sum(x => x.TotalWeight)
                     })
-                    .OrderByDescending(x => x.TotalWeight)
+                    .OrderByDescending(x => x.TotalWeight).Take(5)
                     .ToList();
 
                 return grouped;

@@ -201,7 +201,7 @@
             </div>
             <h3>IT Support requests</h3>
         </div>
-        @if (Created)
+       @*  @if (Created)
         {
             <Button Type="ButtonType.Primary"
                     Shape="ButtonShape.Round"
@@ -209,7 +209,7 @@
                     Style="display:flex;align-items:center;gap:5px;font-weight:500;">
                 <Icon Type="plus" /> New ticket
             </Button>
-        }
+        } *@
     </div>
 
     <!-- Stats -->
@@ -336,7 +336,15 @@
             <Icon Type="undo" /> Reset
         </Button>
     </div>
-
+     @if (Created)
+        {
+            <Button Type="ButtonType.Primary"
+                    Shape="ButtonShape.Round"
+                    OnClick="CreatedAsync"
+                    Style="display:flex;align-items:center;gap:5px;font-weight:500; margin-bottom:10px">
+                <Icon Type="plus" /> New ticket
+            </Button>
+        }
     <!-- Table -->
     <div class="its-table-wrap">
         <Table TItem="RequestSuportDto"
@@ -418,7 +426,7 @@
 
                 <PropertyColumn Width="140" Title="Category" Property="c => c.RequestSuportCategoryName" />
 
-                <PropertyColumn Width="115" Title="Created date" Property="c => c.CreatedDate" />
+                <PropertyColumn Width="115" Title="Created date" Property="c => c.CreatedDate" Format="dd/MM/yyyy HH:mm" />
 
                 <Column Fixed="ColumnFixPlacement.Right" TData="RequestSuportDto" Width="60px" Context="row" Title="Actions">
                     <Template>

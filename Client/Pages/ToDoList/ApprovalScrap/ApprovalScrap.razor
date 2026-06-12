@@ -114,29 +114,41 @@
                                                         Style="text-align:left;">
                                                     <Icon Type="eye" /> Detail
                                                 </Button>
+                                                        @{
+                                                            var isAdmin = CurrenUser.Roles.Any(r => r.Name == "Admin");
 
-                                                @{
-                                                    var myPendingStep = row.Approvals?
-                                                        .FirstOrDefault(a => a.DecisionMaker == CurrenUser.Id
-                                                                          && a.Status == StatusScrap.InterView);
-                                                }
-                                                @if (myPendingStep != null)
-                                                {
-                                                    <Popconfirm Title="Confirm approval?"
-                                                                OnConfirm="@(async () => await ApproveRow(row))"
-                                                                OkText="Approve" CancelText="Cancel">
-                                                        <Button Type="ButtonType.Text"
-                                                                Style="text-align:left; color:#52c41a;">
-                                                            <Icon Type="check" /> Approve
-                                                        </Button>
-                                                    </Popconfirm>
+                                                            // Step đang InterView của chính user này
+                                                            var myPendingStep = row.Approvals?
+                                                                .FirstOrDefault(a => a.DecisionMaker == CurrenUser.Id
+                                                                                  && a.Status == StatusScrap.InterView);
 
-                                                    <Button Type="ButtonType.Text" Danger
-                                                            OnClick="@(() => OpenRejectModal(row))"
-                                                            Style="text-align:left;">
-                                                        <Icon Type="close" /> Reject
-                                                    </Button>
-                                                }
+                                                            // Step đang InterView bất kỳ (dùng cho Admin)
+                                                            var anyPendingStep = row.Approvals?
+                                                                .FirstOrDefault(a => a.Status == StatusScrap.InterView);
+
+                                                            // Hiển thị nút nếu: user đúng step CỦA MÌNH đang InterView
+                                                            //                    HOẶC admin và phiếu còn step nào đang InterView
+                                                            var canAction = myPendingStep != null || (isAdmin && anyPendingStep != null);
+                                                        }
+
+                                                        @if (canAction)
+                                                        {
+                                                            <Popconfirm Title="Confirm approval?"
+                                                                        OnConfirm="@(async () => await ApproveRow(row))"
+                                                                        OkText="Approve" CancelText="Cancel">
+                                                                <Button Type="ButtonType.Text"
+                                                                        Style="text-align:left; color:#52c41a;">
+                                                                    <Icon Type="check" /> Approve
+                                                                </Button>
+                                                            </Popconfirm>
+
+                                                            <Button Type="ButtonType.Text" Danger
+                                                                    OnClick="@(() => OpenRejectModal(row))"
+                                                                    Style="text-align:left;">
+                                                                <Icon Type="close" /> Reject
+                                                            </Button>
+                                                        }
+
 
                                             </div>
                                         </ContentTemplate>

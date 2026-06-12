@@ -118,9 +118,13 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
                 }).ToList();
 
                 await _requestApprovalRepository.InsertRangeAsync(requestApprovals);
+                await _historyScrapRepository.SaveChangesAsync();
+            }
+            else
+            {
+                throw new Exception ($"Không có flow approval nào được cấu hình cho FactoryId: {createScrapDto.FactoryId} và DepartmentId: {createScrapDto.DepartmentId}"); 
             }
 
-            await _historyScrapRepository.SaveChangesAsync();
         }
 
         // ── Không đụng vào ──────────────────────────────────────────────────────────
@@ -245,14 +249,19 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
         }
 
         // ── SỬA: lấy tất cả phiếu user từng tham gia duyệt (không chỉ InterView) ──
-        public async Task<List<HistoryScrapDto>> GetScrapForApproval(Guid userId)
+        public async Task<List<HistoryScrapDto>> GetScrapForApproval(Guid userId, bool isAdmin)
         {
-            // Lấy tất cả phiếu mà user này là DecisionMaker ở bất kỳ step nào
-            // (InterView = đang chờ, Approved = đã duyệt, Rejected = đã từ chối)
-            // Loại trừ Pending vì Pending = chưa đến lượt user này
-            var relatedScrapIds = await _requestApprovalRepository.Query()
-                .Where(a => a.DecisionMaker == userId
-                         && a.Status != StatusScrap.Pending)
+            // ── B1: Lấy RequestApproval làm bảng chính ───────────────────────────────
+            // Admin → lấy tất cả (trừ Pending vì Pending = chưa đến lượt)
+            // User  → chỉ lấy dòng mà DecisionMaker = userId (trừ Pending)
+            var approvalQuery = _requestApprovalRepository.Query()
+                .Where(a => a.Status != StatusScrap.Pending);
+
+            if (!isAdmin)
+                approvalQuery = approvalQuery.Where(a => a.DecisionMaker == userId);
+
+            // Lấy danh sách HistoryScrapId liên quan
+            var relatedScrapIds = await approvalQuery
                 .Select(a => a.HistoryScrapId)
                 .Distinct()
                 .ToListAsync();
@@ -260,65 +269,89 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
             if (!relatedScrapIds.Any())
                 return new List<HistoryScrapDto>();
 
-            var query = from hs in _historyScrapRepository.Query()
-                            .Where(x => relatedScrapIds.Contains(x.Id))
-                        join factory in _factoryRepository.Query() on hs.FactoryId equals factory.Id
-                        join department in _departmentRepository.Query() on hs.DepartmentId equals department.Id
-                        join creator in _userRepository.Query() on hs.CreatedBy equals creator.Id
-                        join lastUser in _userRepository.Query() on hs.LastActionBy equals lastUser.Id into lastUserGroup
-                        from lastUser in lastUserGroup.DefaultIfEmpty()
-                        join confirmer in _userRepository.Query() on hs.Confirmer equals confirmer.Id into confirmerGroup
-                        from confirmer in confirmerGroup.DefaultIfEmpty()
-                        select new HistoryScrapDto
-                        {
-                            Id = hs.Id,
-                            Title = hs.Title,
-                            Status = hs.Status,
-                            Description = hs.Description,
-                            LastActionBy = hs.LastActionBy,
-                            LastActionByName = lastUser != null ? lastUser.FullName : string.Empty,
-                            LastActionDate = hs.LastActionDate,
-                            CreatedDate = hs.CreatedDate,
-                            CreatedById = hs.CreatedBy,
-                            CreatedByName = creator.FullName,
-                            FactoryId = hs.FactoryId,
-                            FactoryName = factory.Name,
-                            DepartmentId = hs.DepartmentId,
-                            DepartmentName = department.Name,
-                            Notes = hs.Notes,
-                            ConfirmationStatusType = hs.ConfirmationStatusType,
-                            ConfirmAmount = hs.ConfirmAmount,
-                            TotalAmount = hs.TotalAmount,
-                            ConfirmerId = hs.Confirmer,
-                            ConfirmerName = confirmer != null ? confirmer.FullName : string.Empty,
-                            ConfirmedDate = hs.ConfirmDate
-                        };
+            // ── B2: Load HistoryScrap + join lookup 1 lần ────────────────────────────
+            var scraps = await (
+                from hs in _historyScrapRepository.Query()
+                    .Where(x => relatedScrapIds.Contains(x.Id))
+                join factory in _factoryRepository.Query() on hs.FactoryId equals factory.Id
+                join department in _departmentRepository.Query() on hs.DepartmentId equals department.Id
+                join creator in _userRepository.Query() on hs.CreatedBy equals creator.Id
+                join lastUser in _userRepository.Query() on hs.LastActionBy equals lastUser.Id into lastUserGrp
+                from lastUser in lastUserGrp.DefaultIfEmpty()
+                join confirmer in _userRepository.Query() on hs.Confirmer equals confirmer.Id into confirmerGrp
+                from confirmer in confirmerGrp.DefaultIfEmpty()
+                select new HistoryScrapDto
+                {
+                    Id = hs.Id,
+                    Title = hs.Title,
+                    Status = hs.Status,
+                    Description = hs.Description,
+                    LastActionBy = hs.LastActionBy,
+                    LastActionByName = lastUser != null ? lastUser.FullName : string.Empty,
+                    LastActionDate = hs.LastActionDate,
+                    CreatedDate = hs.CreatedDate,
+                    CreatedById = hs.CreatedBy,
+                    CreatedByName = creator.FullName,
+                    FactoryId = hs.FactoryId,
+                    FactoryName = factory.Name,
+                    DepartmentId = hs.DepartmentId,
+                    DepartmentName = department.Name,
+                    Notes = hs.Notes,
+                    ConfirmationStatusType = hs.ConfirmationStatusType,
+                    ConfirmAmount = hs.ConfirmAmount,
+                    TotalAmount = hs.TotalAmount,
+                    ConfirmerId = hs.Confirmer,
+                    ConfirmerName = confirmer != null ? confirmer.FullName : string.Empty,
+                    ConfirmedDate = hs.ConfirmDate
+                }
+            ).AsNoTracking().ToListAsync();
 
-            var historyScrapDtos = await query.ToListAsync();
-            var ids = historyScrapDtos.Select(x => x.Id).ToList();
+            var ids = scraps.Select(x => x.Id).ToList();
 
+            // ── B3: Load Detail 1 lần ─────────────────────────────────────────────────
             var allDetails = await _historyScrapDetailRepository.Query()
-                                  .Where(d => ids.Contains(d.ScrapHistoryId)).ToListAsync();
+                .Where(d => ids.Contains(d.ScrapHistoryId))
+                .AsNoTracking()
+                .ToListAsync();
+
             var materialIds = allDetails.Select(d => d.MaterialId).Distinct().ToList();
             var materials = await _materialRepository.Query()
-                                  .Where(m => materialIds.Contains(m.Id)).ToDictionaryAsync(m => m.Id);
-            var detailsGrouped = allDetails.GroupBy(d => d.ScrapHistoryId)
-                                           .ToDictionary(g => g.Key, g => g.ToList());
+                .Where(m => materialIds.Contains(m.Id))
+                .AsNoTracking()
+                .ToDictionaryAsync(m => m.Id);
 
+            var detailsGrouped = allDetails
+                .GroupBy(d => d.ScrapHistoryId)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            // ── B4: Load tất cả RequestApproval của các phiếu này ────────────────────
+            // Lấy toàn bộ approval của phiếu (không chỉ của user) để hiển thị luồng đầy đủ
             var allApprovals = await _requestApprovalRepository.Query()
-                                  .Where(a => ids.Contains(a.HistoryScrapId))
-                                  .OrderBy(a => a.Step).ToListAsync();
-            var approvalUserIds = allApprovals.Select(a => a.DecisionMaker)
-                                  .Union(allApprovals.Where(a => a.ActionBy.HasValue).Select(a => a.ActionBy.Value))
-                                  .Distinct().ToList();
-            var approvalUsers = await _userRepository.Query()
-                                  .Where(u => approvalUserIds.Contains(u.Id))
-                                  .ToDictionaryAsync(u => u.Id, u => new { u.FullName, u.Email, u.WorkDayId });
-            var approvalsGrouped = allApprovals.GroupBy(a => a.HistoryScrapId)
-                                               .ToDictionary(g => g.Key, g => g.ToList());
+                .Where(a => ids.Contains(a.HistoryScrapId))
+                .OrderBy(a => a.Step)
+                .AsNoTracking()
+                .ToListAsync();
 
-            foreach (var dto in historyScrapDtos)
+            // Load user liên quan 1 lần (DecisionMaker + ActionBy)
+            var approvalUserIds = allApprovals
+                .Select(a => a.DecisionMaker)
+                .Union(allApprovals.Where(a => a.ActionBy.HasValue).Select(a => a.ActionBy!.Value))
+                .Distinct()
+                .ToList();
+
+            var approvalUsers = await _userRepository.Query()
+                .Where(u => approvalUserIds.Contains(u.Id))
+                .AsNoTracking()
+                .ToDictionaryAsync(u => u.Id, u => new { u.FullName, u.Email, u.WorkDayId });
+
+            var approvalsGrouped = allApprovals
+                .GroupBy(a => a.HistoryScrapId)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            // ── B5: Map vào DTO ───────────────────────────────────────────────────────
+            foreach (var dto in scraps)
             {
+                // Detail
                 if (detailsGrouped.TryGetValue(dto.Id, out var details))
                 {
                     dto.HistoryDetails = details.Select(d =>
@@ -344,18 +377,21 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
                     }).ToList();
                 }
 
+                // Approvals
                 if (approvalsGrouped.TryGetValue(dto.Id, out var approvals))
                 {
                     dto.Approvals = approvals.Select(a =>
                     {
-                        approvalUsers.TryGetValue(a.DecisionMaker, out var decisionMakerInfo);
+                        approvalUsers.TryGetValue(a.DecisionMaker, out var dm);
+
                         string? actionByName = null, actionByWorkDayId = null, actionByEmail = null;
-                        if (a.ActionBy.HasValue && approvalUsers.TryGetValue(a.ActionBy.Value, out var actionByInfo))
+                        if (a.ActionBy.HasValue && approvalUsers.TryGetValue(a.ActionBy.Value, out var ab))
                         {
-                            actionByName = actionByInfo.FullName;
-                            actionByWorkDayId = actionByInfo.WorkDayId;
-                            actionByEmail = actionByInfo.Email;
+                            actionByName = ab.FullName;
+                            actionByWorkDayId = ab.WorkDayId;
+                            actionByEmail = ab.Email;
                         }
+
                         return new RequestApprovalDto
                         {
                             Id = a.Id,
@@ -370,16 +406,153 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
                             Title = a.Title,
                             Step = a.Step,
                             DecisionMaker = a.DecisionMaker,
-                            DecisionMakerName = decisionMakerInfo?.FullName,
-                            DecisionMakerWorkDayId = decisionMakerInfo?.WorkDayId,
-                            DecisionMakerEmail = decisionMakerInfo?.Email
+                            DecisionMakerName = dm?.FullName,
+                            DecisionMakerWorkDayId = dm?.WorkDayId,
+                            DecisionMakerEmail = dm?.Email
                         };
                     }).ToList();
                 }
             }
 
-            return historyScrapDtos;
+            return scraps;
         }
+
+
+        //public async Task<List<HistoryScrapDto>> GetScrapForApproval(Guid userId)
+        //{
+        //    // Lấy tất cả phiếu mà user này là DecisionMaker ở bất kỳ step nào
+        //    // (InterView = đang chờ, Approved = đã duyệt, Rejected = đã từ chối)
+        //    // Loại trừ Pending vì Pending = chưa đến lượt user này
+        //    var relatedScrapIds = await _requestApprovalRepository.Query()
+        //        .Where(a => a.DecisionMaker == userId
+        //                 && a.Status != StatusScrap.Pending)
+        //        .Select(a => a.HistoryScrapId)
+        //        .Distinct()
+        //        .ToListAsync();
+
+        //    if (!relatedScrapIds.Any())
+        //        return new List<HistoryScrapDto>();
+
+        //    var query = from hs in _historyScrapRepository.Query()
+        //                    .Where(x => relatedScrapIds.Contains(x.Id))
+        //                join factory in _factoryRepository.Query() on hs.FactoryId equals factory.Id
+        //                join department in _departmentRepository.Query() on hs.DepartmentId equals department.Id
+        //                join creator in _userRepository.Query() on hs.CreatedBy equals creator.Id
+        //                join lastUser in _userRepository.Query() on hs.LastActionBy equals lastUser.Id into lastUserGroup
+        //                from lastUser in lastUserGroup.DefaultIfEmpty()
+        //                join confirmer in _userRepository.Query() on hs.Confirmer equals confirmer.Id into confirmerGroup
+        //                from confirmer in confirmerGroup.DefaultIfEmpty()
+        //                select new HistoryScrapDto
+        //                {
+        //                    Id = hs.Id,
+        //                    Title = hs.Title,
+        //                    Status = hs.Status,
+        //                    Description = hs.Description,
+        //                    LastActionBy = hs.LastActionBy,
+        //                    LastActionByName = lastUser != null ? lastUser.FullName : string.Empty,
+        //                    LastActionDate = hs.LastActionDate,
+        //                    CreatedDate = hs.CreatedDate,
+        //                    CreatedById = hs.CreatedBy,
+        //                    CreatedByName = creator.FullName,
+        //                    FactoryId = hs.FactoryId,
+        //                    FactoryName = factory.Name,
+        //                    DepartmentId = hs.DepartmentId,
+        //                    DepartmentName = department.Name,
+        //                    Notes = hs.Notes,
+        //                    ConfirmationStatusType = hs.ConfirmationStatusType,
+        //                    ConfirmAmount = hs.ConfirmAmount,
+        //                    TotalAmount = hs.TotalAmount,
+        //                    ConfirmerId = hs.Confirmer,
+        //                    ConfirmerName = confirmer != null ? confirmer.FullName : string.Empty,
+        //                    ConfirmedDate = hs.ConfirmDate
+        //                };
+
+        //    var historyScrapDtos = await query.ToListAsync();
+        //    var ids = historyScrapDtos.Select(x => x.Id).ToList();
+
+        //    var allDetails = await _historyScrapDetailRepository.Query()
+        //                          .Where(d => ids.Contains(d.ScrapHistoryId)).ToListAsync();
+        //    var materialIds = allDetails.Select(d => d.MaterialId).Distinct().ToList();
+        //    var materials = await _materialRepository.Query()
+        //                          .Where(m => materialIds.Contains(m.Id)).ToDictionaryAsync(m => m.Id);
+        //    var detailsGrouped = allDetails.GroupBy(d => d.ScrapHistoryId)
+        //                                   .ToDictionary(g => g.Key, g => g.ToList());
+
+        //    var allApprovals = await _requestApprovalRepository.Query()
+        //                          .Where(a => ids.Contains(a.HistoryScrapId))
+        //                          .OrderBy(a => a.Step).ToListAsync();
+        //    var approvalUserIds = allApprovals.Select(a => a.DecisionMaker)
+        //                          .Union(allApprovals.Where(a => a.ActionBy.HasValue).Select(a => a.ActionBy.Value))
+        //                          .Distinct().ToList();
+        //    var approvalUsers = await _userRepository.Query()
+        //                          .Where(u => approvalUserIds.Contains(u.Id))
+        //                          .ToDictionaryAsync(u => u.Id, u => new { u.FullName, u.Email, u.WorkDayId });
+        //    var approvalsGrouped = allApprovals.GroupBy(a => a.HistoryScrapId)
+        //                                       .ToDictionary(g => g.Key, g => g.ToList());
+
+        //    foreach (var dto in historyScrapDtos)
+        //    {
+        //        if (detailsGrouped.TryGetValue(dto.Id, out var details))
+        //        {
+        //            dto.HistoryDetails = details.Select(d =>
+        //            {
+        //                materials.TryGetValue(d.MaterialId, out var mat);
+        //                return new HistoryDetailScrapDto
+        //                {
+        //                    Id = d.Id,
+        //                    MaterialId = d.MaterialId,
+        //                    Name = mat?.Name ?? string.Empty,
+        //                    Code = mat?.Code ?? string.Empty,
+        //                    Unit = mat?.Unit ?? string.Empty,
+        //                    BOMHead = d.BOMHead,
+        //                    BOMDescription = d.BOMDescription,
+        //                    Quantity = d.Quantity,
+        //                    Weight = d.Weight,
+        //                    TotalWeight = d.TotalWeight,
+        //                    TYPE = d.TYPE,
+        //                    Plant = d.Plant,
+        //                    ScrapHistoryId = d.ScrapHistoryId,
+        //                    Reson = d.Reson
+        //                };
+        //            }).ToList();
+        //        }
+
+        //        if (approvalsGrouped.TryGetValue(dto.Id, out var approvals))
+        //        {
+        //            dto.Approvals = approvals.Select(a =>
+        //            {
+        //                approvalUsers.TryGetValue(a.DecisionMaker, out var decisionMakerInfo);
+        //                string? actionByName = null, actionByWorkDayId = null, actionByEmail = null;
+        //                if (a.ActionBy.HasValue && approvalUsers.TryGetValue(a.ActionBy.Value, out var actionByInfo))
+        //                {
+        //                    actionByName = actionByInfo.FullName;
+        //                    actionByWorkDayId = actionByInfo.WorkDayId;
+        //                    actionByEmail = actionByInfo.Email;
+        //                }
+        //                return new RequestApprovalDto
+        //                {
+        //                    Id = a.Id,
+        //                    HistoryScrapId = a.HistoryScrapId,
+        //                    Status = a.Status,
+        //                    Comment = a.Comment,
+        //                    ActionBy = a.ActionBy,
+        //                    ActionByName = actionByName,
+        //                    ActionByWorkDayId = actionByWorkDayId,
+        //                    ActionByEmail = actionByEmail,
+        //                    ActionDate = a.ActionDate,
+        //                    Title = a.Title,
+        //                    Step = a.Step,
+        //                    DecisionMaker = a.DecisionMaker,
+        //                    DecisionMakerName = decisionMakerInfo?.FullName,
+        //                    DecisionMakerWorkDayId = decisionMakerInfo?.WorkDayId,
+        //                    DecisionMakerEmail = decisionMakerInfo?.Email
+        //                };
+        //            }).ToList();
+        //        }
+        //    }
+
+        //    return historyScrapDtos;
+        //}
 
         public async Task ActionApproval(ApprovalActionDto request)
         {
@@ -394,8 +567,8 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
             var currentStep = approvals.FirstOrDefault(a => a.Status == StatusScrap.InterView);
             if (currentStep == null) throw new Exception("Phiếu không nằm trong trạng thái chờ duyệt của bước nào!");
 
-            if (currentStep.DecisionMaker != request.ActionBy)
-                throw new Exception("Bạn không phải là người duyệt bước này!");
+            //if (currentStep.DecisionMaker != request.ActionBy)
+            //    throw new Exception("Bạn không phải là người duyệt bước này!");
 
             var now = DateTime.Now;
 
@@ -405,7 +578,7 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
             currentStep.Comment = request.Comment;
 
             //// LastAction luôn là người vừa thao tác (approve hoặc reject)
-           
+
 
             if (!request.IsApproved)
             {

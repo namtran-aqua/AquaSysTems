@@ -11,7 +11,6 @@ namespace AquaSolution.Shared.ReportDto
         public Guid DepartmentId { get; set; }
         public string DepartmentName { get; set; } = string.Empty;
         public int TotalOrders { get; set; }
-        public decimal TotalQuantity { get; set; }
         public decimal TotalWeight { get; set; }
         public decimal ConfirmedWeight { get; set; }
 
@@ -20,6 +19,12 @@ namespace AquaSolution.Shared.ReportDto
         public int TotalOrderPending { get; set; }
         public int TotalOrderDone { get; set; }
 
-        //public string StatusLabel { get; set; } = "Normal";
+
+        // Số lượng (từ HistoryScrapDetail.Quantity) — theo từng trạng thái
+        public decimal TotalQuantity { get; set; }   // tất cả
+        public decimal TotalQuantityApproval { get; set; }   // đã duyệt
+        public decimal TotalQuantityReject { get; set; }   // từ chối
+        public decimal TotalQuantityDone { get; set; }   // hoàn thành
+        public decimal TotalQuantityPending { get; set; }   // đang chờ
     }
 }

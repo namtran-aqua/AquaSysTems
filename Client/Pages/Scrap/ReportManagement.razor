@@ -113,6 +113,7 @@
                     LabelName="@nameof(FactoryDto.Name)"
                     Placeholder="Tất cả nhà máy"
                     AllowClear
+                    Disabled="!IsAdmin"
                     Style="min-width:200px"
                     OnSelectedItemChanged="OnFactoryChanged">
             </Select>
@@ -225,13 +226,18 @@
                    Bordered Size="TableSize.Small"
                    HidePagination>
                 <ColumnDefinitions Context="row">
-                    <PropertyColumn Width="auto"  Title="Phòng ban"          Property="c => c.DepartmentName" />
+                    <PropertyColumn Width="200px"  Title="Phòng ban"          Property="c => c.DepartmentName" />
                     <PropertyColumn Width="90px"  Title="Tổng số đơn"             Property="c => c.TotalOrders" />
                     <PropertyColumn Width="90px"  Title="Tổng số đã Duyệt"             Property="c => c.TotalOrderApproval" />
                     <PropertyColumn Width="90px"  Title="Tổng số từ chối"             Property="c => c.TotalOrderReject" />
                     <PropertyColumn Width="90px"  Title="Tổng số chờ"             Property="c => c.TotalOrderPending" />
                     <PropertyColumn Width="90px"  Title="Tổng số hoàn thành"             Property="c => c.TotalOrderDone" />
-                    <PropertyColumn Width="110px" Title="Số lượng"           Property="c => c.TotalQuantity"   Format="N0" Align="ColumnAlign.Right" />
+                    <PropertyColumn Width="110px" Title="Tổng số lượng"           Property="c => c.TotalQuantity"   Format="N0" Align="ColumnAlign.Right" />
+                    <PropertyColumn Width="110px" Title="Số lượng đã duyệt"           Property="c => c.TotalQuantityApproval"   Format="N0" Align="ColumnAlign.Right" />
+                    <PropertyColumn Width="110px" Title="Số lượng từ chối"           Property="c => c.TotalQuantityReject"   Format="N0" Align="ColumnAlign.Right" />
+                    <PropertyColumn Width="110px" Title="Số lượng chờ"           Property="c => c.TotalQuantityPending"   Format="N0" Align="ColumnAlign.Right" />
+                    <PropertyColumn Width="110px" Title="Số lượng hoàn thành"           Property="c => c.TotalQuantityDone"   Format="N0" Align="ColumnAlign.Right" />
+
                     <PropertyColumn Width="150px" Title="KL Đăng ký (kg)"    Property="c => c.TotalWeight"     Format="0.####" Align="ColumnAlign.Right" />
                     <PropertyColumn Width="170px" Title="Nhà rác nhận (kg)"  Property="c => c.ConfirmedWeight" Format="0.####" Align="ColumnAlign.Right" />
                     

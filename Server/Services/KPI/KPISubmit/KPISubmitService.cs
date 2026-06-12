@@ -636,37 +636,38 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
         }
         public async Task<List<ViewKPIForApprovalDto>> GetKPIForApproval()
         {
-            var requests = await _requestApprovalTaskRepo.GetAllAsync() ?? new List<RequestApprovalTask>();
-            var users = await _userRepo.GetAllAsync() ?? new List<User>();
-            var flows = await _approvalFlowRepo.GetAllAsync() ?? new List<ApprovalFlow>();
-            var positions = await _positionRepo.GetAllAsync() ?? new List<Position>();
+            // Load data 1 lần
+            var requests = _requestApprovalTaskRepo.Query().ToList();
+            var usersDict = _userRepo.Query().ToDictionary(x => x.Id);
+            var flowsDict = _approvalFlowRepo.Query().ToDictionary(x => x.Id);
+            var positionsDict = _positionRepo.Query().ToDictionary(x => x.Id);
 
-            var result = new List<ViewKPIForApprovalDto>();
+            var result = new List<ViewKPIForApprovalDto>(requests.Count);
 
             foreach (var req in requests)
             {
                 if (req == null) continue;
 
-                // 🟩 Lấy user (có thể null)
-                var user = users.FirstOrDefault(u => u.Id == req.RequesterId);
+                // 🟩 User
+                usersDict.TryGetValue(req.RequesterId, out var user);
                 string userName = user?.FullName ?? string.Empty;
 
-                // 🟩 Lấy flow (có thể null)
-                var flow = flows.FirstOrDefault(f => f.Id == req.Id);
+                // 🟩 Flow
+                flowsDict.TryGetValue(req.Id, out var flow);
                 Guid? decisionMaker = req.DecisionMaker ?? flow?.DecisionMaker;
 
-                // 🟩 Lấy PositionId từ flow hoặc user
-                Guid? positionId =/* flow?.PositionId ??*/ user?.PositionId;
-                var position = positionId != null
-                    ? positions.FirstOrDefault(p => p.Id == positionId)
-                    : null;
+                // 🟩 Position
+                Guid? positionId = user?.PositionId;
+
+                positionsDict.TryGetValue(positionId ?? Guid.Empty, out var position);
                 string positionName = position?.Name ?? string.Empty;
-                int step = req.Step ?? 1;
-                var dto = new ViewKPIForApprovalDto
+
+                // 🟩 DTO
+                result.Add(new ViewKPIForApprovalDto
                 {
                     Id = req.Id,
                     SubmitId = req.SubmitId,
-                    Step = step,
+                    Step = req.Step ?? 1,
                     Title = req.Title ?? string.Empty,
                     CreatedBy = req.RequesterId,
                     CreatedByName = userName,
@@ -678,13 +679,62 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
                     Month = req.Month,
                     ApprovalDate = req.ApprovalDate,
                     RejectDate = req.RejectDate
-                };
-
-                result.Add(dto);
+                });
             }
 
-            return result.ToList();
+            return result;
         }
+        //public async Task<List<ViewKPIForApprovalDto>> GetKPIForApproval()
+        //{
+        //    var requests =  _requestApprovalTaskRepo.Query().ToList() ;
+        //    var users =  _userRepo.Query().ToList() ;
+        //    var flows =  _approvalFlowRepo.Query().ToList() ;
+        //    var positions =  _positionRepo.Query().ToList() ;
+
+        //    var result = new List<ViewKPIForApprovalDto>();
+
+        //    foreach (var req in requests)
+        //    {
+        //        if (req == null) continue;
+
+        //        // 🟩 Lấy user (có thể null)
+        //        var user = users.FirstOrDefault(u => u.Id == req.RequesterId);
+        //        string userName = user?.FullName ?? string.Empty;
+
+        //        // 🟩 Lấy flow (có thể null)
+        //        var flow = flows.FirstOrDefault(f => f.Id == req.Id);
+        //        Guid? decisionMaker = req.DecisionMaker ?? flow?.DecisionMaker;
+
+        //        // 🟩 Lấy PositionId từ flow hoặc user
+        //        Guid? positionId =/* flow?.PositionId ??*/ user?.PositionId;
+        //        var position = positionId != null
+        //            ? positions.FirstOrDefault(p => p.Id == positionId)
+        //            : null;
+        //        string positionName = position?.Name ?? string.Empty;
+        //        int step = req.Step ?? 1;
+        //        var dto = new ViewKPIForApprovalDto
+        //        {
+        //            Id = req.Id,
+        //            SubmitId = req.SubmitId,
+        //            Step = step,
+        //            Title = req.Title ?? string.Empty,
+        //            CreatedBy = req.RequesterId,
+        //            CreatedByName = userName,
+        //            CreatedDate = req.CreatedDate,
+        //            EApprovalStatusType = req.StatusType,
+        //            Position = positionName,
+        //            PositionId = positionId ?? Guid.Empty,
+        //            DecisionMaker = decisionMaker,
+        //            Month = req.Month,
+        //            ApprovalDate = req.ApprovalDate,
+        //            RejectDate = req.RejectDate
+        //        };
+
+        //        result.Add(dto);
+        //    }
+
+        //    return result.ToList();
+        //}
         public async Task<List<ProcessApprovalDto>> GetProcessApprovalBySubmitIdAsync(Guid submitId)
         {
             // Lấy tất cả RequestApprovalTask theo SubmitId
@@ -950,58 +1000,63 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
         #region RESULT KPI
         public async Task<List<ViewResultKpiDto>> ResultAllKpi()
         {
-            var query = from request in await _kpiRequestRepo.GetQueryableAsync()
-                        join totalScore in await _kpiTotalScoreRepo.GetQueryableAsync()
-                        on request.SubmitId equals totalScore.SubmitId
+            var query =
+                from request in _kpiRequestRepo.Query()
 
-                        join user in await _userRepo.GetQueryableAsync()
-                        on request.CreatedBy equals user.Id
+                join totalScore in _kpiTotalScoreRepo.Query()
+                    on request.SubmitId equals totalScore.SubmitId
 
-                        join department in await _departmentRepo.GetQueryableAsync()
-                        on user.DepartmentId equals department.Id
-                        into dept
-                        from department in dept.DefaultIfEmpty()
+                join user in _userRepo.Query()
+                    on request.CreatedBy equals user.Id
 
-                        join factory in await _factoryRepo.GetQueryableAsync()
-                        on user.FactoryId equals factory.Id
-                        into fact
-                        from factory in fact.DefaultIfEmpty()
+                join approval in _userRepo.Query()
+                    on request.ApprovalBy equals approval.Id
 
-                        join approval in await _userRepo.GetQueryableAsync()
-                        on request.ApprovalBy equals approval.Id
+                join department in _departmentRepo.Query()
+                    on user.DepartmentId equals department.Id into dept
+                from department in dept.DefaultIfEmpty()
 
-                        where totalScore.Status == StatusKPIRequestType.Approved
-                        && request.RequestStatus == StatusKPIRequestType.Approved
+                join factory in _factoryRepo.Query()
+                    on user.FactoryId equals factory.Id into fact
+                from factory in fact.DefaultIfEmpty()
 
-                        select new ViewResultKpiDto
-                        {
-                            SubmitId = request.SubmitId,
-                            UserName = user.FullName,
-                            Approver = approval.FullName,
-                            Status = totalScore.Status,
-                            ApprovalDate = request.ApprovalDate ?? DateTime.Now,
-                            Month = totalScore.Month,
-                            Quarter = totalScore.Quarter,
-                            HalfYear = totalScore.HalfYear,
-                            Year = totalScore.Year,
-                            KPIScore = totalScore.KPIScore,
-                            KeyTaskScore = totalScore.KeyTaskScore,
-                            OMGScore = totalScore.OMGScore,
-                            TotalScroe = totalScore.TotaleScore,
-                            WorkDayId = user.WorkDayId,
-                            Description = request.Description,
-                            DepartmentId = user.DepartmentId,
-                            FactoryId = user.FactoryId,
-                            Department = department.Name,
-                            Factory = factory.Name,
-                            kPITotalScoreType = totalScore.kPITotalScoreType,
-                        };
-            var result = query.ToList();
-            if (result.Count > 0)
-            {
-                return result;
-            }
-            return new List<ViewResultKpiDto>();
+                where totalScore.Status == StatusKPIRequestType.Approved
+                   && request.RequestStatus == StatusKPIRequestType.Approved
+
+                select new ViewResultKpiDto
+                {
+                    SubmitId = request.SubmitId,
+                    UserName = user.FullName,
+                    Approver = approval.FullName,
+                    Status = totalScore.Status,
+
+                    // ✅ tránh SQL xử lý DateTime.Now
+                    ApprovalDate = request.ApprovalDate ?? DateTime.Now,
+
+                    Month = totalScore.Month,
+                    Quarter = totalScore.Quarter,
+                    HalfYear = totalScore.HalfYear,
+                    Year = totalScore.Year,
+
+                    KPIScore = totalScore.KPIScore,
+                    KeyTaskScore = totalScore.KeyTaskScore,
+                    OMGScore = totalScore.OMGScore,
+                    TotalScroe = totalScore.TotaleScore,
+
+                    WorkDayId = user.WorkDayId,
+                    Description = request.Description,
+
+                    DepartmentId = user.DepartmentId,
+                    FactoryId = user.FactoryId,
+
+                    Department = department != null ? department.Name : "",
+                    Factory = factory != null ? factory.Name : "",
+
+                    kPITotalScoreType = totalScore.kPITotalScoreType,
+                };
+
+            // ✅ chạy 1 query duy nhất + no tracking (rất nhanh)
+            return await query.AsNoTracking().ToListAsync();
         }
         #endregion
         #region CALCULATE POINT

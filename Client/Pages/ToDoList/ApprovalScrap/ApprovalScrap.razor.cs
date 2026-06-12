@@ -62,23 +62,30 @@ namespace AquaSolution.Client.Pages.ToDoList.ApprovalScrap
         }
         public async Task LoadScraps()
         {
-            if (CurrenUser.Id == Guid.Empty) return;
+            if (CurrenUser == null || CurrenUser.Id == Guid.Empty) return;
 
             IsLoading = true;
             try
             {
+                var isAdmin = CurrenUser.Roles.Any(r => r.Name == "Admin");
+
                 var res = await Http.GetFromJsonAsync<List<HistoryScrapDto>>(
-                    $"api/scrap/get-scrap-for-approval/{CurrenUser.Id}");
+                    $"api/scrap/get-scrap-for-approval?userId={CurrenUser.Id}&isAdmin={isAdmin}");
 
                 if (res != null)
                 {
                     ListScrap = res;
+
                     _factoryOptions = ListScrap
                         .Where(x => !string.IsNullOrEmpty(x.FactoryName))
-                        .Select(x => x.FactoryName).Distinct().OrderBy(x => x).ToList();
+                        .Select(x => x.FactoryName)
+                        .Distinct().OrderBy(x => x).ToList();
+
                     _departmentOptions = ListScrap
                         .Where(x => !string.IsNullOrEmpty(x.DepartmentName))
-                        .Select(x => x.DepartmentName).Distinct().OrderBy(x => x).ToList();
+                        .Select(x => x.DepartmentName)
+                        .Distinct().OrderBy(x => x).ToList();
+
                     ApplyFilter();
                 }
             }

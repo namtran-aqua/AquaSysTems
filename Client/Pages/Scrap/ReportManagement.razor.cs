@@ -1,9 +1,12 @@
 using AntDesign;
+using AquaSolution.Client.Common;
 using AquaSolution.Shared.Enum.Scrap;
 using AquaSolution.Shared.Factory;
 using AquaSolution.Shared.ReportDto;
+using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
+using NPOI.SS.Formula.Functions;
 using System.Globalization;
 using System.Net.Http.Json;
 
@@ -14,7 +17,8 @@ namespace AquaSolution.Client.Pages.Scrap
         [Inject] private HttpClient Http { get; set; } = default!;
         [Inject] private IJSRuntime JS { get; set; } = default!;
         [Inject] private IMessageService Message { get; set; } = default!;
-
+        private bool IsAdmin;
+        private UserDto? CurrenUser { get; set; }
         // ─── Filter state ─────────────────────────────────────────────────────
         private ReportFilterDto _filter = new()
         {
@@ -56,10 +60,25 @@ namespace AquaSolution.Client.Pages.Scrap
         // ─── Lifecycle ────────────────────────────────────────────────────────
         protected override async Task OnInitializedAsync()
         {
-            BuildWeekList(); // khởi tạo danh sách tuần ngay từ đầu
             await LoadFactoriesAsync();
-            await LoadReportAsync();
+            var currenUserClass = new CurrenUser(Http, AuthStateProvider);
+            CurrenUser = await currenUserClass.LoadCurrenUser();
+            IsAdmin = CurrenUser.Roles.Any(x => x.Name == "Admin");
+
+            if (!IsAdmin)
+            {
+
+                if (CurrenUser.FactoryId.HasValue && CurrenUser.FactoryId.Value != Guid.Empty)
+                    _filter.FactoryId = CurrenUser.FactoryId;
+            }
+
+            BuildWeekList();
+            if (_filter.FactoryId != null || IsAdmin)
+            {
+                await LoadReportAsync();
+            }
         }
+
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
@@ -139,8 +158,7 @@ namespace AquaSolution.Client.Pages.Scrap
                 $"Period={_filter.Period}",
                 $"Year={_filter.Year}"
             };
-
-            if (_filter.FactoryId.HasValue)
+            if (_filter.FactoryId.HasValue && _filter.FactoryId.Value != Guid.Empty)
                 parts.Add($"FactoryId={_filter.FactoryId}");
 
             if (_filter.Period == FilterPeriod.Month && _filter.Month.HasValue)
@@ -151,6 +169,7 @@ namespace AquaSolution.Client.Pages.Scrap
 
             return string.Join("&", parts);
         }
+
 
         // ─── Event handlers ───────────────────────────────────────────────────
         private async Task OnFactoryChanged(FactoryDto? factory)

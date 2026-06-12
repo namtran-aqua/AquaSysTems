@@ -2,8 +2,6 @@
 using AquaSolution.Server.SignalR;
 using AquaSolution.Shared.ITSuport.Attachments;
 using AquaSolution.Shared.ITSuport.RequestSuport;
-using AquaSolution.Shared.ITSuport.RequestSuportCategory;
-using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 

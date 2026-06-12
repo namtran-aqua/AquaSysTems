@@ -30,7 +30,6 @@
                 <Panel Header="@($"{group.StatusName} ({group.Items.Count})")">
                     <Table TItem="ViewKPIForApprovalDto" @ref="_tableRef"
                            Bordered
-                           HidePagination
                            DataSource="@group.Items">
                         <ColumnDefinitions Context="rowItem">
                             <Column Title="No" Width="30" TData="ViewKPIForApprovalDto" Context="row">

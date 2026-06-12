@@ -30,8 +30,8 @@ namespace AquaSolution.Server.Controllers.ScrapManagement
             try
             {
                 var result = await _scrapService.GetHistory();
-            return Ok(result);
-        }
+                return Ok(result);
+            }
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = $"Lỗi hệ thống: {ex.Message}" });
@@ -51,17 +51,36 @@ namespace AquaSolution.Server.Controllers.ScrapManagement
                 return StatusCode(500, new { message = $"Lỗi hệ thống: {ex.Message}" });
             }
         }
-        [HttpGet("get-scrap-for-approval/{userId}")]
-        public async Task<IActionResult> GetScrapForApproval(Guid userId)
+        //[HttpGet("get-scrap-for-approval/{userId}")]
+        //public async Task<IActionResult> GetScrapForApproval(Guid userId)
+        //{
+        //    try
+        //    {
+        //        var historyScraps = await _scrapService.GetScrapForApproval(userId);
+        //        return Ok(historyScraps);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(ex.Message);
+        //    }
+        //}
+
+        [HttpGet("get-scrap-for-approval")]
+        public async Task<IActionResult> GetScrapForApproval(
+            [FromQuery] Guid userId,
+            [FromQuery] bool isAdmin)
         {
             try
             {
-                var historyScraps = await _scrapService.GetScrapForApproval(userId);
-                return Ok(historyScraps);
+                if (userId == Guid.Empty)
+                    return BadRequest(new { message = "UserId không hợp lệ." });
+
+                var result = await _scrapService.GetScrapForApproval(userId, isAdmin);
+                return Ok(result);
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return StatusCode(500, new { message = ex.Message });
             }
         }
 
