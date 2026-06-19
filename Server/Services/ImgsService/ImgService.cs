@@ -29,12 +29,9 @@ namespace AquaSolution.Server.Services.ImgsService
         public async Task<List<CloudinaryImageDto>> GetAllImagesFromCloudinary()
         {
 
-            //var cloudName = "dphblwavf";
-            //var apiKey = "576923445121493";
-            //var apiSecret = "LC-nxR3dP-U2tZpxy-N2wdccw7U";
-            var cloudName = "daqqqxs3x";
-            var apiKey = "927863195659843";
-            var apiSecret = "Fn4WC3stx5fbSR-r7QLtrvsh7MI";
+            var cloudName = "dphblwavf";
+            var apiKey = "576923445121493";
+            var apiSecret = "LC-nxR3dP-U2tZpxy-N2wdccw7U";
 
             var allImages = new List<CloudinaryImageDto>();
             string nextCursor = null;
@@ -119,13 +116,9 @@ namespace AquaSolution.Server.Services.ImgsService
         }
         public async Task<bool> DeleteImageFromCloudinary(string publicId)
         {
-            //var cloudName = "dphblwavf";
-            //var apiKey = "576923445121493";
-            //var apiSecret = "LC-nxR3dP-U2tZpxy-N2wdccw7U";
-            var cloudName = "daqqqxs3x";
-            var apiKey = "927863195659843";
-            var apiSecret = "Fn4WC3stx5fbSR-r7QLtrvsh7MI";
-
+            var cloudName = "dphblwavf";
+            var apiKey = "576923445121493";
+            var apiSecret = "LC-nxR3dP-U2tZpxy-N2wdccw7U";
 
             var url = $"https://api.cloudinary.com/v1_1/{cloudName}/image/destroy";
 
