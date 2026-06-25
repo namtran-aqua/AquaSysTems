@@ -436,44 +436,48 @@
 
                 <PropertyColumn Width="115" Title="Created date" Property="c => c.CreatedDate" Format="dd/MM/yyyy HH:mm" />
 
-                <Column Fixed="ColumnFixPlacement.Right" TData="RequestSuportDto" Width="60px" Context="row" Title="Actions">
+                <Column Fixed="ColumnFixPlacement.Right"
+                        TData="RequestSuportDto"
+                        Width="80"
+                        Context="row"
+                        Title="Actions">
                     <Template>
-                        <Popover Title="Actions" Trigger="new Trigger[] { Trigger.Click }" Placement="Placement.Bottom">
-                            <ChildContent>
-                                <Button Icon="ellipsis" Size="ButtonSize.Small"
-                                        Style="border-radius:6px;border:1px solid #d9d9d9;" />
-                            </ChildContent>
-                            <ContentTemplate>
-                                <div style="display:flex;flex-direction:column;gap:2px;min-width:110px;">
-                                    <Button Type="ButtonType.Text"
-                                            OnClick="@(async () => await ViewAsync(row))"
-                                            Style="text-align:left;font-size:13px;">
-                                        <Icon Type="eye" /> Detail
-                                    </Button>
-                                    @{
-                                        var disable3 = row.Status == RequestSuportStatusType.Resolved
-                                                    || row.Status == RequestSuportStatusType.Cancel;
-                                    }
-                                    @if (Edit)
-                                    {
-                                        <Button Disabled="disable3" Type="ButtonType.Text"
-                                                OnClick="@(async () => await UpdateAsync(row))"
-                                                Style="text-align:left;font-size:13px;">
-                                            <Icon Type="edit" /> Edit
-                                        </Button>
-                                    }
-                                    @if (Delete)
-                                    {
-                                        var disible = CurrenUser!.Roles.Any(x => x.Name == "Admin") ? false : disable3;
-                                        <Button Disabled="disible" Type="ButtonType.Text"
-                                                OnClick="@(async () => await DeleteAsync(row.Id))"
-                                                Style="text-align:left;font-size:13px;color:#ff4d4f;">
-                                            <Icon Type="delete" /> Delete
-                                        </Button>
-                                    }
-                                </div>
-                            </ContentTemplate>
-                        </Popover>
+                        @{
+                            var disable3 = row.Status == RequestSuportStatusType.Resolved
+                            || row.Status == RequestSuportStatusType.Cancel;
+
+                            var disableDelete = CurrenUser!.Roles.Any(x => x.Name == "Admin")
+                            ? false
+                            : disable3;
+                        }
+
+                        <Space>
+                            <Button Type="ButtonType.Default"
+                                    Size="ButtonSize.Small"
+                                    OnClick="@(async () => await ViewAsync(row))">
+                                <Icon Type="eye" />
+                            </Button>
+
+                            @if (Edit)
+                            {
+                                <Button Type="ButtonType.Primary"
+                                        Size="ButtonSize.Small"
+                                        Disabled="disable3"
+                                        OnClick="@(async () => await UpdateAsync(row))">
+                                    <Icon Type="edit" />
+                                </Button>
+                            }
+
+                            @if (Delete)
+                            {
+                                <Button Danger
+                                        Size="ButtonSize.Small"
+                                        Disabled="disableDelete"
+                                        OnClick="@(async () => await DeleteAsync(row.Id))">
+                                    <Icon Type="delete" />
+                                </Button>
+                            }
+                        </Space>
                     </Template>
                 </Column>
 
