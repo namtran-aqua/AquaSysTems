@@ -39,6 +39,7 @@ namespace AquaSolution.Shared.UserManagements
         public PositionType? PositionType { get; set; }
         public List<RoleDto> Roles { get; set; } = new();
         public int FlowApproval { get; set; }
+        public bool IsChangeTask { get; set; }
     }
 
 }

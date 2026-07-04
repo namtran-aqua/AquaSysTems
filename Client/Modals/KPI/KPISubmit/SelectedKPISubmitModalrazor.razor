@@ -108,7 +108,6 @@
                                             x.Month == item.Month && x.Quarter == null && x.HalfYear == null&&
                                             x.Year == item.Year).OrderBy(x => x.Index)
                                             .ToList();
-                                            var a = details;
                                             Title = $"{item.Title} - KpiScore:{item.KPIScore: 0.###} - KeyTaskScore:{item.KeyTaskScore: 0.###} - OMGScore:{item.OMGScore: 0.###} - TotaleScore:{item.TotaleScore: 0.###}";
                                             <RenderKPISubmitComponent isCalculating="@isCalculating" HandleActual="details" Title="@Title"></RenderKPISubmitComponent>
                                         }
@@ -121,7 +120,6 @@
                                             x.Year == item.Year).OrderBy(x => x.Index)
                                             .ToList();
                                             Title = $"{item.Title} - KpiScore:{item.KPIScore: 0.###} - KeyTaskScore:{item.KeyTaskScore: 0.###} - OMGScore:{item.OMGScore: 0.###} - TotaleScore:{item.TotaleScore: 0.###}";
-                                            var a = details;
                                             <RenderKPISubmitComponent isCalculating="@isCalculating" HandleActual="details" Title="@Title"></RenderKPISubmitComponent>
                                         }
                                         else if (item.HalfYear.HasValue)
@@ -129,24 +127,29 @@
 
                                             var details = HandleKPISubmitDto.HandleActual
                                             .Where(x =>
-                                            x.HalfYear == item.HalfYear && x.Month == null && x.HalfYear == null &&
+                                            x.HalfYear == item.HalfYear && 
+                                            x.Month == null && 
+                                            x.Quarter == null &&
                                             x.Year == item.Year).OrderBy(x => x.Index)
                                             .ToList();
                                             Title = $"{item.Title} - KpiScore:{item.KPIScore: 0.###} - KeyTaskScore:{item.KeyTaskScore: 0.###} - OMGScore:{item.OMGScore: 0.###} - TotaleScore:{item.TotaleScore: 0.###}";
                                             <RenderKPISubmitComponent HandleActual="details" Title="@Title"></RenderKPISubmitComponent>
                                         }
-                                        else
-                                        {
-                                            // ✅ THEO NĂM
+                                        else if (!item.Month.HasValue && !item.Quarter.HasValue && !item.HalfYear.HasValue)
+{
+                                            // ✅ THEO NĂM — chỉ khớp item cấp năm thật sự, tránh rơi nhầm các item lỗi/không xác định vào đây
                                             var details = HandleKPISubmitDto.HandleActual
-                                            .Where(x => x.Year == item.Year).OrderBy(x => x.Index)
-                                            .ToList();
+                                                .Where(x =>
+                                                    x.Year == item.Year &&
+                                                    x.Month == null &&
+                                                    x.Quarter == null &&
+                                                    x.HalfYear == null)
+                                                .OrderBy(x => x.Index)
+                                                .ToList();
                                             Title = $"{item.Title} - KpiScore:{item.KPIScore: 0.###} - KeyTaskScore:{item.KeyTaskScore: 0.###} - OMGScore:{item.OMGScore: 0.###} - TotaleScore:{item.TotaleScore: 0.###}";
-                                            <RenderKPISubmitComponent HandleActual="details" Title="@Title"></RenderKPISubmitComponent>
+                                            <RenderKPISubmitComponent isCalculating="@isCalculating" HandleActual="details" Title="@Title"></RenderKPISubmitComponent>
                                         }
-
                                     }
-
                                 }
                             </Collapse>
                         @* } *@
