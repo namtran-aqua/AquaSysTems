@@ -42,7 +42,7 @@ namespace AquaSolution.Server.Controllers.KPI.KPISubmit
             var result = await _kPISubmitService.GetResultDetailByQuarter(userId, year, quarter);
             return Ok(result);
         }
-        [HttpGet("get-result-total-score-by-quarter/{userId}/{year}/{month}")]
+        [HttpGet("get-result-total-score-by-quarter/{userId}/{year}/{quarter}")]
         public async Task<IActionResult> GetResultTotalByQuarter(Guid userId, int year, int quarter)
         {
             var result = await _kPISubmitService.GetResultTotalByQuarter(userId, year, quarter);

@@ -1309,6 +1309,8 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
                         {
                             TaskId = detailScore.TaskId,
                             Month = detailScore.Month,
+                            Quarter = detailScore.Quarter,
+                            HalfYear = detailScore.HalfYear,
                             Year = detailScore.Year,
                             ActualValue = detailScore.Actual,
                             Index = 0,
@@ -1356,6 +1358,8 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
                         {
                             TaskId = detailScore.TaskId,
                             Month = detailScore.Month,
+                            Quarter = detailScore.Quarter,
+                            HalfYear = detailScore.HalfYear,
                             Year = detailScore.Year,
                             ActualValue = detailScore.Actual,
                             Index = 0,

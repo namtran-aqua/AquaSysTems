@@ -109,7 +109,7 @@ namespace AquaSolution.Client.Pages.KPI.KPISubmit
         }
         private async Task SelectedKpi()
         {
-            if(CurrenUser.PositionId !=null)
+            if(CurrenUser.PositionId == null)
             {
                 Message.Error("chua có positon vui lòng liên hệ IT hỗ trợ");
             }    

@@ -528,9 +528,49 @@ namespace AquaSolution.Client.Pages.KPI.UserTask
             await Task.CompletedTask;
         }
 
+        //private async Task CalculateHalfYearScoresFromQuarters(int? month, UserDto user)
+        //{
+        //    if (!month.HasValue) return;
+
+        //    int halfYear = month == 6 ? 1 : 2;
+        //    int prevQuarter = month == 6 ? 1 : 3;
+
+        //    var tempSubmit = new HandleKPISubmitDto();
+
+        //    // ✅ Load quarter trước từ DB
+        //    var totalQuarterFromDb = await Http.GetFromJsonAsync<KPITotalScoreDto>(
+        //        $"api/kpiSubmit/get-result-total-score-by-quarter/{user.Id}/{Year}/{prevQuarter}");
+        //    if (totalQuarterFromDb != null)
+        //        tempSubmit.KPITotalScore.Add(totalQuarterFromDb);
+
+        //    var detailsFromDb = await Http.GetFromJsonAsync<List<HandleActualDto>>(
+        //        $"api/kpiSubmit/get-result-detail-by-quarter/{user.Id}/{Year}/{prevQuarter}");
+        //    if (detailsFromDb != null)
+        //        tempSubmit.HandleActual.AddRange(detailsFromDb);
+
+        //    // ✅ Thêm detail quarter vừa tính từ cache
+        //    tempSubmit.HandleActual.AddRange(_cachedQuarterHandleActual);
+
+        //    if (tempSubmit.KPITotalScore.Count < 1) return;
+
+        //    await CalculateHalfYear(tempSubmit, user, halfYear, Year);
+
+        //    // ✅ Gán vào _handleKPISubmitForCalculate
+        //    var halfYearTotal = tempSubmit.KPITotalScore
+        //        .FirstOrDefault(x => x.HalfYear == halfYear && x.Month == null);
+
+        //    var halfYearHandleActual = tempSubmit.HandleActual
+        //        .Where(x => x.HalfYear == halfYear && x.Month == null)
+        //        .ToList();
+
+        //    if (halfYearTotal != null)
+        //    {
+        //        _handleKPISubmitForCalculate.KPITotalScore.Add(halfYearTotal);
+        //        _handleKPISubmitForCalculate.HandleActual.AddRange(halfYearHandleActual);
+        //    }
+        //}
         private async Task CalculateHalfYearScoresFromQuarters(int? month, UserDto user)
         {
-            if (!month.HasValue) return;
 
             int halfYear = month == 6 ? 1 : 2;
             int prevQuarter = month == 6 ? 1 : 3;
@@ -538,35 +578,34 @@ namespace AquaSolution.Client.Pages.KPI.UserTask
             var tempSubmit = new HandleKPISubmitDto();
 
             // ✅ Load quarter trước từ DB
-            var totalQuarterFromDb = await Http.GetFromJsonAsync<KPITotalScoreDto>(
-                $"api/kpiSubmit/get-result-total-score-by-quarter/{user.Id}/{Year}/{prevQuarter}");
-            if (totalQuarterFromDb != null)
-                tempSubmit.KPITotalScore.Add(totalQuarterFromDb);
+            var totalQuarterFromDb = await SafeGetFromJsonAsync<KPITotalScoreDto>(
+                    $"api/kpiSubmit/get-result-total-score-by-quarter/{user.Id}/{Year}/{prevQuarter}");
+            if (totalQuarterFromDb != null) tempSubmit.KPITotalScore.Add(totalQuarterFromDb);
 
-            var detailsFromDb = await Http.GetFromJsonAsync<List<HandleActualDto>>(
-                $"api/kpiSubmit/get-result-detail-by-quarter/{user.Id}/{Year}/{prevQuarter}");
-            if (detailsFromDb != null)
-                tempSubmit.HandleActual.AddRange(detailsFromDb);
+            var detailsFromDb = await SafeGetFromJsonAsync<List<HandleActualDto>>(
+                    $"api/kpiSubmit/get-result-detail-quarter/{user.Id}/{Year}/{prevQuarter}");
+                if (detailsFromDb != null)
+                    tempSubmit.HandleActual.AddRange(detailsFromDb);
 
             // ✅ Thêm detail quarter vừa tính từ cache
-            tempSubmit.HandleActual.AddRange(_cachedQuarterHandleActual);
+                tempSubmit.HandleActual.AddRange(_cachedQuarterHandleActual);
 
             if (tempSubmit.KPITotalScore.Count < 1) return;
 
-            await CalculateHalfYear(tempSubmit, user, halfYear, Year);
+                await CalculateHalfYear(tempSubmit, user, halfYear, Year);
 
             // ✅ Gán vào _handleKPISubmitForCalculate
-            var halfYearTotal = tempSubmit.KPITotalScore
-                .FirstOrDefault(x => x.HalfYear == halfYear && x.Month == null);
+                var halfYearTotal = tempSubmit.KPITotalScore
+                    .FirstOrDefault(x => x.HalfYear == halfYear && x.Month == null);
 
-            var halfYearHandleActual = tempSubmit.HandleActual
-                .Where(x => x.HalfYear == halfYear && x.Month == null)
-                .ToList();
+                var halfYearHandleActual = tempSubmit.HandleActual
+                    .Where(x => x.HalfYear == halfYear && x.Month == null)
+                    .ToList();
 
-            if (halfYearTotal != null)
-            {
-                _handleKPISubmitForCalculate.KPITotalScore.Add(halfYearTotal);
-                _handleKPISubmitForCalculate.HandleActual.AddRange(halfYearHandleActual);
+                if (halfYearTotal != null)
+                {
+                    _handleKPISubmitForCalculate.KPITotalScore.Add(halfYearTotal);
+                    _handleKPISubmitForCalculate.HandleActual.AddRange(halfYearHandleActual);
             }
         }
         private async Task CalculateHalfYear(
@@ -702,6 +741,27 @@ namespace AquaSolution.Client.Pages.KPI.UserTask
             return achievement;
         }
 
+        #endregion
+        #region Helper
+        private async Task<T?> SafeGetFromJsonAsync<T>(string url) where T : class
+        {
+            try
+            {
+                var response = await Http.GetAsync(url);
+                if (!response.IsSuccessStatusCode) return null;
+
+                var content = await response.Content.ReadAsStringAsync();
+                if (string.IsNullOrWhiteSpace(content) || content == "null") return null;
+
+                return System.Text.Json.JsonSerializer.Deserialize<T>(content,
+                    new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[SafeGetFromJsonAsync ERROR] {url} -> {ex.Message}");
+                return null;
+            }
+        }
         #endregion
 
     }

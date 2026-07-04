@@ -142,14 +142,15 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
                 await AddCurrenTask(HandleKPISubmitDto);
 
                 var month = HandleKPISubmitDto.HandleActual.FirstOrDefault()?.Month;
+                bool quarterCreated = false;
 
                 if (month == 3 || month == 6 || month == 9 || month == 12)
                 {
 
-                    await LoadAndCalculateQuarterAsync(HandleKPISubmitDto, month);
+                    quarterCreated = await LoadAndCalculateQuarterAsync(HandleKPISubmitDto, month);
                 }
 
-                if (month == 6 || month == 12)
+                if ((month == 6 || month == 12) && quarterCreated)
                 {
                     await LoadAndCalculateHalfYearAsync(HandleKPISubmitDto, month);
                 }
@@ -242,11 +243,11 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
             };
         }
 
-        private async Task LoadAndCalculateQuarterAsync(
+        private async Task<bool> LoadAndCalculateQuarterAsync(
             HandleKPISubmitDto handleKPISubmit,
             int? month)
         {
-            if (!month.HasValue) return;
+            if (!month.HasValue) return false;
 
             var months = GetMonthsInQuarter(month.Value);
             int year = handleKPISubmit.HandleActual.First().Year;
@@ -262,8 +263,12 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
                 if (details != null) handleKPISubmit.HandleActual.AddRange(details);
 
             }
-            if (handleKPISubmit.KPITotalScore.Count < 2) return;
+            var monthCountInQuarter = handleKPISubmit.KPITotalScore
+                .Count(x => x.Year == year && x.Month.HasValue && months.Contains(x.Month.Value));
+
+            if (monthCountInQuarter < 2) return false;
             await CalculatedQuarter(handleKPISubmit, month.Value);
+            return true;
         }
         private async Task CalculatedQuarter(HandleKPISubmitDto handleKPISubmit, int month)
         {
@@ -380,7 +385,20 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
             omgscore = sumOMG * omgWeight;
             kpiScore = sumKPI * kpiWeight;
             keytaskscore = sumKeyTask * keyTaskWeight;
+            if (CurrenUser.IsChangeTask)
+            {
+                var monthsInQuarter = GetMonthsInQuarter(month);
+                var monthlyTotals = handleKPISubmit.KPITotalScore
+                    .Where(x => x.Year == year && x.Month.HasValue && monthsInQuarter.Contains(x.Month.Value))
+                    .ToList();
 
+                if (monthlyTotals.Any())
+                {
+                    kpiScore = ConvertNumberCommon.ConvertNumber(monthlyTotals.Average(x => x.KPIScore));
+                    keytaskscore = ConvertNumberCommon.ConvertNumber(monthlyTotals.Average(x => x.KeyTaskScore));
+                    omgscore = ConvertNumberCommon.ConvertNumber(monthlyTotals.Average(x => x.OMGScore));
+                }
+            }
             totalScore = ConvertNumberCommon.ConvertNumber(kpiScore + keytaskscore + omgscore);
             totalActualScore = ConvertNumberCommon.ConvertNumber(kpiScore + keytaskscore + omgscore);
             if (totalScore > CeilingLevel.CeilingLevelValue && CeilingLevel.CeilingLevelValue > 0)
@@ -426,24 +444,28 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
             int quarter = month <= 6 ? 1 : 3;
             int year = handleKPISubmit.HandleActual.First().Year;
 
-            var totalQuarters = await Http.GetFromJsonAsync<KPITotalScoreDto>(
+            var totalQuarters = await SafeGetFromJsonAsync<KPITotalScoreDto>(
                 $"api/kpiSubmit/get-result-total-score-by-quarter/{CurrenUser.Id}/{year}/{quarter}");
-            if (totalQuarters != null) handleKPISubmit.KPITotalScore.Add(totalQuarters);
+            //if (totalQuarters != null) handleKPISubmit.KPITotalScore.Add(totalQuarters);
+            if (totalQuarters == null) return;
 
-            var details = await Http.GetFromJsonAsync<List<HandleActualDto>>(
-             $"api/kpiSubmit/get-result-detail-by-momth/{CurrenUser.Id}/{year}/{quarter}");
+
+            var details = await SafeGetFromJsonAsync<List<HandleActualDto>>(
+             $"api/kpiSubmit/get-result-detail-quarter/{CurrenUser.Id}/{year}/{quarter}");
             if (details != null) handleKPISubmit.HandleActual.AddRange(details);
+            if (details == null || !details.Any()) return;
 
-            if (handleKPISubmit.KPITotalScore.Count < 1) return;
-            await CalculateHalfYear(handleKPISubmit, month);
+            //if (handleKPISubmit.KPITotalScore.Count < 1) return;
+            await CalculateHalfYear(handleKPISubmit, month, totalQuarters);
         }
 
         private async Task CalculateHalfYear(
             HandleKPISubmitDto handleKPISubmit,
-            int? month)
+            int? month,
+            KPITotalScoreDto quarterTotal)
         {
             int haftyear = month <= 6 ? 1 : 2;
-            int quarter = month <= 6 ? 2 : 4;
+            int quarterOfHalfYear = month <= 6 ? 2 : 4;
             int year = handleKPISubmit.HandleActual.First().Year;
 
             var TotalQuarter = new KPITotalScoreDto();
@@ -455,7 +477,7 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
             decimal totalScore = 0;
 
             // 🔹 STEP 1: BUILD DATA
-            foreach (var group in handleKPISubmit.HandleActual.GroupBy(x => x.TaskId))
+            foreach (var group in handleKPISubmit.HandleActual.Where(x => x.Quarter != null).GroupBy(x => x.TaskId))
             {
                 var first = group.First();
                 decimal? actual = null;
@@ -474,7 +496,7 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
                         break;
 
                     case QuarterCalculateType.CAL3:
-                        var last = group.OrderByDescending(x => x.Month).First();
+                        var last = group.OrderByDescending(x => x.Quarter).First();
                         actual = last.ActualValue;
                         target = last.TargetValue;
                         break;
@@ -536,15 +558,15 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
             decimal keyTaskWeight = indexWeights.FirstOrDefault(x => x.KPIIndexType == KPIIndexType.KeyTask)?.Weight ?? 0;
             // 🔹 STEP 3: CALCULATE SCORE (SAU KHI CÓ DATA ĐẦY ĐỦ)
             var listOMGDetails = handleKPISubmit.HandleActual
-                .Where(x => x.KPIIndexType == KPIIndexType.OMG && x.Quarter == haftyear)
+                .Where(x => x.KPIIndexType == KPIIndexType.OMG && x.HalfYear == haftyear)
                 .ToList();
 
             var listKPIDetails = handleKPISubmit.HandleActual
-                .Where(x => x.KPIIndexType == KPIIndexType.KPI && x.Quarter == haftyear)
+                .Where(x => x.KPIIndexType == KPIIndexType.KPI && x.HalfYear == haftyear)
                 .ToList();
 
             var listKeyTaskDetails = handleKPISubmit.HandleActual
-                .Where(x => x.KPIIndexType == KPIIndexType.KeyTask && x.Quarter == haftyear)
+                .Where(x => x.KPIIndexType == KPIIndexType.KeyTask && x.HalfYear == haftyear)
                 .ToList();
 
             decimal sumOMG = listOMGDetails.Sum(x => x.Score ?? 0);
@@ -554,6 +576,18 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
             omgscore = sumOMG * omgWeight;
             kpiScore = sumKPI * kpiWeight;
             keytaskscore = sumKeyTask * keyTaskWeight;
+            if (CurrenUser.IsChangeTask)
+            {
+                var quarter2Total = handleKPISubmit.KPITotalScore
+                    .FirstOrDefault(x => x.Quarter == quarterOfHalfYear && x.Year == year);
+
+                if (quarter2Total != null && quarterTotal != null)
+                {
+                    kpiScore = ConvertNumberCommon.ConvertNumber((quarterTotal.KPIScore + quarter2Total.KPIScore) / 2);
+                    keytaskscore = ConvertNumberCommon.ConvertNumber((quarterTotal.KeyTaskScore + quarter2Total.KeyTaskScore) / 2);
+                    omgscore = ConvertNumberCommon.ConvertNumber((quarterTotal.OMGScore + quarter2Total.OMGScore) / 2);
+                }
+            }
 
             totalScore = ConvertNumberCommon.ConvertNumber(kpiScore + keytaskscore + omgscore);
 
@@ -566,7 +600,7 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
             {
                 Title = $"EMC - {year} - H{haftyear} - {CurrenUser.FullName}",
                 Year = year,
-                Quarter = haftyear,
+                HalfYear = haftyear,
                 KPIScore = ConvertNumberCommon.ConvertNumber(kpiScore),
                 KeyTaskScore = ConvertNumberCommon.ConvertNumber(keytaskscore),
                 OMGScore = ConvertNumberCommon.ConvertNumber(omgscore),
@@ -575,12 +609,19 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
             };
             handleKPISubmit.KPITotalScore.Add(TotalQuarter);
             // 🔹 STEP 4: REMOVE OLD DATA
+            //var removeHandleActual = handleKPISubmit.HandleActual
+            //    .Where(x => x.Quarter != quarterOfHalfYear && x.HalfYear == null)
+            //    .ToList();
+
+            //var removeTotalScore = handleKPISubmit.KPITotalScore
+            //    .Where(x => x.Quarter != quarterOfHalfYear && x.HalfYear == null)
+            //    .ToList();
             var removeHandleActual = handleKPISubmit.HandleActual
-                .Where(x => x.Quarter != quarter && x.HalfYear == null)
+                .Where(x => x.HalfYear == null && x.Quarter != quarterOfHalfYear && x.Month != month)
                 .ToList();
 
             var removeTotalScore = handleKPISubmit.KPITotalScore
-                .Where(x => x.Quarter != quarter && x.HalfYear == null)
+                .Where(x => x.HalfYear == null && x.Quarter != quarterOfHalfYear && x.Month != month)
                 .ToList();
 
             removeHandleActual.ForEach(x => handleKPISubmit.HandleActual.Remove(x));
@@ -665,6 +706,25 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
                 throw ex;
             }
 
+        }
+        private async Task<T?> SafeGetFromJsonAsync<T>(string url) where T : class
+        {
+            try
+            {
+                var response = await Http.GetAsync(url);
+                if (!response.IsSuccessStatusCode) return null;
+
+                var content = await response.Content.ReadAsStringAsync();
+                if (string.IsNullOrWhiteSpace(content) || content == "null") return null;
+
+                return System.Text.Json.JsonSerializer.Deserialize<T>(content,
+                    new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[SafeGetFromJsonAsync ERROR] {url} -> {ex.Message}");
+                return null;
+            }
         }
         #endregion
     }
