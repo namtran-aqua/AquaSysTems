@@ -111,7 +111,7 @@ namespace AquaSolution.Client.Pages.KPI.KPISubmit
         {
             if(CurrenUser.PositionId == null)
             {
-                Message.Error("chua có positon vui lòng liên hệ IT hỗ trợ");
+                Message.Error("Chưa có position. Vui lòng liên hệ IT hỗ trợ");
             }    
           await  _selectedKpiSubmitModalrazor.ShowModal(CurrenUser!);
         }

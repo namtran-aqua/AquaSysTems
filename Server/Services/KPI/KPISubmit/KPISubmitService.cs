@@ -1331,6 +1331,7 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
                             Description = task.TaskDescription,
                             CalculateMethod = task.CalculatedMdethod,
                             Formula = fomulaRepo.FormulaName,
+                            KPIFormulaType = fomulaRepo.KPIFormulaType,
                             calculated = quarterCalculate.QuarterCalculated,
                             DataSource = task.DataSource,
                             PIC = task.PIC
@@ -1380,6 +1381,7 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
                             Description = task.TaskDescription,
                             CalculateMethod = task.CalculatedMdethod,
                             Formula = fomulaRepo.FormulaName,
+                            KPIFormulaType = fomulaRepo.KPIFormulaType,
                             calculated = quarterCalculate.QuarterCalculated,
                             DataSource = task.DataSource,
                             PIC = task.PIC
