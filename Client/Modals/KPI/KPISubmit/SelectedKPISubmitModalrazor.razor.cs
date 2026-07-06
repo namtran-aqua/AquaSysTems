@@ -502,9 +502,7 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
                         break;
                 }
 
-                decimal achivement = (target.HasValue && target > 0 && actual.HasValue)
-                    ? actual.Value / target.Value
-                    : 0;
+                decimal achivement = await HelperCalculated(first.KPIFormulaType, actual ?? 0, target ?? 0, first.Max ?? 0);
 
                 if (first.Bottom.HasValue && achivement < first.Bottom)
                     achivement = 0;
