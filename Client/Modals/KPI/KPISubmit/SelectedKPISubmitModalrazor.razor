@@ -133,7 +133,7 @@
                                             x.Year == item.Year).OrderBy(x => x.Index)
                                             .ToList();
                                             Title = $"{item.Title} - KpiScore:{item.KPIScore: 0.###} - KeyTaskScore:{item.KeyTaskScore: 0.###} - OMGScore:{item.OMGScore: 0.###} - TotaleScore:{item.TotaleScore: 0.###}";
-                                            <RenderKPISubmitComponent HandleActual="details" Title="@Title"></RenderKPISubmitComponent>
+                                            <RenderKPISubmitComponent isCalculating="@isCalculating" HandleActual="details" Title="@Title"></RenderKPISubmitComponent>
                                         }
                                         else if (!item.Month.HasValue && !item.Quarter.HasValue && !item.HalfYear.HasValue)
 {

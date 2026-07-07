@@ -572,8 +572,8 @@ namespace AquaSolution.Client.Pages.KPI.UserTask
         private async Task CalculateHalfYearScoresFromQuarters(int? month, UserDto user)
         {
 
-            int halfYear = month == 6 ? 1 : 2;
-            int prevQuarter = month == 6 ? 1 : 3;
+            int halfYear = month == 7 ? 1 : 2;
+            int prevQuarter = month == 7 ? 1 : 3;
 
             var tempSubmit = new HandleKPISubmitDto();
 
@@ -633,7 +633,7 @@ namespace AquaSolution.Client.Pages.KPI.UserTask
                         break;
 
                     case QuarterCalculateType.CAL3:
-                        var last = group.OrderByDescending(x => x.Month).First();
+                        var last = group.OrderByDescending(x => x.Quarter).First();
                         actual = last.ActualValue;
                         target = last.TargetValue;
                         break;
