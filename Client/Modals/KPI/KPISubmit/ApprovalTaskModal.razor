@@ -1,4 +1,4 @@
-﻿@using AntDesign
+@using AntDesign
 @using AquaSolution.Client.Common
 @using AquaSolution.Shared.KPI.KPISubmit
 @using AquaSolution.Client.Common.ConvertNumber
@@ -161,7 +161,7 @@
 
                             details = ViewDetailApprovalKPI.DetailScore
                             .Where(x =>
-                            x.HalfYear == item.HalfYear && x.Month == null && x.HalfYear == null &&
+                            x.HalfYear == item.HalfYear && x.Month == null && x.Quarter == null &&
                             x.Year == item.Year).OrderBy(x => x.Index)
                             .ToList();
                               Title = $"{item.Title} - KpiScore:{item.KPIScore: 0.###} - KeyTaskScore:{item.KeyTaskScore: 0.###} - OMGScore:{item.OMGScore: 0.###} - TotaleScore:{item.TotaleScore: 0.###}";
