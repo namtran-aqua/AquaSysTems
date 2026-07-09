@@ -81,77 +81,85 @@
                     <TabPane Key="2">
                        @*  @if (!isCalculating)
                         { *@
-                            <Collapse DefaultActiveKey="@(new[] { "1" })">
-                                @{
-                                    var orderedScores = HandleKPISubmitDto.KPITotalScore
-                                            .OrderBy(x => x.Year)
-                                            .ThenBy(x =>
-                                            {
-                                                if (x.Month.HasValue)
-                                                    return x.Month.Value * 10;
+                        <Collapse DefaultActiveKey="@(new[] { "1" })">
+                            @{
+                                var orderedScores = HandleKPISubmitDto.KPITotalScore
+                                        .OrderBy(x => x.Year)
+                                        .ThenBy(x =>
+                                        {
+                                            if (x.Month.HasValue)
+                                                return x.Month.Value * 10;
 
-                                                if (x.Quarter.HasValue)
-                                                    return x.Quarter.Value * 100 + 50;
-                                                if (x.HalfYear.HasValue)
-                                                    return x.HalfYear.Value * 1000 + 500;
-                                                return int.MaxValue;
-                                            })
-                                            .ToList();
-                                    var Title = string.Empty;
+                                            if (x.Quarter.HasValue)
+                                                return x.Quarter.Value * 100 + 50;
+                                            if (x.HalfYear.HasValue)
+                                                return x.HalfYear.Value * 1000 + 500;
+                                            return int.MaxValue;
+                                        })
+                                        .ToList();
+                                var Title = string.Empty;
 
-                                    foreach (var item in orderedScores)
+                                foreach (var item in orderedScores)
+                                {
+                                    // 🔹 Khi IsChangeTask = true và là cấp Quarter/HalfYear: KPI/KeyTask/OMG không còn ý nghĩa (luôn = 0)
+                                    // -> chỉ hiển thị TotaleScore, ẩn phần breakdown để tránh gây hiểu lầm.
+                                    bool isAggregatedLevel = item.Quarter.HasValue || item.HalfYear.HasValue;
+                                    bool hideBreakdown = CurrenUser.IsChangeTask && isAggregatedLevel;
+
+                                    if (item.Month.HasValue && item.Month == KPIPeriodSubmit.Month)
                                     {
-                                        if (item.Month.HasValue && item.Month == KPIPeriodSubmit.Month)
-                                        {
-                                           var details = HandleKPISubmitDto.HandleActual
+                                        var details = HandleKPISubmitDto.HandleActual
+                                         .Where(x =>
+                                         x.Month == item.Month && x.Quarter == null && x.HalfYear == null &&
+                                         x.Year == item.Year).OrderBy(x => x.Index)
+                                         .ToList();
+                                        Title = $"{item.Title} - KpiScore:{item.KPIScore: 0.###} - KeyTaskScore:{item.KeyTaskScore: 0.###} - OMGScore:{item.OMGScore: 0.###} - TotaleScore:{item.TotaleScore: 0.###}";
+                                        <RenderKPISubmitComponent isCalculating="@isCalculating" HandleActual="details" Title="@Title"></RenderKPISubmitComponent>
+                                    }
+                                    else if (item.Quarter.HasValue && item.Quarter == QuarterValue)
+                                    {
+                                        // ✅ THEO QUÝ
+                                        var details = HandleKPISubmitDto.HandleActual
+                                         .Where(x =>
+                                         x.Quarter == item.Quarter && x.Month == null && x.HalfYear == null &&
+                                         x.Year == item.Year).OrderBy(x => x.Index)
+                                         .ToList();
+                                        Title = hideBreakdown
+                                            ? $"{item.Title} - TotaleScore:{item.TotaleScore: 0.###}"
+                                            : $"{item.Title} - KpiScore:{item.KPIScore: 0.###} - KeyTaskScore:{item.KeyTaskScore: 0.###} - OMGScore:{item.OMGScore: 0.###} - TotaleScore:{item.TotaleScore: 0.###}";
+                                        <RenderKPISubmitComponent isCalculating="@isCalculating" HandleActual="details" Title="@Title"></RenderKPISubmitComponent>
+                                    }
+                                    else if (item.HalfYear.HasValue)
+                                    {
+                                        var details = HandleKPISubmitDto.HandleActual
+                                        .Where(x =>
+                                        x.HalfYear == item.HalfYear &&
+                                        x.Month == null &&
+                                        x.Quarter == null &&
+                                        x.Year == item.Year).OrderBy(x => x.Index)
+                                        .ToList();
+                                        Title = hideBreakdown
+                                            ? $"{item.Title} - TotaleScore:{item.TotaleScore: 0.###}"
+                                            : $"{item.Title} - KpiScore:{item.KPIScore: 0.###} - KeyTaskScore:{item.KeyTaskScore: 0.###} - OMGScore:{item.OMGScore: 0.###} - TotaleScore:{item.TotaleScore: 0.###}";
+                                        <RenderKPISubmitComponent isCalculating="@isCalculating" HandleActual="details" Title="@Title"></RenderKPISubmitComponent>
+                                    }
+                                    else if (!item.Month.HasValue && !item.Quarter.HasValue && !item.HalfYear.HasValue)
+                                    {
+                                        // ✅ THEO NĂM
+                                        var details = HandleKPISubmitDto.HandleActual
                                             .Where(x =>
-                                            x.Month == item.Month && x.Quarter == null && x.HalfYear == null&&
-                                            x.Year == item.Year).OrderBy(x => x.Index)
+                                                x.Year == item.Year &&
+                                                x.Month == null &&
+                                                x.Quarter == null &&
+                                                x.HalfYear == null)
+                                            .OrderBy(x => x.Index)
                                             .ToList();
-                                            Title = $"{item.Title} - KpiScore:{item.KPIScore: 0.###} - KeyTaskScore:{item.KeyTaskScore: 0.###} - OMGScore:{item.OMGScore: 0.###} - TotaleScore:{item.TotaleScore: 0.###}";
-                                            <RenderKPISubmitComponent isCalculating="@isCalculating" HandleActual="details" Title="@Title"></RenderKPISubmitComponent>
-                                        }
-                                        else if (item.Quarter.HasValue && item.Quarter == QuarterValue)
-                                        {
-                                            // ✅ THEO QUÝ
-                                          var  details = HandleKPISubmitDto.HandleActual
-                                            .Where(x =>
-                                            x.Quarter == item.Quarter && x.Month == null && x.HalfYear == null &&
-                                            x.Year == item.Year).OrderBy(x => x.Index)
-                                            .ToList();
-                                            Title = $"{item.Title} - KpiScore:{item.KPIScore: 0.###} - KeyTaskScore:{item.KeyTaskScore: 0.###} - OMGScore:{item.OMGScore: 0.###} - TotaleScore:{item.TotaleScore: 0.###}";
-                                            <RenderKPISubmitComponent isCalculating="@isCalculating" HandleActual="details" Title="@Title"></RenderKPISubmitComponent>
-                                        }
-                                        else if (item.HalfYear.HasValue)
-                                        {
-
-                                            var details = HandleKPISubmitDto.HandleActual
-                                            .Where(x =>
-                                            x.HalfYear == item.HalfYear && 
-                                            x.Month == null && 
-                                            x.Quarter == null &&
-                                            x.Year == item.Year).OrderBy(x => x.Index)
-                                            .ToList();
-                                            Title = $"{item.Title} - KpiScore:{item.KPIScore: 0.###} - KeyTaskScore:{item.KeyTaskScore: 0.###} - OMGScore:{item.OMGScore: 0.###} - TotaleScore:{item.TotaleScore: 0.###}";
-                                            <RenderKPISubmitComponent isCalculating="@isCalculating" HandleActual="details" Title="@Title"></RenderKPISubmitComponent>
-                                        }
-                                        else if (!item.Month.HasValue && !item.Quarter.HasValue && !item.HalfYear.HasValue)
-{
-                                            // ✅ THEO NĂM — chỉ khớp item cấp năm thật sự, tránh rơi nhầm các item lỗi/không xác định vào đây
-                                            var details = HandleKPISubmitDto.HandleActual
-                                                .Where(x =>
-                                                    x.Year == item.Year &&
-                                                    x.Month == null &&
-                                                    x.Quarter == null &&
-                                                    x.HalfYear == null)
-                                                .OrderBy(x => x.Index)
-                                                .ToList();
-                                            Title = $"{item.Title} - KpiScore:{item.KPIScore: 0.###} - KeyTaskScore:{item.KeyTaskScore: 0.###} - OMGScore:{item.OMGScore: 0.###} - TotaleScore:{item.TotaleScore: 0.###}";
-                                            <RenderKPISubmitComponent isCalculating="@isCalculating" HandleActual="details" Title="@Title"></RenderKPISubmitComponent>
-                                        }
+                                        Title = $"{item.Title} - KpiScore:{item.KPIScore: 0.###} - KeyTaskScore:{item.KeyTaskScore: 0.###} - OMGScore:{item.OMGScore: 0.###} - TotaleScore:{item.TotaleScore: 0.###}";
+                                        <RenderKPISubmitComponent isCalculating="@isCalculating" HandleActual="details" Title="@Title"></RenderKPISubmitComponent>
                                     }
                                 }
-                            </Collapse>
+                            }
+                        </Collapse>
                         @* } *@
                     </TabPane>
                 </Tabs>

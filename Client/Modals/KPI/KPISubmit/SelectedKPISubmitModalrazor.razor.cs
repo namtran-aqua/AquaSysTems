@@ -285,8 +285,10 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
             decimal keytaskscore = 0;
             decimal totalScore = 0;
             decimal totalActualScore = 0;
-            // 🔹 STEP 1: BUILD DATA
-            foreach (var group in handleKPISubmit.HandleActual.GroupBy(x => x.TaskId))
+            if (!CurrenUser.IsChangeTask)
+            {
+                // 🔹 STEP 1: BUILD DATA
+                foreach (var group in handleKPISubmit.HandleActual.GroupBy(x => x.TaskId))
             {
                 var first = group.First();
                 decimal? actual = null;
@@ -360,6 +362,7 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
 
             // 🔹 STEP 2: ADD DATA SAU KHI BUILD XONG
             handleKPISubmit.HandleActual.AddRange(newHandleActualList);
+            
             var indexWeights = IndexWeight?.Where(x => x.PeriodType == PeriodType.Quarter).ToList()
                                 ?? new List<IndexWeightDto>();
             decimal omgWeight = indexWeights.FirstOrDefault(x => x.KPIIndexType == KPIIndexType.OMG)?.Weight ?? 0;
@@ -385,22 +388,37 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
             omgscore = sumOMG * omgWeight;
             kpiScore = sumKPI * kpiWeight;
             keytaskscore = sumKeyTask * keyTaskWeight;
-            if (CurrenUser.IsChangeTask)
+
+            totalScore = ConvertNumberCommon.ConvertNumber(kpiScore + keytaskscore + omgscore);
+            totalActualScore = totalScore;
+            }
+            else
             {
+                // 🔹 IsChangeTask = true: weight quý hiện tại KHÔNG áp dụng đúng cho các tháng trước khi đổi vị trí
+                // -> KHÔNG tính riêng KPI/KeyTask/OMG nữa, chỉ trung bình cộng TotaleScore đã chốt của từng tháng.
+                // (Vẫn gắn Quarter vào các dòng chi tiết tháng để hiển thị, nhưng không dùng để tính điểm)
                 var monthsInQuarter = GetMonthsInQuarter(month);
+                var monthlyDetails = handleKPISubmit.HandleActual
+                    .Where(x => x.Quarter == null && x.Month.HasValue && monthsInQuarter.Contains(x.Month.Value))
+                    .ToList();
+
+                foreach (var item in monthlyDetails)
+                {
+                    item.Quarter = quarter;
+                }
+
                 var monthlyTotals = handleKPISubmit.KPITotalScore
                     .Where(x => x.Year == year && x.Month.HasValue && monthsInQuarter.Contains(x.Month.Value))
                     .ToList();
 
-                if (monthlyTotals.Any())
-                {
-                    kpiScore = ConvertNumberCommon.ConvertNumber(monthlyTotals.Average(x => x.KPIScore));
-                    keytaskscore = ConvertNumberCommon.ConvertNumber(monthlyTotals.Average(x => x.KeyTaskScore));
-                    omgscore = ConvertNumberCommon.ConvertNumber(monthlyTotals.Average(x => x.OMGScore));
-                }
+                kpiScore = 0;
+                keytaskscore = 0;
+                omgscore = 0;
+                totalScore = monthlyTotals.Any()
+                    ? ConvertNumberCommon.ConvertNumber(monthlyTotals.Average(x => x.TotaleScore))
+                    : 0;
+                totalActualScore = totalScore;
             }
-            totalScore = ConvertNumberCommon.ConvertNumber(kpiScore + keytaskscore + omgscore);
-            totalActualScore = ConvertNumberCommon.ConvertNumber(kpiScore + keytaskscore + omgscore);
             if (totalScore > CeilingLevel.CeilingLevelValue && CeilingLevel.CeilingLevelValue > 0)
             {
                 totalScore = CeilingLevel.CeilingLevelValue;
@@ -476,8 +494,10 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
             decimal keytaskscore = 0;
             decimal totalScore = 0;
 
-            // 🔹 STEP 1: BUILD DATA
-            foreach (var group in handleKPISubmit.HandleActual.Where(x => x.Quarter != null).GroupBy(x => x.TaskId))
+            if (!CurrenUser.IsChangeTask)
+            {
+                // 🔹 STEP 1: BUILD DATA
+                foreach (var group in handleKPISubmit.HandleActual.Where(x => x.Quarter != null).GroupBy(x => x.TaskId))
             {
                 var first = group.First();
                 decimal? actual = null;
@@ -549,6 +569,7 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
 
             // 🔹 STEP 2: ADD DATA SAU KHI BUILD XONG
             handleKPISubmit.HandleActual.AddRange(newHandleActualList);
+           
             var indexWeights = IndexWeight?.Where(x => x.PeriodType == PeriodType.Quarter).ToList()
                                 ?? new List<IndexWeightDto>();
             decimal omgWeight = indexWeights.FirstOrDefault(x => x.KPIIndexType == KPIIndexType.OMG)?.Weight ?? 0;
@@ -574,20 +595,34 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
             omgscore = sumOMG * omgWeight;
             kpiScore = sumKPI * kpiWeight;
             keytaskscore = sumKeyTask * keyTaskWeight;
-            if (CurrenUser.IsChangeTask)
+            
+
+            totalScore = ConvertNumberCommon.ConvertNumber(kpiScore + keytaskscore + omgscore);
+            }
+            else
             {
+                // 🔹 IsChangeTask = true: weight của 2 quý có thể khác nhau (đổi vị trí giữa Q1/Q2)
+                // -> KHÔNG tính riêng KPI/KeyTask/OMG nữa, chỉ trung bình cộng TotaleScore của 2 quý đã chốt.
+                var quarterlyDetails = handleKPISubmit.HandleActual
+                    .Where(x => x.HalfYear == null && x.Quarter.HasValue)
+                    .ToList();
+
+                foreach (var item in quarterlyDetails)
+                {
+                    item.HalfYear = haftyear;
+                }
+
                 var quarter2Total = handleKPISubmit.KPITotalScore
                     .FirstOrDefault(x => x.Quarter == quarterOfHalfYear && x.Year == year);
 
-                if (quarter2Total != null && quarterTotal != null)
-                {
-                    kpiScore = ConvertNumberCommon.ConvertNumber((quarterTotal.KPIScore + quarter2Total.KPIScore) / 2);
-                    keytaskscore = ConvertNumberCommon.ConvertNumber((quarterTotal.KeyTaskScore + quarter2Total.KeyTaskScore) / 2);
-                    omgscore = ConvertNumberCommon.ConvertNumber((quarterTotal.OMGScore + quarter2Total.OMGScore) / 2);
-                }
-            }
+                kpiScore = 0;
+                keytaskscore = 0;
+                omgscore = 0;
 
-            totalScore = ConvertNumberCommon.ConvertNumber(kpiScore + keytaskscore + omgscore);
+                totalScore = (quarterTotal != null && quarter2Total != null)
+                    ? ConvertNumberCommon.ConvertNumber((quarterTotal.TotaleScore + quarter2Total.TotaleScore) / 2)
+                    : 0;
+            }
 
             if (totalScore > CeilingLevel.CeilingLevelValue && CeilingLevel.CeilingLevelValue > 0)
             {
