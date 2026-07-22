@@ -17,6 +17,12 @@
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="7.0.20" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="7.1.0" />
 	  <PackageReference Include="MySql.Data" Version="8.3.0" />
+    <PackageReference Include="Google.Apis.Drive.v3" Version="1.68.0.3428" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="google-credentials.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AquaSolution.Data\AquaSolution.Data.csproj" />
