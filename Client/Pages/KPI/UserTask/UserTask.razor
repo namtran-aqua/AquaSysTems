@@ -1,4 +1,4 @@
-﻿@page "/task-user-management"
+@page "/task-user-management"
 @using AquaSolution.Client.Common
 @using AquaSolution.Client.Modals.Administration.Users
 @using AntDesign
@@ -109,22 +109,7 @@
                                 <ContentTemplate>
                                     <div style="display:flex; flex-direction:column; gap:4px; padding:8px; min-width:200px;">
       
-                                        @if (CalculateQuarterPointsPermission)
-                                        {
-                                            var disable = !(Month == 4 || Month == 7 || Month == 10 || Month == 1);
-                                            var title = disable ?
-                                            "Quarter Points can only be calculated in April, July, October, and January."
-                                            : "";
 
-                                            <Tooltip Title="@title">
-                                                <Button Disabled="disable"
-                                                        Type="ButtonType.Text"
-                                                OnClick="@(async () => await CalculateQuarterPoints(row))"
-                                                Style="text-align:left;">
-                                            <Icon Type="plus" /> Calculate Quarter Points
-                                        </Button>
-                                            </Tooltip>
-                                        }
 
                                         @if (CurrenUser.Id == row.Id || CurrenUser.Id == row.ManagerId || CurrenUser.Roles.Any(x => x.Name == "Admin"))
                                         {
@@ -160,22 +145,7 @@
                                 </ChildContent>
                                 <ContentTemplate>
                                     <div style="display: flex; flex-direction: column; gap: 4px; padding: 8px;">
-                                        @if (CalculateQuarterPointsPermission)
-                                        {
-                                            var disable = !(Month == 4 || Month == 7 || Month == 10 || Month == 1);
-                                            var title = disable ?
-                                            "Quarter Points can only be calculated in April, July, October, and January."
-                                            : "";
 
-                                            <Tooltip Title="@title">
-                                                <Button Disabled="disable"
-                                                        Type="ButtonType.Text"
-                                                        OnClick="@(async () => await CalculateQuarterPoints(row))"
-                                                        Style="text-align:left;">
-                                                    <Icon Type="plus" /> Calculate Quarter Points
-                                                </Button>
-                                            </Tooltip>
-                                        }
                                         @if (TaskManagement)
                                         {
                                             <Button Type="ButtonType.Text" OnClick="@(async () => await EditTask(row))" Style="text-align: left;">

@@ -1,4 +1,4 @@
-﻿using AquaService.Shared.AuthModels;
+using AquaService.Shared.AuthModels;
 using AquaSolution.Data.Data.Entities.Admin;
 using AquaSolution.Data.Repositories;
 using AquaSolution.Server.Services.Administration.UserService;
@@ -170,7 +170,9 @@ public class UserService : IUserService
                 IsActive = user.IsActive,
                 ManagerWorkDay = manager?.WorkDayId,
                 PositionType = position?.Type,
-                IsChangeTask = user.IsChangeTask            };
+                IsChangeTask = user.IsChangeTask,
+                ChangeTaskMonth = user.ChangeTaskMonth
+            };
 
             var userRoles = await _userRoleRepo.WhereAsync(ur => ur.UserId == user.Id);
             var roleIds = userRoles.Select(ur => ur.RoleId).Distinct().ToList();
@@ -298,6 +300,8 @@ public class UserService : IUserService
                             ManagerWorkDay = manager.WorkDayId,
                             PositionType = position.Type,
                             FlowApproval = u.FlowApproval,
+                            IsChangeTask = u.IsChangeTask,
+                            ChangeTaskMonth = u.ChangeTaskMonth,
                             Roles = new List<RoleDto>()
                         };
 

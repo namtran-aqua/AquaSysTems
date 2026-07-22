@@ -1,4 +1,4 @@
-﻿using AquaSolution.Shared.Enum;
+using AquaSolution.Shared.Enum;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -40,6 +40,7 @@ namespace AquaSolution.Shared.UserManagements
         public List<RoleDto> Roles { get; set; } = new();
         public int FlowApproval { get; set; }
         public bool IsChangeTask { get; set; }
+        public int? ChangeTaskMonth { get; set; }
     }
 
 }

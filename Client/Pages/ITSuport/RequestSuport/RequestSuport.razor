@@ -191,6 +191,11 @@
             border-top: 1px solid #d9d9d9;
             z-index: 9;
         }
+        .btn-custom {
+            border-radius: 8px !important;
+            padding: 3px 8px !important;
+            height: 30px !important;
+        }
     </style>
 
     <!-- Header -->
@@ -440,6 +445,7 @@
                         TData="RequestSuportDto"
                         Width="80"
                         Context="row"
+                        
                         Title="Actions">
                     <Template>
                         @{
@@ -451,9 +457,10 @@
                             : disable3;
                         }
 
-                        <Space>
+                        <Space Style="gap: 4px">
                             <Button Type="ButtonType.Default"
                                     Size="ButtonSize.Small"
+                                    Class="btn-custom"
                                     OnClick="@(async () => await ViewAsync(row))">
                                 <Icon Type="eye" />
                             </Button>
@@ -462,6 +469,7 @@
                             {
                                 <Button Type="ButtonType.Primary"
                                         Size="ButtonSize.Small"
+                                        Class="btn-custom"
                                         Disabled="disable3"
                                         OnClick="@(async () => await UpdateAsync(row))">
                                     <Icon Type="edit" />
@@ -472,6 +480,7 @@
                             {
                                 <Button Danger
                                         Size="ButtonSize.Small"
+                                        Class="btn-custom"
                                         Disabled="disableDelete"
                                         OnClick="@(async () => await DeleteAsync(row.Id))">
                                     <Icon Type="delete" />

@@ -1,4 +1,4 @@
-﻿using AntDesign;
+using AntDesign;
 using AquaSolution.Client.Common;
 using AquaSolution.Client.Common.ConvertNumber;
 using AquaSolution.Shared.Enum.KPIType;
@@ -285,8 +285,6 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
             decimal keytaskscore = 0;
             decimal totalScore = 0;
             decimal totalActualScore = 0;
-            if (!CurrenUser.IsChangeTask)
-            {
                 // 🔹 STEP 1: BUILD DATA
                 foreach (var group in handleKPISubmit.HandleActual.GroupBy(x => x.TaskId))
             {
@@ -391,34 +389,6 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
 
             totalScore = ConvertNumberCommon.ConvertNumber(kpiScore + keytaskscore + omgscore);
             totalActualScore = totalScore;
-            }
-            else
-            {
-                // 🔹 IsChangeTask = true: weight quý hiện tại KHÔNG áp dụng đúng cho các tháng trước khi đổi vị trí
-                // -> KHÔNG tính riêng KPI/KeyTask/OMG nữa, chỉ trung bình cộng TotaleScore đã chốt của từng tháng.
-                // (Vẫn gắn Quarter vào các dòng chi tiết tháng để hiển thị, nhưng không dùng để tính điểm)
-                var monthsInQuarter = GetMonthsInQuarter(month);
-                var monthlyDetails = handleKPISubmit.HandleActual
-                    .Where(x => x.Quarter == null && x.Month.HasValue && monthsInQuarter.Contains(x.Month.Value))
-                    .ToList();
-
-                foreach (var item in monthlyDetails)
-                {
-                    item.Quarter = quarter;
-                }
-
-                var monthlyTotals = handleKPISubmit.KPITotalScore
-                    .Where(x => x.Year == year && x.Month.HasValue && monthsInQuarter.Contains(x.Month.Value))
-                    .ToList();
-
-                kpiScore = 0;
-                keytaskscore = 0;
-                omgscore = 0;
-                totalScore = monthlyTotals.Any()
-                    ? ConvertNumberCommon.ConvertNumber(monthlyTotals.Average(x => x.TotaleScore))
-                    : 0;
-                totalActualScore = totalScore;
-            }
             if (totalScore > CeilingLevel.CeilingLevelValue && CeilingLevel.CeilingLevelValue > 0)
             {
                 totalScore = CeilingLevel.CeilingLevelValue;
@@ -494,7 +464,16 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
             decimal keytaskscore = 0;
             decimal totalScore = 0;
 
-            if (!CurrenUser.IsChangeTask)
+            bool useNewWayForHalfYear = false;
+            if (CurrenUser.IsChangeTask && CurrenUser.ChangeTaskMonth.HasValue)
+            {
+                if (CurrenUser.ChangeTaskMonth.Value == 4 && haftyear == 1)
+                    useNewWayForHalfYear = true;
+                else if (CurrenUser.ChangeTaskMonth.Value == 7 && haftyear == 2)
+                    useNewWayForHalfYear = true;
+            }
+
+            if (!useNewWayForHalfYear)
             {
                 // 🔹 STEP 1: BUILD DATA
                 foreach (var group in handleKPISubmit.HandleActual.Where(x => x.Quarter != null).GroupBy(x => x.TaskId))
@@ -603,14 +582,7 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
             {
                 // 🔹 IsChangeTask = true: weight của 2 quý có thể khác nhau (đổi vị trí giữa Q1/Q2)
                 // -> KHÔNG tính riêng KPI/KeyTask/OMG nữa, chỉ trung bình cộng TotaleScore của 2 quý đã chốt.
-                var quarterlyDetails = handleKPISubmit.HandleActual
-                    .Where(x => x.HalfYear == null && x.Quarter.HasValue)
-                    .ToList();
 
-                foreach (var item in quarterlyDetails)
-                {
-                    item.HalfYear = haftyear;
-                }
 
                 var quarter2Total = handleKPISubmit.KPITotalScore
                     .FirstOrDefault(x => x.Quarter == quarterOfHalfYear && x.Year == year);
