@@ -1,4 +1,4 @@
-﻿namespace AquaSolution.Data.Data.Entities.Admin
+namespace AquaSolution.Data.Data.Entities.Admin
 {
     public class User
     {
@@ -25,5 +25,6 @@
         public bool IsActive { get; set; }
         public int FlowApproval { get; set; }
         public bool IsChangeTask { get; set; }
+        public int? ChangeTaskMonth { get; set; }
     }
 }
