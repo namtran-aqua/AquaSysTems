@@ -1,4 +1,4 @@
-﻿using AquaSolution.Data.Connection;
+using AquaSolution.Data.Connection;
 using AquaSolution.Server;
 using AquaSolution.Server.Services.Common.Hangfire;
 using AquaSolution.Server.Services.Hangfire;
@@ -106,6 +106,17 @@ app.UseHangfireDashboard("/hangfire", new DashboardOptions
 var lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
 lifetime.ApplicationStarted.Register(() =>
 {
+    // Job xóa ảnh trên Google Drive lúc nửa đêm (00:00)
+    RecurringJob.AddOrUpdate<AquaSolution.Server.Services.ImgsService.DailyImageCleanupJob>(
+        "daily-google-drive-cleanup",
+        job => job.ExecuteAsync(),
+        Cron.Daily(0, 0),
+        new RecurringJobOptions
+        {
+            TimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")
+        }
+    );
+
     // Job 9h sáng
     RecurringJob.AddOrUpdate<DailyJobService>(
         "daily-job-9am",

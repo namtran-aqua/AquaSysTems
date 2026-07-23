@@ -85,54 +85,54 @@ namespace AquaSolution.Client.Pages.ImgManagements
 
             try
             {
-                // var allImages = await Http.GetFromJsonAsync<List<CloudinaryImageDto>>(
-                //     "api/Img/get-all-img");
+                var allImages = await Http.GetFromJsonAsync<List<CloudinaryImageDto>>(
+                    "api/Img/get-all-img");
 
-                // if (allImages == null || !allImages.Any())
-                // {
-                //     images = new List<GroupImg>();
-                //     return;
-                // }
-                // if (CurrenUser.Roles.Any(r => r.Name == "Admin"))
-                // {
-                //     images = allImages
-                //         .Where(x => !string.IsNullOrWhiteSpace(x.WorkId))
-                //         .GroupBy(x => x.WorkId)
-                //         .Select(g => new GroupImg
-                //         {
-                //             WorkId = g.Key,
-                //             CloudinaryImageDtos = g
-                //                 .OrderByDescending(x => x.UpLoadDate)
-                //                 .ToList()
-                //         })
-                //         .ToList();
+                if (allImages == null || !allImages.Any())
+                {
+                    images = new List<GroupImg>();
+                    return;
+                }
+                if (CurrenUser.Roles.Any(r => r.Name == "Admin"))
+                {
+                    images = allImages
+                        .Where(x => !string.IsNullOrWhiteSpace(x.WorkId))
+                        .GroupBy(x => x.WorkId)
+                        .Select(g => new GroupImg
+                        {
+                            WorkId = g.Key,
+                            CloudinaryImageDtos = g
+                                .OrderByDescending(x => x.UpLoadDate)
+                                .ToList()
+                        })
+                        .ToList();
 
-                //     return;
-                // }
+                    return;
+                }
 
-                // if (Contributors == null || !Contributors.Any())
-                // {
-                //     images = new List<GroupImg>();
-                //     return;
-                // }
+                if (Contributors == null || !Contributors.Any())
+                {
+                    images = new List<GroupImg>();
+                    return;
+                }
 
-                // var allowedWorkIds = Contributors
-                //     .Select(c => c.WorkDayId.ToString())
-                //     .ToHashSet();
+                var allowedWorkIds = Contributors
+                    .Select(c => c.WorkDayId?.ToString())
+                    .ToHashSet();
 
-                // images = allImages
-                //     .Where(img =>
-                //         !string.IsNullOrWhiteSpace(img.WorkId) &&
-                //         allowedWorkIds.Contains(img.WorkId))
-                //     .GroupBy(img => img.WorkId)
-                //     .Select(g => new GroupImg
-                //     {
-                //         WorkId = g.Key,
-                //         CloudinaryImageDtos = g
-                //             .OrderByDescending(x => x.UpLoadDate)
-                //             .ToList()
-                //     })
-                //     .ToList();
+                images = allImages
+                    .Where(img =>
+                        !string.IsNullOrWhiteSpace(img.WorkId) &&
+                        allowedWorkIds.Contains(img.WorkId))
+                    .GroupBy(img => img.WorkId)
+                    .Select(g => new GroupImg
+                    {
+                        WorkId = g.Key,
+                        CloudinaryImageDtos = g
+                            .OrderByDescending(x => x.UpLoadDate)
+                            .ToList()
+                    })
+                    .ToList();
             }
             finally
             {

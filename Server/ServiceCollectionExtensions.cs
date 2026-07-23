@@ -53,7 +53,6 @@ namespace AquaSolution.Server
 
             // Google Drive & Cleanup Services
             services.AddScoped<IGoogleDriveService, GoogleDriveService>();
-            services.AddScoped<IImageCleanupScheduler, ImageCleanupScheduler>();
 
             // Đăng ký UserService
             #region Admin
