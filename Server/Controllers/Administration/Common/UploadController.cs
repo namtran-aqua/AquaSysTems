@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 
 namespace AquaSolution.Server.Controllers.Administration.Common
 {
@@ -11,6 +11,9 @@ namespace AquaSolution.Server.Controllers.Administration.Common
         {
             _env = env;
         }
+
+        // Local file endpoints removed to avoid conflict.
+
         [HttpPost("avatar")]
         public async Task<IActionResult> UploadAvatar(IFormFile file)
         {
@@ -18,7 +21,13 @@ namespace AquaSolution.Server.Controllers.Administration.Common
                 return BadRequest("File is empty.");
 
             var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
-            var filePath = Path.Combine("wwwroot/uploads/avatars", fileName);
+            var filePath = Path.Combine(_env.WebRootPath ?? "wwwroot", "uploads", "avatars", fileName);
+            
+            var uploadDir = Path.Combine(_env.WebRootPath ?? "wwwroot", "uploads", "avatars");
+            if (!Directory.Exists(uploadDir))
+            {
+                Directory.CreateDirectory(uploadDir);
+            }
 
             using (var stream = new FileStream(filePath, FileMode.Create))
             {
@@ -29,6 +38,7 @@ namespace AquaSolution.Server.Controllers.Administration.Common
             var url = $"{baseUrl}/uploads/avatars/{fileName}";
             return Ok(url);
         }
+
         [HttpDelete("delete-avatar")]
         public IActionResult DeleteAvatar([FromQuery] string avatarUrl)
         {

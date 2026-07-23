@@ -1,4 +1,4 @@
-﻿using AquaSolution.Data.Repositories;
+using AquaSolution.Data.Repositories;
 using AquaSolution.Server.Services.Administration.ApprovalFlowService;
 using AquaSolution.Server.Services.Administration.DepartmentService;
 using AquaSolution.Server.Services.Administration.FactoryService;
@@ -50,6 +50,11 @@ namespace AquaSolution.Server
             services.AddHttpContextAccessor();
 
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+
+            // Google Drive & Cleanup Services
+            services.AddScoped<IGoogleDriveService, GoogleDriveService>();
+            services.AddScoped<IImageCleanupScheduler, ImageCleanupScheduler>();
+
             // Đăng ký UserService
             #region Admin
             services.AddScoped<IUserService, UserService>();

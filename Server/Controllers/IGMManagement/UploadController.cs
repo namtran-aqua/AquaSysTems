@@ -1,15 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using Google.Apis.Auth.OAuth2;
-using Google.Apis.Drive.v3;
-using Google.Apis.Services;
-using System.IO;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using System;
-using File = Google.Apis.Drive.v3.Data.File;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Authorization;
-
+using AquaSolution.Server.Services.ImgsService;
+using Microsoft.EntityFrameworkCore;
+using AquaSolution.Data.Connection;
 namespace AquaSolution.Server.Controllers.IGMManagement
 {
     [ApiController]
@@ -17,78 +9,47 @@ namespace AquaSolution.Server.Controllers.IGMManagement
     // [Authorize] // Uncomment this if you want to require authentication
     public class UploadController : ControllerBase
     {
-        // TODO: Sửa lại đường dẫn tới file JSON và ID thư mục của bạn
-        private readonly string _credentialsFilePath = "google-credentials.json"; 
-        private readonly string _folderId = "YOUR_GOOGLE_DRIVE_FOLDER_ID"; // Điền ID thư mục ở Bước 1 vào đây
+        private readonly AquaDbContext _context;
+        private readonly IGoogleDriveService _googleDriveService;
+        private readonly IImageCleanupScheduler _cleanupScheduler;
+
+        public UploadController(AquaDbContext context, IGoogleDriveService googleDriveService, IImageCleanupScheduler cleanupScheduler)
+        {
+            _context = context;
+            _googleDriveService = googleDriveService;
+            _cleanupScheduler = cleanupScheduler;
+        }
 
         [HttpPost]
-        public async Task<IActionResult> UploadImage([FromForm] IFormFile file, [FromForm] string workId)
+        public async Task<IActionResult> UploadImage([FromForm] IFormFile file, [FromForm] string WorkDayId)
         {
             if (file == null || file.Length == 0)
                 return BadRequest(new { message = "Không có file tải lên." });
 
+            if (string.IsNullOrWhiteSpace(WorkDayId))
+                return BadRequest(new { message = "WorkDayId không được để trống." });
+
             try
             {
-                // 1. Khởi tạo xác thực với Google Service Account
-                GoogleCredential credential;
-                using (var stream = new FileStream(_credentialsFilePath, FileMode.Open, FileAccess.Read))
-                {
-                    credential = GoogleCredential.FromStream(stream)
-                        .CreateScoped(DriveService.ScopeConstants.DriveFile);
-                }
+                // Kiểm tra WorkDayId có tồn tại trong Database không
+                var isValidWorkDayId = await _context.tbl_Users
+                    .AnyAsync(u => u.WorkDayId == WorkDayId && !u.IsDeleted);
 
-                // 2. Tạo Service kết nối Drive
-                var service = new DriveService(new BaseClientService.Initializer()
-                {
-                    HttpClientInitializer = credential,
-                    ApplicationName = "Image Uploader Web API"
-                });
+                if (!isValidWorkDayId)
+                    return BadRequest(new { message = $"WorkDayId '{WorkDayId}' không hợp lệ hoặc đã bị xóa khỏi hệ thống." });
 
-                // 3. Chuẩn bị Metadata (Tên file và thư mục lưu)
-                // Đặt tên file theo định dạng: WorkId_Guid_OriginalName
-                var fileMetadata = new File()
-                {
-                    Name = $"{workId}_{Guid.NewGuid():N}_{file.FileName}",
-                    Parents = new List<string> { _folderId }
-                };
+                // Upload ảnh qua Service
+                var (url, fileId) = await _googleDriveService.UploadAsync(file, WorkDayId);
 
-                string fileId = null;
-
-                // 4. Đọc luồng file gửi từ App và Upload lên Drive
-                using (var ms = new MemoryStream())
-                {
-                    await file.CopyToAsync(ms);
-                    var uploadStream = new MemoryStream(ms.ToArray());
-                    
-                    var request = service.Files.Create(fileMetadata, uploadStream, file.ContentType);
-                    request.Fields = "id"; // Chỉ yêu cầu trả về ID sau khi upload xong
-                    
-                    var response = await request.UploadAsync();
-                    
-                    if (response.Status != Google.Apis.Upload.UploadStatus.Completed)
-                    {
-                        return StatusCode(500, new { message = "Lỗi upload lên Google Drive." });
-                    }
-                    
-                    fileId = request.ResponseBody.Id;
-                }
-
-                // 5. Cấp quyền Public (Bất kỳ ai có link đều xem được)
-                var permission = new Google.Apis.Drive.v3.Data.Permission
-                {
-                    Type = "anyone",
-                    Role = "reader"
-                };
-                await service.Permissions.Create(permission, fileId).ExecuteAsync();
-
-                // 6. Trả về kết quả cho Mobile App
-                var link = $"https://drive.google.com/uc?id={fileId}";
+                // Lên lịch tự động xóa sau 2 ngày
+                var jobId = _cleanupScheduler.ScheduleCleanup(fileId, TimeSpan.FromDays(2));
                 
                 return Ok(new 
                 { 
-                    url = link,
+                    url = url,
                     fileId = fileId,
-                    message = "Upload thành công!" 
+                    jobId = jobId,
+                    message = "Upload thành công! Đã lên lịch xóa tự động sau 2 ngày." 
                 });
             }
             catch (Exception ex)
@@ -98,11 +59,24 @@ namespace AquaSolution.Server.Controllers.IGMManagement
         }
 
         [HttpGet("workday-ids")]
-        public IActionResult GetWorkDayIds()
+        public async Task<IActionResult> GetWorkDayIds()
         {
-            // TODO: Fetch from database instead of returning static list
-            var workDayIds = new[] { "Work001", "Work002", "Work003" };
-            return Ok(workDayIds);
+            try
+            {
+                var workDayIds = await _context.tbl_Users
+                    .Where(u => !string.IsNullOrEmpty(u.WorkDayId) && !u.IsDeleted)
+                    .Select(u => u.WorkDayId!)
+                    .Distinct()
+                    .ToListAsync();
+                    
+                return Ok(workDayIds);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Đã xảy ra lỗi khi lấy danh sách WorkDayId: {ex.Message}" });
+            }
         }
+
+
     }
 }
