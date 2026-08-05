@@ -1,6 +1,6 @@
 namespace AquaSolution.Client.Pages.Scrap
 {
-    public partial class BOMManagement
+    public partial class NonBOMManagement
     {
     }
 }

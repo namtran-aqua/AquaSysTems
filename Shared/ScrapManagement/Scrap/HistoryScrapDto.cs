@@ -23,6 +23,8 @@ namespace AquaSolution.Shared.ScrapManagement.Scrap
         public string FactoryName { get; set; } = string.Empty;
         public Guid DepartmentId { get; set; }
         public string DepartmentName { get; set;} = string.Empty;
+        public Guid? SectionId { get; set; }
+        public string? SectionName { get; set; }
         public string? Notes { get; set; }
         public ConfirmationStatusType ConfirmationStatusType { get; set; }
         public decimal? ConfirmAmount { get; set; } = 0;

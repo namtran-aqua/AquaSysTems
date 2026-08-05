@@ -13,8 +13,8 @@ namespace AquaSolution.Server.Services.ImgsService
 
         public async Task ExecuteAsync()
         {
-            // Xóa tất cả các file cũ hơn 2 ngày
-            await _googleDriveService.DeleteOldFilesAsync(2);
+            // Xóa tất cả các file cũ hơn 1 ngày
+            await _googleDriveService.DeleteOldFilesAsync(1);
         }
     }
 }

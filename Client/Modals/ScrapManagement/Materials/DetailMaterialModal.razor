@@ -32,12 +32,15 @@
         <div style="margin-bottom: 20px;">
             <h3>Thông tin chung</h3>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                <div>
-                    <strong>BOM Head:</strong> @Material.BOMHead
-                </div>
-                <div>
-                    <strong>BOM Description:</strong> @Material.BOMDescription
-                </div>
+                @if (IsBomOnly)
+                {
+                    <div>
+                        <strong>BOM Head:</strong> @Material.BOMHead
+                    </div>
+                    <div>
+                        <strong>BOM Description:</strong> @Material.BOMDescription
+                    </div>
+                }
                 <div>
                     <strong>Code:</strong> @Material.Code
                 </div>

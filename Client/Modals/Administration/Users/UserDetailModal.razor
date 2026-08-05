@@ -1,4 +1,4 @@
-﻿@using AntDesign
+@using AntDesign
 @using AquaSolution.Shared.UserManagements
 @inject IMessageService Message
 @inject NavigationManager Navigation
@@ -116,7 +116,8 @@
                         <DescriptionsItem Span="2" Title="Manager">@User.ManagerName</DescriptionsItem>
                         <DescriptionsItem Span="2" Title="Created Date">@User.CreatedTime.ToString("dd/MM/yyyy")</DescriptionsItem>
                         <DescriptionsItem Span="2" Title="Department">@User.DepartmentName</DescriptionsItem>
-                        <DescriptionsItem Span="4" Title="IsActive">@User.IsActive</DescriptionsItem>
+                        <DescriptionsItem Span="2" Title="Section">@User.SectionName</DescriptionsItem>
+                        <DescriptionsItem Span="2" Title="IsActive">@User.IsActive</DescriptionsItem>
                     </Descriptions>
                 </Panel>
                 <Panel Header="Roles" Key="2">

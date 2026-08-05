@@ -53,7 +53,7 @@
             @* Header chọn Factory/Department - ẩn khi Edit *@
             @if (!_isEdit)
             {
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
                     <div>
                         <div class="flow-info-label">Factory</div>
                         <Select TItem="FactoryDto"
@@ -73,9 +73,23 @@
                                 TItemValue="Guid"
                                 DataSource="@_departments"
                                 @bind-Value="_selectedDepartmentId"
+                                OnSelectedItemChanged="OnDepartmentChanged"
                                 ValueName="@nameof(DepartmentDto.Id)"
                                 LabelName="@nameof(DepartmentDto.Name)"
                                 Placeholder="-- Chọn Department --"
+                                Style="width:100%"
+                                AllowClear>
+                        </Select>
+                    </div>
+                    <div>
+                        <div class="flow-info-label">Section</div>
+                        <Select TItem="AquaSolution.Shared.Administration.Sections.SectionDto"
+                                TItemValue="Guid?"
+                                DataSource="@_sections"
+                                @bind-Value="_selectedSectionId"
+                                ValueName="@nameof(AquaSolution.Shared.Administration.Sections.SectionDto.Id)"
+                                LabelName="@nameof(AquaSolution.Shared.Administration.Sections.SectionDto.Name)"
+                                Placeholder="-- Chọn Section --"
                                 Style="width:100%"
                                 AllowClear>
                         </Select>
@@ -92,6 +106,9 @@
                     <div style="font-size:13px; color:#d9d9d9; margin:0 4px;">|</div>
                     <div style="font-size:13px; color:#999;">Department:</div>
                     <div style="font-size:13px; font-weight:500; color:#222;">@_editDepartmentName</div>
+                    <div style="font-size:13px; color:#d9d9d9; margin:0 4px;">|</div>
+                    <div style="font-size:13px; color:#999;">Section:</div>
+                    <div style="font-size:13px; font-weight:500; color:#222;">@(_editSectionName ?? "N/A")</div>
                 </div>
                 <Divider Style="margin:4px 0" />
             }

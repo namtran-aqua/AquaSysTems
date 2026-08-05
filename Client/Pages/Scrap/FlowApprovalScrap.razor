@@ -167,7 +167,7 @@
                         <ContentTemplate>
                             <div style="display:flex; flex-direction:column; gap:4px; padding:4px;">
                                 <Popconfirm Title="Xóa luồng duyệt này?"
-                                            OnConfirm="@(async () => await DeleteFlow(row.DepartmentId, row.FactoryId))"
+                                            OnConfirm="@(async () => await DeleteFlow(row.DepartmentId, row.FactoryId, row.SectionId))"
                                             OkText="Xóa" CancelText="Hủy">
                                     <Button Type="ButtonType.Text" Danger Style="text-align:left;">
                                         <Icon Type="delete" /> Xóa luồng

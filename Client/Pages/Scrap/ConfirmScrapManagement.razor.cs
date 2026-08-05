@@ -179,6 +179,8 @@ namespace AquaSolution.Client.Pages.Scrap
                 FactoryName = row.FactoryName,
                 DepartmentId = row.DepartmentId,
                 DepartmentName = row.DepartmentName,
+                SectionId = row.SectionId,
+                SectionName = row.SectionName,
                 TotalAmount = row.TotalAmount,
                 ConfirmAmount = row.ConfirmAmount,
                 ConfirmationStatusType = row.ConfirmationStatusType,

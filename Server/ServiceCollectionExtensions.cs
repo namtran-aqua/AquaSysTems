@@ -39,7 +39,7 @@ using AquaSolution.Server.Services.SemiReport.CusPackService;
 using AquaSolution.Server.Services.SemiReport.PcbReportService;
 using AquaSolution.Server.Services.SemiReport.RollReportService;
 using AquaSolution.Server.Services.SemiReport.SemiReportService;
-
+using AquaSolution.Server.Services.Administration.SectionService;
 
 namespace AquaSolution.Server
 {
@@ -68,6 +68,7 @@ namespace AquaSolution.Server
             services.AddScoped<IApprovalFlowService, ApprovalFlowService>();
             services.AddScoped<ISystemLockService, SystemLockService>();
             services.AddScoped<IImgService, ImgService>();
+            services.AddScoped<ISectionService, SectionService>();
 
             #endregion
             #region Medical

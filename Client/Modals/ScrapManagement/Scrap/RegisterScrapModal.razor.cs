@@ -31,10 +31,7 @@ namespace AquaSolution.Client.Modals.ScrapManagement.Scrap
         private List<MaterialDto> _materials = new();
         private List<HistoryDetailScrapDto> _details = new();
 
-        // Confirm fields
-        private decimal _confirmAmount { get; set; } = 0;
-        private ConfirmationStatusType _confirmStatus { get; set; } = ConfirmationStatusType.Received;
-        private string? _confirmNote { get; set; }
+
 
         private string ModalTitle => Mode switch
         {
@@ -63,25 +60,18 @@ namespace AquaSolution.Client.Modals.ScrapManagement.Scrap
                 HandleScrap = handleScrap;
                 _details = HandleScrap.HistoryDetails ?? new();
 
-                // Pre-fill confirm amount nếu có
-                if (Mode == ScrapModalMode.Confirm)
-                {
-                    _confirmAmount = (HandleScrap.ConfirmAmount ?? 0) == 0
-                                     ? HandleScrap.TotalAmount ?? 0
-                                     : HandleScrap.ConfirmAmount ?? 0;
-                    _confirmStatus = HandleScrap.ConfirmationStatusType;
-                    _confirmNote = HandleScrap.Notes;
-                }
+
             }
             else
             {
                 HandleScrap = new HandleScrapDto
                 {
-                    Title = $"SCRAP - {user.FactoryName} - {user.DepartmentName} - {DateTime.Now:yyyy-MM-dd HH:mm:ss}".ToUpper(),
+                    Title = $"SCRAP - {user.FactoryName} - {user.DepartmentName} - {user.SectionName} - {DateTime.Now:yyyy-MM-dd HH:mm:ss}".ToUpper(),
                     CreatedById = user.Id,
                     HistoryDetails = new(),
                     DepartmentId = user.DepartmentId ?? Guid.Empty,
                     FactoryId = user.FactoryId ?? Guid.Empty,
+                    SectionId = user.SectionId,
                     CreatedDate = DateTime.Now
                 };
                 _details = HandleScrap.HistoryDetails;
@@ -274,22 +264,34 @@ namespace AquaSolution.Client.Modals.ScrapManagement.Scrap
 
         private async Task ConfirmAction()
         {
-            if (_confirmAmount <= 0)
+            if (_details.Any(d => (d.ConfirmAmount ?? 0) <= 0))
             {
-                await Message.Warning("Vui lòng nhập số lượng thực tế nhận!");
+                await Message.Warning("Vui lòng nhập thực nhận lớn hơn 0 cho tất cả chi tiết!");
                 return;
             }
+
+            if (_details.Any(d => d.ConfirmUnitType == ConfirmUnitType.Unit && (d.ConfirmAmount ?? 0) % 1 != 0))
+            {
+                await Message.Warning("Vui lòng nhập số nguyên cho các chi tiết nhận theo cái!");
+                return;
+            }
+
             try
             {
                 _submitting = true;
-                var req = new ConfirmScrapDto
+                var req = new ActionConfirmScrapDto
                 {
                     HistoryScrapId = HandleScrap!.Id,
                     ConfirmerId = CurrenUser!.Id,
-                    ConfirmAmount = _confirmAmount,
-                    ConfirmationStatusType = _confirmStatus,
-                    Notes = _confirmNote
+                    Details = _details.Select(d => new ConfirmDetailDto
+                    {
+                        HistoryDetailId = d.Id,
+                        ConfirmAmount = d.ConfirmAmount ?? 0,
+                        ConfirmUnitType = d.ConfirmUnitType,
+                        ConfirmNote = d.ConfirmNote
+                    }).ToList()
                 };
+
                 var res = await Http.PostAsJsonAsync("api/scrap/confirm-scrap", req);
                 if (res.IsSuccessStatusCode)
                 {
@@ -317,8 +319,6 @@ namespace AquaSolution.Client.Modals.ScrapManagement.Scrap
             IsModalVisible = false;
             IsRejectModalVisible = false;
             _details = new();
-            _confirmAmount = 0;
-            _confirmNote = null;
             StateHasChanged();
         }
         #endregion

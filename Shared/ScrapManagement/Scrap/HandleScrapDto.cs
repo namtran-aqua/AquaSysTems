@@ -15,6 +15,8 @@ namespace AquaSolution.Shared.ScrapManagement.Scrap
         public string? FactoryName { get; set; }
         public Guid DepartmentId { get; set; }
         public string? DepartmentName { get; set; }
+        public Guid? SectionId { get; set; }
+        public string? SectionName { get; set; }
         public decimal? TotalAmount { get; set; }          
         public decimal? ConfirmAmount { get; set; }        
         public ConfirmationStatusType ConfirmationStatusType { get; set; } 

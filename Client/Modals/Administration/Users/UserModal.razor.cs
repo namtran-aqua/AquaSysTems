@@ -1,4 +1,4 @@
-﻿using AntDesign;
+using AntDesign;
 using AquaSolution.Shared.ApprovalFlows;
 using AquaSolution.Shared.CommonDto;
 using AquaSolution.Shared.Departments;
@@ -23,6 +23,7 @@ namespace AquaSolution.Client.Modals.Administration.Users
         private List<BaseDto> ListDepartment = new List<BaseDto>();
         private List<BaseDto> ListFactory = new List<BaseDto>();
         private List<BaseDto> ListPosition = new List<BaseDto>();
+        private List<BaseDto> ListSection = new List<BaseDto>();
         private List<UserContributerDto> AllManagers = new();
         private List<ApprovalFlowDto>? ListApprovalFlow = new();
         #endregion
@@ -45,6 +46,15 @@ namespace AquaSolution.Client.Modals.Administration.Users
             await LoadFactory();
             await LoadManager();
             await FlowApproval();
+
+            if (CreatedUserDto.DepartmentId.HasValue)
+            {
+                await LoadSections(CreatedUserDto.DepartmentId.Value);
+            }
+            else
+            {
+                ListSection.Clear();
+            }
 
             IsModalVisible = true;
             await InvokeAsync(StateHasChanged);
@@ -73,6 +83,45 @@ namespace AquaSolution.Client.Modals.Administration.Users
                 throw ex;
             }
            
+        }
+
+        private async Task LoadSections(Guid departmentId)
+        {
+            try
+            {
+                ListSection = new List<BaseDto>();
+                var data = await Http.GetFromJsonAsync<List<AquaSolution.Shared.Administration.Sections.SectionDto>>($"api/section/by-department/{departmentId}");
+                if (data != null)
+                {
+                    foreach (var item in data)
+                    {
+                        ListSection.Add(new BaseDto
+                        {
+                            Id = item.Id,
+                            Name = item.Name,
+                        });
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        private async Task OnDepartmentChanged(BaseDto item)
+        {
+            if (item != null && item.Id.HasValue)
+            {
+                await LoadSections(item.Id.Value);
+                // Nếu department đổi, ta clear SectionId cũ (hoặc giữ nếu thuộc)
+                CreatedUserDto.SectionId = null;
+            }
+            else
+            {
+                ListSection.Clear();
+                CreatedUserDto.SectionId = null;
+            }
         }
         private async Task LoaPosition()
         {

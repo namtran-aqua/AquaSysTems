@@ -12,6 +12,7 @@ namespace AquaSolution.Client.Modals.ScrapManagement.Materials
         #region Declaration
         [Inject] private HttpClient Http { get; set; }
         [Inject] private IMessageService Message { get; set; }
+        [Parameter] public bool IsBomOnly { get; set; } = true;
 
 
         private bool IsModalVisible = false;

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -30,6 +30,7 @@ namespace AquaSolution.Shared.UserManagements
         public string CreatedBy { get; set; } = string.Empty;
         public string? AvatarUrl { get; set; }
         public Guid? DepartmentId { get; set; }
+        public Guid? SectionId { get; set; }
         public Guid? ManagerId { get; set; }
         public Guid? PositionId { get; set; }
         public Guid? FactoryId { get; set; }

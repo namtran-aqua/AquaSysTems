@@ -1,4 +1,4 @@
-﻿using AquaSolution.Data.Data.Entities;
+using AquaSolution.Data.Data.Entities;
 using AquaSolution.Data.Data.Entities.Admin;
 using AquaSolution.Data.Data.Entities.Clinic;
 using AquaSolution.Data.Data.Entities.KPI;
@@ -31,6 +31,7 @@ namespace AquaSolution.Data.Connection
         public DbSet<UserRole> tbl_UserRoles { get; set; }
         public DbSet<Groups> tbl_Groups { get; set; }
         public DbSet<Department> tbl_Departments { get; set; }
+        public DbSet<Section> tbl_Sections { get; set; }
         public DbSet<Factory> tbl_Factorys { get; set; }
         public DbSet<Position> tbl_Positions { get; set; }
         public DbSet<ApprovalFlow> tbl_ApprovalFlow { get; set; }
@@ -107,6 +108,7 @@ namespace AquaSolution.Data.Connection
             modelBuilder.ApplyConfiguration(new UserRoleConfiguration());
             modelBuilder.ApplyConfiguration(new GroupsConfiguration());
             modelBuilder.ApplyConfiguration(new DepartmentConfiguration());   
+            modelBuilder.ApplyConfiguration(new SectionConfiguration());
             modelBuilder.ApplyConfiguration(new FactoryConfiguration());
             modelBuilder.ApplyConfiguration(new PositionConfiguration());
             modelBuilder.ApplyConfiguration(new ApprovalFlowConfiguration());

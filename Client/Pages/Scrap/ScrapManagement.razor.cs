@@ -105,6 +105,8 @@ namespace AquaSolution.Client.Pages.Scrap
                 FactoryName = historyScrap.FactoryName,
                 DepartmentId = historyScrap.DepartmentId,
                 DepartmentName = historyScrap.DepartmentName,
+                SectionId = historyScrap.SectionId,
+                SectionName = historyScrap.SectionName,
                 HistoryDetails = historyScrap.HistoryDetails,
                 Approvals = historyScrap.Approvals
             };

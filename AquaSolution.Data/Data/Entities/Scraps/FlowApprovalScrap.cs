@@ -1,4 +1,4 @@
-﻿
+
 
 namespace AquaSolution.Data.Data.Entities.Scraps
 {
@@ -9,6 +9,8 @@ namespace AquaSolution.Data.Data.Entities.Scraps
         public string Name { get; set; }
 
         public Guid DepartmentId { get; set; }
+        
+        public Guid? SectionId { get; set; }
 
         public Guid FactoryId { get; set; }
 
