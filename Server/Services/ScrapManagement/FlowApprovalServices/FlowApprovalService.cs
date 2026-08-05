@@ -14,21 +14,23 @@ namespace AquaSolution.Server.Services.ScrapManagetment.FlowApprovalServices
         private readonly IRepository<Department> _departmentRepository;
         private readonly IRepository<Factory> _factoryRepository;
         private readonly IRepository<User> _userRepository;
+        private readonly IRepository<Section> _sectionRepository;
 
         public FlowApprovalService(
             IRepository<FlowApprovalScrap> flowApprovalScrapRepository,
             IRepository<Department> departmentRepository,
             IRepository<User> userRepository,
-
+            IRepository<Section> sectionRepository,
             IRepository<Factory> factoryRepository)
         {
             _flowApprovalScrapRepository = flowApprovalScrapRepository;
             _factoryRepository = factoryRepository;
             _departmentRepository = departmentRepository;
             _userRepository = userRepository;
+            _sectionRepository = sectionRepository;
         }
 
-        public async Task<FlowApprovalResponse> GetFlowApprovalAsync(Guid departmentId, Guid factoryId)
+        public async Task<FlowApprovalResponse> GetFlowApprovalAsync(Guid departmentId, Guid factoryId, Guid? sectionId = null)
         {
             var department = await _departmentRepository.FirstOrDefaultAsync(x => x.Id == departmentId);
             var factory = await _factoryRepository.FirstOrDefaultAsync(x => x.Id == factoryId);
@@ -36,8 +38,10 @@ namespace AquaSolution.Server.Services.ScrapManagetment.FlowApprovalServices
             if (department == null || factory == null)
                 return null;
 
+            var section = sectionId.HasValue ? await _sectionRepository.FirstOrDefaultAsync(x => x.Id == sectionId.Value) : null;
+
             var steps = await _flowApprovalScrapRepository.Query()
-                .Where(x => x.DepartmentId == departmentId && x.FactoryId == factoryId)
+                .Where(x => x.DepartmentId == departmentId && x.FactoryId == factoryId && x.SectionId == sectionId)
                 .OrderBy(x => x.Step)
                 .Select(x => new FlowApprovalScrapDto
                 {
@@ -53,6 +57,8 @@ namespace AquaSolution.Server.Services.ScrapManagetment.FlowApprovalServices
             {
                 DepartmentId = departmentId,
                 DepartmentName = department.Name,
+                SectionId = sectionId,
+                SectionName = section?.Name,
                 FactoryId = factoryId,
                 FactoryName = factory.Name,
                 Steps = steps
@@ -74,19 +80,28 @@ namespace AquaSolution.Server.Services.ScrapManagetment.FlowApprovalServices
 
             var departmentIds = steps.Select(s => s.DepartmentId).Distinct().ToList();
 
+            var sectionIds = steps.Where(s => s.SectionId.HasValue).Select(s => s.SectionId.Value).Distinct().ToList();
+
             var departments = await _departmentRepository.Query()
                 .Where(x => departmentIds.Contains(x.Id))
                 .ToListAsync();
 
+            var sections = await _sectionRepository.Query()
+                .Where(x => sectionIds.Contains(x.Id))
+                .ToListAsync();
+
             var result = steps
-                .GroupBy(x => x.DepartmentId)
+                .GroupBy(x => new { x.DepartmentId, x.SectionId })
                 .Select(g =>
                 {
-                    var department = departments.FirstOrDefault(d => d.Id == g.Key);
+                    var department = departments.FirstOrDefault(d => d.Id == g.Key.DepartmentId);
+                    var section = sections.FirstOrDefault(s => s.Id == g.Key.SectionId);
                     return new FlowApprovalResponse
                     {
-                        DepartmentId = g.Key,
+                        DepartmentId = g.Key.DepartmentId,
                         DepartmentName = department?.Name ?? string.Empty,
+                        SectionId = g.Key.SectionId,
+                        SectionName = section?.Name,
                         FactoryId = factoryId,
                         FactoryName = factory.Name,
                         Steps = g.Select(x => new FlowApprovalScrapDto
@@ -109,7 +124,7 @@ namespace AquaSolution.Server.Services.ScrapManagetment.FlowApprovalServices
             try
             {
                 var existed = await _flowApprovalScrapRepository.AnyAsync(
-                    x => x.DepartmentId == request.DepartmentId && x.FactoryId == request.FactoryId);
+                    x => x.DepartmentId == request.DepartmentId && x.FactoryId == request.FactoryId && x.SectionId == request.SectionId);
 
                 if (existed)
                     return false;
@@ -119,6 +134,7 @@ namespace AquaSolution.Server.Services.ScrapManagetment.FlowApprovalServices
                     Id = Guid.NewGuid(),
                     Name = s.Name,
                     DepartmentId = request.DepartmentId,
+                    SectionId = request.SectionId,
                     FactoryId = request.FactoryId,
                     DecisionMaker = s.DecisionMaker,
                     Description = s.Description,
@@ -158,12 +174,12 @@ namespace AquaSolution.Server.Services.ScrapManagetment.FlowApprovalServices
             return await _flowApprovalScrapRepository.DeleteAsync(entity);
         }
 
-        public async Task<bool> DeleteFlowApprovalAsync(Guid departmentId, Guid factoryId)
+        public async Task<bool> DeleteFlowApprovalAsync(Guid departmentId, Guid factoryId, Guid? sectionId = null)
         {
             try
             {
                 var entities = await _flowApprovalScrapRepository.Query()
-                    .Where(x => x.DepartmentId == departmentId && x.FactoryId == factoryId)
+                    .Where(x => x.DepartmentId == departmentId && x.FactoryId == factoryId && x.SectionId == sectionId)
                     .ToListAsync();
 
                 if (!entities.Any())
@@ -198,22 +214,30 @@ namespace AquaSolution.Server.Services.ScrapManagetment.FlowApprovalServices
                 .Where(x => departmentIds.Contains(x.Id))
                 .ToListAsync();
 
+            var sectionIds = steps.Where(s => s.SectionId.HasValue).Select(s => s.SectionId.Value).Distinct().ToList();
+            var sections = await _sectionRepository.Query()
+                .Where(x => sectionIds.Contains(x.Id))
+                .ToListAsync();
+
             var users = await _userRepository.Query()
                 .Where(x => userIds.Contains(x.Id))
                 .ToListAsync();
 
             var result = steps
-                .GroupBy(x => new { x.FactoryId, x.DepartmentId })
+                .GroupBy(x => new { x.FactoryId, x.DepartmentId, x.SectionId })
                 .Select(g =>
                 {
                     var factory = factories.FirstOrDefault(f => f.Id == g.Key.FactoryId);
                     var department = departments.FirstOrDefault(d => d.Id == g.Key.DepartmentId);
+                    var section = sections.FirstOrDefault(s => s.Id == g.Key.SectionId);
                     return new FlowApprovalResponse
                     {
                         FactoryId = g.Key.FactoryId,
                         FactoryName = factory?.Name ?? string.Empty,
                         DepartmentId = g.Key.DepartmentId,
                         DepartmentName = department?.Name ?? string.Empty,
+                        SectionId = g.Key.SectionId,
+                        SectionName = section?.Name,
                         Steps = g.Select(x =>
                         {
                             var user = users.FirstOrDefault(u => u.Id == x.DecisionMaker);

@@ -157,12 +157,16 @@ namespace AquaSolution.Client.Pages.Scrap
             }
         }
 
-        private async Task DeleteFlow(Guid departmentId, Guid factoryId)
+        private async Task DeleteFlow(Guid departmentId, Guid factoryId, Guid? sectionId)
         {
             try
             {
-                var response = await Http.DeleteAsync(
-                    $"api/FlowApprovalScrap/delete-flow/{departmentId}/{factoryId}");
+                var url = $"api/FlowApprovalScrap/delete-flow/{departmentId}/{factoryId}";
+                if (sectionId.HasValue && sectionId.Value != Guid.Empty)
+                {
+                    url += $"?sectionId={sectionId.Value}";
+                }
+                var response = await Http.DeleteAsync(url);
 
                 if (response.IsSuccessStatusCode)
                 {

@@ -28,6 +28,7 @@ public class UserService : IUserService
     private readonly IRepository<Department> _departmentRepo;
     private readonly IRepository<Factory> _factoryRepo;
     private readonly IRepository<Position> _positionRepo;
+    private readonly IRepository<Section> _sectionRepo;
     private readonly IConfiguration _config;
     private readonly IHttpContextAccessor _httpContextAccessor;
     public UserService(
@@ -43,6 +44,7 @@ public class UserService : IUserService
         IRepository<Department> departmentRepo,
         IRepository<Factory> factoryRepo,
         IRepository<Position> positionRepo,
+        IRepository<Section> sectionRepo,
         IConfiguration config)
     {
         _userRepo = userRepo;
@@ -58,6 +60,7 @@ public class UserService : IUserService
         _departmentRepo = departmentRepo;
         _factoryRepo = factoryRepo;
         _positionRepo = positionRepo;
+        _sectionRepo = sectionRepo;
     }
 
     public async Task<LoginResponse?> LoginAsync(LoginRequest loginRequest)
@@ -91,6 +94,7 @@ public class UserService : IUserService
                         new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                         new Claim(ClaimTypes.Name, user.FullName),
                         new Claim(ClaimTypes.Email, user.Email ?? ""),
+                        new Claim("SectionId", user.SectionId?.ToString() ?? "")
                     };
             //add Claim
             var perrmission_user = await GetPermissionRole(user.Id);
@@ -143,6 +147,7 @@ public class UserService : IUserService
             var department = await _departmentRepo.FirstOrDefaultAsync(x => x.Id == user.DepartmentId);
             var factory = await _factoryRepo.FirstOrDefaultAsync(x => x.Id == user.FactoryId);
             var position = await _positionRepo.FirstOrDefaultAsync(x => x.Id == user.PositionId);
+            var section = await _sectionRepo.FirstOrDefaultAsync(x => x.Id == user.SectionId);
             var userDto = new UserDto
             {
                 Id = user.Id,
@@ -163,6 +168,8 @@ public class UserService : IUserService
                             : $"{baseUrl}/{user.Avatar.TrimStart('/')}",
                 DepartmentName = department?.Name,
                 DepartmentId = user.DepartmentId,
+                SectionId = user.SectionId,
+                SectionName = section?.Name,
                 PositionId = user.PositionId,
                 FactoryId = user.FactoryId,
                 FactoryName = factory?.Name,
@@ -264,6 +271,9 @@ public class UserService : IUserService
                         join d in await _departmentRepo.GetQueryableAsync() on u.DepartmentId equals d.Id into d1
                         from department in d1.DefaultIfEmpty()
 
+                        join sec in await _sectionRepo.GetQueryableAsync() on u.SectionId equals sec.Id into sec1
+                        from section in sec1.DefaultIfEmpty()
+
                         join f in await _factoryRepo.GetQueryableAsync() on u.FactoryId equals f.Id into f1
                         from factory in f1.DefaultIfEmpty()
 
@@ -291,6 +301,8 @@ public class UserService : IUserService
                                 : $"{baseUrl}/{u.Avatar.TrimStart('/')}",
                             DepartmentId = u.DepartmentId,
                             DepartmentName = department.Name,
+                            SectionId = u.SectionId,
+                            SectionName = section.Name,
                             FactoryId = u.FactoryId,
                             FactoryName = factory.Name,
                             PositionId = u.PositionId,
@@ -399,6 +411,15 @@ public class UserService : IUserService
                 throw new InvalidOperationException("Default password not configured in appsettings.json at DefaultUser:Password");
 
             var hashedPassword = PasswordHelper.HashPassword(password);
+            if (createdUserDto.SectionId.HasValue)
+            {
+                var section = await _sectionRepo.GetByIdAsync(createdUserDto.SectionId.Value);
+                if (section == null || section.DepartmentId != createdUserDto.DepartmentId)
+                {
+                    throw new Exception("Khu vực không hợp lệ hoặc không thuộc phòng ban đã chọn.");
+                }
+            }
+
             var user = new User
             {
                 Id = createdUserDto.Id,
@@ -416,6 +437,7 @@ public class UserService : IUserService
                 IsActive = true,
                 CreatedBy = createdUserDto.CreatedBy,
                 DepartmentId = createdUserDto.DepartmentId,
+                SectionId = createdUserDto.SectionId,
                 PositionId = createdUserDto.PositionId,
                 FactoryId = createdUserDto.FactoryId,
                 FlowApproval = createdUserDto.FlowApproval ?? 1,
@@ -449,6 +471,15 @@ public class UserService : IUserService
             if (user == null)
                 return false;
 
+            if (updateUserDto.SectionId.HasValue)
+            {
+                var section = await _sectionRepo.GetByIdAsync(updateUserDto.SectionId.Value);
+                if (section == null || section.DepartmentId != updateUserDto.DepartmentId)
+                {
+                    throw new Exception("Khu vực không hợp lệ hoặc không thuộc phòng ban đã chọn.");
+                }
+            }
+
             user.WorkDayId = updateUserDto.WorkDayId;
             user.FirstName = updateUserDto.FirstName;
             user.LastName = updateUserDto.LastName;
@@ -462,6 +493,7 @@ public class UserService : IUserService
             user.UpdateBy = updateUserDto.UpdateBy;
             user.UpdatedTime = updateUserDto.UpdatedTime;
             user.DepartmentId = updateUserDto.DepartmentId;
+            user.SectionId = updateUserDto.SectionId;
             user.FactoryId = updateUserDto.FactoryId;
             user.PositionId = updateUserDto.PositionId;
             user.FlowApproval = updateUserDto.FlowApproval ?? 1;
@@ -571,6 +603,11 @@ public class UserService : IUserService
                    on userSelected.FactoryId equals factory.Id
                    into f
                    from factory in f.DefaultIfEmpty()
+
+                   join section in await _sectionRepo.GetQueryableAsync()
+                   on userSelected.SectionId equals section.Id
+                   into s
+                   from section in s.DefaultIfEmpty()
                    where userSelected.IsActive == true
 
                    select new UserSelectedDto
@@ -579,6 +616,8 @@ public class UserService : IUserService
                        Name = userSelected.FullName,
                        DepartmentId = userSelected.DepartmentId,
                        DepartmentName = department.Name,
+                       SectionId = userSelected.SectionId,
+                       SectionName = section.Name,
                        WorkDayId = userSelected.WorkDayId,
                        FactoryId = userSelected.FactoryId,
                        FactoryName = factory.Name,

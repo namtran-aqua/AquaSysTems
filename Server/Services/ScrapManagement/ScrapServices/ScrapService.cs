@@ -24,6 +24,8 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
         private readonly IRepository<HistoryScrapDetail> _historyScrapDetailRepository;
         private readonly IRepository<FlowApprovalScrap> _flowApprovalScrapRepository;
         private readonly IRepository<RequestApproval> _requestApprovalRepository;
+        private readonly IRepository<Section> _sectionRepository;
+        private readonly AquaSolution.Data.Connection.AquaDbContext _context;
 
         public ScrapService(IRepository<Material> materialRepository,
                 IRepository<Factory> factoryRepository,
@@ -33,7 +35,9 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
                 IRepository<HistoryScrapDetail> historyScrapDetailRepository,
                 IRepository<FlowApprovalScrap> flowApprovalScrapRepository,
                 IRepository<RequestApproval> requestApprovalRepository,
-                IRepository<Weight> weightRepository)
+                IRepository<Weight> weightRepository,
+                IRepository<Section> sectionRepository,
+                AquaSolution.Data.Connection.AquaDbContext context)
         {
             _materialRepository = materialRepository;
             _weightRepository = weightRepository;
@@ -44,6 +48,8 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
             _historyScrapDetailRepository = historyScrapDetailRepository;
             _flowApprovalScrapRepository = flowApprovalScrapRepository;
             _requestApprovalRepository = requestApprovalRepository;
+            _sectionRepository = sectionRepository;
+            _context = context;
         }
 
         // ── Không đụng vào ──────────────────────────────────────────────────────────
@@ -70,6 +76,7 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
                 CreatedBy = createScrapDto.CreatedById,
                 FactoryId = createScrapDto.FactoryId,
                 DepartmentId = createScrapDto.DepartmentId,
+                SectionId = createScrapDto.SectionId,
                 TotalAmount = totalAmount,
             };
 
@@ -98,9 +105,17 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
             }
 
             var flowSteps = await _flowApprovalScrapRepository.Query()
-                .Where(x => x.FactoryId == createScrapDto.FactoryId && x.DepartmentId == createScrapDto.DepartmentId)
+                .Where(x => x.FactoryId == createScrapDto.FactoryId && x.DepartmentId == createScrapDto.DepartmentId && x.SectionId == createScrapDto.SectionId)
                 .OrderBy(x => x.Step)
                 .ToListAsync();
+
+            if (!flowSteps.Any())
+            {
+                flowSteps = await _flowApprovalScrapRepository.Query()
+                    .Where(x => x.FactoryId == createScrapDto.FactoryId && x.DepartmentId == createScrapDto.DepartmentId && x.SectionId == null)
+                    .OrderBy(x => x.Step)
+                    .ToListAsync();
+            }
 
             if (flowSteps.Any())
             {
@@ -122,7 +137,7 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
             }
             else
             {
-                throw new Exception ($"Không có flow approval nào được cấu hình cho FactoryId: {createScrapDto.FactoryId} và DepartmentId: {createScrapDto.DepartmentId}"); 
+                throw new Exception ($"Không có flow approval nào được cấu hình cho FactoryId: {createScrapDto.FactoryId}, DepartmentId: {createScrapDto.DepartmentId}, SectionId: {createScrapDto.SectionId}"); 
             }
 
         }
@@ -133,6 +148,8 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
             var query = from hs in _historyScrapRepository.Query()
                         join factory in _factoryRepository.Query() on hs.FactoryId equals factory.Id
                         join department in _departmentRepository.Query() on hs.DepartmentId equals department.Id
+                        join section in _sectionRepository.Query() on hs.SectionId equals section.Id into secGroup
+                        from section in secGroup.DefaultIfEmpty()
                         join creator in _userRepository.Query() on hs.CreatedBy equals creator.Id
                         join lastUser in _userRepository.Query() on hs.LastActionBy equals lastUser.Id into lastUserGroup
                         from lastUser in lastUserGroup.DefaultIfEmpty()
@@ -154,6 +171,8 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
                             FactoryName = factory.Name,
                             DepartmentId = hs.DepartmentId,
                             DepartmentName = department.Name,
+                            SectionId = hs.SectionId,
+                            SectionName = section != null ? section.Name : string.Empty,
                             Notes = hs.Notes,
                             ConfirmationStatusType = hs.ConfirmationStatusType,
                             ConfirmAmount = hs.ConfirmAmount,
@@ -206,7 +225,10 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
                             TYPE = d.TYPE,
                             Plant = d.Plant,
                             ScrapHistoryId = d.ScrapHistoryId,
-                            Reson = d.Reson
+                            Reson = d.Reson,
+                            ConfirmAmount = d.ConfirmAmount,
+                            ConfirmUnitType = d.ConfirmUnitType,
+                            ConfirmNote = d.ConfirmNote
                         };
                     }).ToList();
                 }
@@ -275,6 +297,8 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
                     .Where(x => relatedScrapIds.Contains(x.Id))
                 join factory in _factoryRepository.Query() on hs.FactoryId equals factory.Id
                 join department in _departmentRepository.Query() on hs.DepartmentId equals department.Id
+                join section in _sectionRepository.Query() on hs.SectionId equals section.Id into secGroup
+                from section in secGroup.DefaultIfEmpty()
                 join creator in _userRepository.Query() on hs.CreatedBy equals creator.Id
                 join lastUser in _userRepository.Query() on hs.LastActionBy equals lastUser.Id into lastUserGrp
                 from lastUser in lastUserGrp.DefaultIfEmpty()
@@ -296,6 +320,8 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
                     FactoryName = factory.Name,
                     DepartmentId = hs.DepartmentId,
                     DepartmentName = department.Name,
+                    SectionId = hs.SectionId,
+                    SectionName = section != null ? section.Name : string.Empty,
                     Notes = hs.Notes,
                     ConfirmationStatusType = hs.ConfirmationStatusType,
                     ConfirmAmount = hs.ConfirmAmount,
@@ -625,6 +651,8 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
                                     || x.Status == StatusScrap.Done)
                         join factory in _factoryRepository.Query() on hs.FactoryId equals factory.Id
                         join department in _departmentRepository.Query() on hs.DepartmentId equals department.Id
+                        join section in _sectionRepository.Query() on hs.SectionId equals section.Id into secGroup
+                        from section in secGroup.DefaultIfEmpty()
                         join creator in _userRepository.Query() on hs.CreatedBy equals creator.Id
                         join lastUser in _userRepository.Query() on hs.LastActionBy equals lastUser.Id into lastUserGroup
                         from lastUser in lastUserGroup.DefaultIfEmpty()
@@ -646,6 +674,8 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
                             FactoryName = factory.Name,
                             DepartmentId = hs.DepartmentId,
                             DepartmentName = department.Name,
+                            SectionId = hs.SectionId,
+                            SectionName = section != null ? section.Name : string.Empty,
                             Notes = hs.Notes,
                             ConfirmationStatusType = hs.ConfirmationStatusType,
                             ConfirmAmount = hs.ConfirmAmount,
@@ -740,7 +770,7 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
         }
 
         // ── Không đụng vào ──────────────────────────────────────────────────────────
-        public async Task ConfirmScrap(ConfirmScrapDto request)
+        public async Task ConfirmScrap(ActionConfirmScrapDto request)
         {
             var scrap = await _historyScrapRepository.GetByIdAsync(request.HistoryScrapId)
                 ?? throw new Exception("Không tìm thấy phiếu Scrap");
@@ -748,14 +778,61 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
             if (scrap.Status != StatusScrap.Approved)
                 throw new Exception("Phiếu chưa được duyệt hoàn toàn!");
 
-            scrap.Status = StatusScrap.Done;
-            scrap.Confirmer = request.ConfirmerId;
-            scrap.ConfirmDate = DateTime.Now;
-            scrap.ConfirmAmount = request.ConfirmAmount;
-            scrap.ConfirmationStatusType = request.ConfirmationStatusType;
-            scrap.Notes = request.Notes;
+            // Lấy tất cả details của phiếu này để kiểm tra bảo mật
+            var existingDetails = await _historyScrapDetailRepository.Query()
+                .Where(d => d.ScrapHistoryId == request.HistoryScrapId)
+                .ToListAsync();
 
-            await _historyScrapRepository.UpdateAsync(scrap);
+            var existingDetailIds = existingDetails.Select(d => d.Id).ToHashSet();
+
+            // Validate
+            foreach (var detailDto in request.Details)
+            {
+                if (!existingDetailIds.Contains(detailDto.HistoryDetailId))
+                {
+                    throw new Exception($"Lỗi bảo mật: Mã chi tiết {detailDto.HistoryDetailId} không thuộc phiếu Scrap này!");
+                }
+
+                if (detailDto.ConfirmUnitType == ConfirmUnitType.Unit)
+                {
+                    if (detailDto.ConfirmAmount % 1 != 0)
+                    {
+                        throw new Exception($"Dữ liệu không hợp lệ: Nhận theo số lượng (Cái) không được nhập số thập phân ({detailDto.ConfirmAmount}).");
+                    }
+                }
+            }
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                // Update từng detail
+                foreach (var detailDto in request.Details)
+                {
+                    var detailToUpdate = existingDetails.First(d => d.Id == detailDto.HistoryDetailId);
+                    detailToUpdate.ConfirmAmount = detailDto.ConfirmAmount;
+                    detailToUpdate.ConfirmUnitType = detailDto.ConfirmUnitType;
+                    detailToUpdate.ConfirmNote = detailDto.ConfirmNote;
+                    await _historyScrapDetailRepository.UpdateAsync(detailToUpdate);
+                }
+
+                // Update Header
+                scrap.Status = StatusScrap.Done;
+                scrap.Confirmer = request.ConfirmerId;
+                scrap.ConfirmDate = DateTime.Now;
+
+                // Tuỳ chọn: tính tổng cho ConfirmAmount nếu cần (hiện tại bỏ trống vì khác đơn vị)
+                // scrap.ConfirmAmount = request.Details.Sum(d => d.ConfirmAmount);
+                // scrap.ConfirmationStatusType = ??? (có thể tính dựa vào tổng nhận so với tổng yêu cầu)
+
+                await _historyScrapRepository.UpdateAsync(scrap);
+
+                await transaction.CommitAsync();
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
     }
 }

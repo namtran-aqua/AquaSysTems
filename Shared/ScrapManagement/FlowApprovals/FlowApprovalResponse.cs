@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,6 +10,8 @@ namespace AquaSolution.Shared.ScrapManagement.FlowApprovals
     {
         public Guid DepartmentId { get; set; }
         public string DepartmentName { get; set; } = string.Empty;
+        public Guid? SectionId { get; set; }
+        public string? SectionName { get; set; }
         public Guid FactoryId { get; set; }
         public string FactoryName { get; set; } = string.Empty;
         public List<FlowApprovalScrapDto> Steps { get; set; } = new();

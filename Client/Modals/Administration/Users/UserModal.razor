@@ -1,4 +1,4 @@
-﻿@using AntDesign
+@using AntDesign
 @using AquaSolution.Shared.ApprovalFlows
 @using AquaSolution.Shared.CommonDto;
 @using AquaSolution.Shared.UserManagements
@@ -86,18 +86,30 @@
 
         </Row>
         <Row Gutter="16">
-            <Col Span="12">
+            <Col Span="8">
             <FormItem  Label="Department">
                 <Select TItem="BaseDto" TItemValue="Guid?"
                         DataSource="@ListDepartment"
                         @bind-Value="@CreatedUserDto.DepartmentId"
+                        OnSelectedItemChanged="OnDepartmentChanged"
                         AllowClear="true"
                         ItemValue="c => c.Id"
                         ItemLabel="c => c.Name">
                 </Select>
             </FormItem>
             </Col>
-            <Col Span="12">
+            <Col Span="8">
+            <FormItem Label="Section">
+                <Select TItem="BaseDto" TItemValue="Guid?"
+                        DataSource="@ListSection"
+                        @bind-Value="@CreatedUserDto.SectionId"
+                        AllowClear="true"
+                        ItemValue="c => c.Id"
+                        ItemLabel="c => c.Name">
+                </Select>
+            </FormItem>
+            </Col>
+            <Col Span="8">
             <FormItem Label="Manager">
                 <Select TItem="UserContributerDto" TItemValue="Guid?"
                         DataSource="@AllManagers"

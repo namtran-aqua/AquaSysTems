@@ -198,7 +198,7 @@
                 <div style="font-size:15px; text-align:center; font-weight:500; color:#222;">@HandleScrap?.Title</div>
             </div>
 
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
                 <div class="scrap-info-field">
                     <div class="scrap-info-label">Người tạo:</div>
                     <div class="scrap-info-value">
@@ -226,6 +226,12 @@
                     }
                     <Tag Color="@sColor">@sText</Tag>
                 </div>
+                <div class="scrap-info-field">
+                    <div class="scrap-info-label">Ngày tạo:</div>
+                    <div class="scrap-info-value">
+                        @(Mode == ScrapModalMode.Create ? DateTime.Now.ToString("dd/MM/yyyy HH:mm") : HandleScrap?.CreatedDate.ToString("dd/MM/yyyy HH:mm"))
+                    </div>
+                </div>
             </div>
 
             <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
@@ -242,9 +248,9 @@
                     </div>
                 </div>
                 <div class="scrap-info-field">
-                    <div class="scrap-info-label">Ngày tạo:</div>
+                    <div class="scrap-info-label">Section:</div>
                     <div class="scrap-info-value">
-                        @(Mode == ScrapModalMode.Create ? DateTime.Now.ToString("dd/MM/yyyy HH:mm") : HandleScrap?.CreatedDate.ToString("dd/MM/yyyy HH:mm"))
+                        @(Mode == ScrapModalMode.Create ? CurrenUser?.SectionName : HandleScrap?.SectionName)
                     </div>
                 </div>
             </div>
@@ -347,6 +353,37 @@
                                              Placeholder="Lý do..." />
                         </Column>
 
+                        @if (Mode == ScrapModalMode.Confirm || _isConfirmed)
+                        {
+                            <Column TData="ConfirmUnitType" Title="Loại nhận" Width="110px">
+                                <Select TItem="ConfirmUnitType"
+                                        TItemValue="ConfirmUnitType"
+                                        DataSource="@(Enum.GetValues(typeof(ConfirmUnitType)).Cast<ConfirmUnitType>())"
+                                        @bind-Value="context.ConfirmUnitType"
+                                        Disabled="@_isConfirmed"
+                                        Style="width:100%">
+                                    <ItemTemplate Context="unitType">
+                                        @(unitType == ConfirmUnitType.Weight ? "Kg" : "Cái")
+                                    </ItemTemplate>
+                                </Select>
+                            </Column>
+                            <Column TData="decimal?" Title="Thực nhận" Width="110px">
+                                <AntDesign.InputNumber TValue="decimal?"
+                                                       @bind-Value="context.ConfirmAmount"
+                                                       Min="0"
+                                                       Disabled="@_isConfirmed"
+                                                       Style="width:100%"
+                                                       Parser="@(context.ConfirmUnitType == ConfirmUnitType.Unit ? (Func<string, string>)(val => System.Text.RegularExpressions.Regex.Replace(val ?? "", @"[^\d]", "")) : null)"
+                                                       Formatter="@(context.ConfirmUnitType == ConfirmUnitType.Unit ? (Func<decimal?, string>)(val => val?.ToString("N0") ?? "") : (Func<decimal?, string>)(val => val?.ToString("N2") ?? ""))"
+                                                       Placeholder="@(context.ConfirmUnitType == ConfirmUnitType.Weight ? "kg" : "cái")" />
+                            </Column>
+                            <Column TData="string" Title="Ghi chú nhận" Width="150px">
+                                <AntDesign.Input @bind-Value="context.ConfirmNote"
+                                                 Disabled="@_isConfirmed"
+                                                 Placeholder="Ghi chú..." />
+                            </Column>
+                        }
+
                         @if (Mode == ScrapModalMode.Create)
                         {
                             <Column TData="string" Title="" Width="40px">
@@ -359,101 +396,6 @@
                 </Table>
             </div>
 
-            @* Confirm section - hiện khi Mode = Confirm (cả Approved lẫn Done) *@
-            @if (Mode == ScrapModalMode.Confirm)
-            {
-                <Divider Style="margin:6px 0" />
-                <div class="confirm-section">
-
-                    <div style="font-size:13px; font-weight:600; color:#389e0d; margin-bottom:12px;">
-                        ✅ Xác nhận nhận hàng
-                    </div>
-
-                    @* So sánh tổng phiếu vs thực nhận *@
-                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:12px;">
-
-                        <div style=" border:1px solid #91d5ff; border-radius:6px; padding:10px 14px; text-align:center;">
-                            <div style="font-size:11px; font-weight:600; margin-bottom:4px;">
-                                📋 TỔNG PHIẾU
-                            </div>
-                            <div style="font-size:20px; font-weight:700;">
-                                @(HandleScrap?.TotalAmount?.ToString("N2") ?? "—")
-                            </div>
-                            <div style="font-size:11px; color:#888;">kg</div>
-                        </div>
-
-                        <div style=" border:1px solid #ffd591; border-radius:6px; padding:10px 14px; text-align:center;">
-                            <div style="font-size:11px;  font-weight:600; margin-bottom:4px;">
-                                ✏️ THỰC TẾ NHẬN
-                            </div>
-                            <div style="font-size:20px; font-weight:700; ">
-                                @(_confirmAmount.ToString("N2"))
-                            </div>
-                            <div style="font-size:11px; color:#888;">kg</div>
-                        </div>
-
-                        <div style="background:@(_confirmAmount == 0 ? "#fafafa" : _confirmAmount == HandleScrap?.TotalAmount ? "#f6ffed" : _confirmAmount > HandleScrap?.TotalAmount ? "#e6f7ff" : "#fffbe6");
-                                    border:1px solid @(_confirmAmount == 0 ? "#d9d9d9" : _confirmAmount == HandleScrap?.TotalAmount ? "#b7eb8f" : _confirmAmount > HandleScrap?.TotalAmount ? "#91d5ff" : "#ffe58f");
-                                    border-radius:6px; padding:10px 14px; text-align:center;">
-                            <div style="font-size:11px; color:#888; font-weight:600; margin-bottom:4px;">
-                                CHÊNH LỆCH
-                            </div>
-                            @{
-                                var diff = _confirmAmount - (HandleScrap?.TotalAmount ?? 0);
-                                var diffColor = diff == 0 ? "#52c41a" : diff > 0 ? "#1677ff" : "#faad14";
-                                var diffText  = diff == 0 ? "±0" : diff > 0 ? $"+{diff:N2}" : $"{diff:N2}";
-                            }
-                            <div style="font-size:20px; font-weight:700; color:@diffColor;">
-                                @diffText
-                            </div>
-                            <div style="font-size:11px; color:#888;">kg</div>
-                        </div>
-
-                    </div>
-
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-
-                        @* Input weight *@
-                        <div>
-                            <div class="scrap-info-label" style="margin-bottom:4px;">Số lượng thực tế nhận (kg)</div>
-                            <AntDesign.InputNumber TValue="decimal"
-                                                   @bind-Value="_confirmAmount"
-                                                   Min="0"
-                                                   Disabled="@_isConfirmed"
-                                                   Style="width:100%; font-size:16px;"
-                                                   Placeholder="Nhập số lượng..." />
-                        </div>
-
-                        @* Radio status *@
-                        <div>
-                            <div class="scrap-info-label" style="margin-bottom:4px;">Tình trạng nhận</div>
-                            <RadioGroup @bind-Value="_confirmStatus"
-                                        Disabled="@_isConfirmed"
-                                        Style="display:flex; flex-direction:column; gap:6px;">
-                                <Radio Value="@ConfirmationStatusType.Received">
-                                    <span style="color:#52c41a; font-weight:500;">✓ Nhận đủ (Received)</span>
-                                </Radio>
-                                <Radio Value="@ConfirmationStatusType.Overreceived">
-                                    <span style="color:#1677ff; font-weight:500;">↑ Nhận dư (Over received)</span>
-                                </Radio>
-                                <Radio Value="@ConfirmationStatusType.Underreceived">
-                                    <span style="color:#faad14; font-weight:500;">↓ Nhận thiếu (Under received)</span>
-                                </Radio>
-                            </RadioGroup>
-                        </div>
-
-                    </div>
-
-                    @* Note *@
-                    <div style="margin-top:10px;">
-                        <div class="scrap-info-label" style="margin-bottom:4px;">Ghi chú</div>
-                        <TextArea @bind-Value="_confirmNote"
-                                  Rows="2"
-                                  Disabled="@_isConfirmed"
-                                  Placeholder="Ghi chú thêm nếu có..." />
-                    </div>
-
-                </div>
             }
 
         </div>

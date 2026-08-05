@@ -14,6 +14,7 @@ namespace AquaSolution.Client.Modals.ScrapManagement.Materials
         [Inject] private IMessageService Message { get; set; }
 
         [Parameter] public EventCallback OnSaved { get; set; }
+        [Parameter] public bool IsBomOnly { get; set; } = true;
 
         private Form<UpdateWeightDto> formRef;
         private bool IsModalVisible { get; set; } = false;

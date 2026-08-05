@@ -113,7 +113,7 @@ namespace AquaSolution.Server.Controllers.ScrapManagement
         }
 
         [HttpPost("confirm-scrap")]
-        public async Task<IActionResult> ConfirmScrap([FromBody] ConfirmScrapDto request)
+        public async Task<IActionResult> ConfirmScrap([FromBody] ActionConfirmScrapDto request)
         {
             try
             {

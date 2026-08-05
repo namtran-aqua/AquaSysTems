@@ -9,7 +9,7 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
         Task CreateScrap(HandleScrapDto createScrapDto);
         Task<List<HistoryScrapDto>> GetScrapForApproval(Guid userId, bool isAdmin);
         Task ActionApproval(ApprovalActionDto request);
-        Task ConfirmScrap(ConfirmScrapDto request); 
+        Task ConfirmScrap(ActionConfirmScrapDto request); 
         Task<List<HistoryScrapDto>> GetScrapForConfirm(); 
     }
 }

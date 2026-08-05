@@ -1,0 +1,67 @@
+@using AntDesign
+@using AquaSolution.Client.Modals.Administration.Icon
+@using AquaSolution.Shared.CommonDto
+@using AquaSolution.Shared.Administration.Sections
+@using AquaSolution.Shared.Departments
+@using AquaSolution.Shared.Enum
+@inject HttpClient httpClient
+@inject IMessageService Message
+
+@{
+    RenderFragment footer = @<Template>
+        <Button OnClick="@SaveAsync" @key="@("submit")" Type="ButtonType.Primary">
+            Save
+        </Button>
+
+        <Button Style="color:#808080" OnClick="@HandleCancel" @key="@("back")">
+            Close
+        </Button>
+    </Template>;
+}
+
+<Modal @bind-Visible="IsModalVisible" Title="@Title" Width="600" Footer="@footer">
+    <Form @ref="@formRef"
+          Model="@_model"
+          Layout="FormLayout.Vertical"
+          OnFinish="SaveAsync"
+          ValidateMode="FormValidateMode.Complex"
+          ValidateOnChange="true"
+          Context="formCtx">
+
+        <Row Gutter="24">
+            <Col Span="12">
+            <FormItem Required="true" Label="Section Code">
+                <Input @bind-Value="_model.Code" />
+            </FormItem>
+            </Col>
+
+            <Col Span="12">
+            <FormItem Required="true" Label="Section Name">
+                <Input @bind-Value="_model.Name" />
+            </FormItem>
+            </Col>
+        </Row>
+
+        <Row Gutter="24">
+            <Col Span="12">
+            <FormItem Label="Department" Required="true">
+                <Select TItem="DepartmentDto"
+                        TItemValue="Guid"
+                        DataSource="@ListDepartments"
+                        @bind-Value="@_model.DepartmentId"
+                        ItemValue="c => c.Id"
+                        ItemLabel="c => c.Name">
+                </Select>
+            </FormItem>
+            </Col>
+        </Row>
+        <Row Gutter="24">
+            <Col Span="24">
+            <FormItem Label="Description">
+                <TextArea @bind-Value="_model.Description" Rows="2"></TextArea>
+            </FormItem>
+            </Col>
+        </Row>
+
+    </Form>
+</Modal>

@@ -1,4 +1,4 @@
-﻿@using AquaSolution.Client.Common.GetInitial_helpers
+@using AquaSolution.Client.Common.GetInitial_helpers
 @using AquaSolution.Client.Modals.Administration.Users
 @inject IJSRuntime JS
 @inject GetInitial GetInitials
@@ -6,18 +6,22 @@
     <div class="user-dropdown" id="userDropdown">
         <div class="user-dropdown-toggle d-flex align-items-center gap-2">
             @* Thay thẻ <img> cũ bằng đoạn này *@
-                @if (!string.IsNullOrWhiteSpace(userDto?.Avatar))
-                {
-                    <img src="@userDto.Avatar"
-                         alt="Avatar"
-                         class="avatar-img" />
-                }
-                else
-                {
-                    <div class="avatar-initials">
-                        @GetInitials.GetInitials(userDto?.FullName)
-                    </div>
-                }
+            @if (!string.IsNullOrWhiteSpace(userDto?.Avatar))
+            {
+                <img src="@userDto.Avatar"
+                     alt="Avatar"
+                     class="avatar-img"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                <div class="avatar-initials" style="display: none;">
+                    @GetInitials.GetInitials(userDto?.FullName)
+                </div>
+            }
+            else
+            {
+                <div class="avatar-initials">
+                    @GetInitials.GetInitials(userDto?.FullName)
+                </div>
+            }
             <span class="text-dark">@userDto?.FullName</span>
         </div>
         <div class="user-dropdown-menu">

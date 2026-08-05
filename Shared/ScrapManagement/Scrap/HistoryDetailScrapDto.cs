@@ -34,5 +34,10 @@ namespace AquaSolution.Shared.ScrapManagement.Scrap
         public decimal Weight { get; set; }
         public decimal TotalWeight { get; set; }
         public string? Reson { get; set; } = null;
+
+        // Confirm properties
+        public decimal? ConfirmAmount { get; set; }
+        public ConfirmUnitType ConfirmUnitType { get; set; }
+        public string? ConfirmNote { get; set; }
     }
 }

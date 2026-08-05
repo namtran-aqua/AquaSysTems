@@ -23,11 +23,14 @@ namespace AquaSolution.Client.Modals.ScrapManagement.FlowApprovalScraps
 
         private Guid _selectedFactoryId = Guid.Empty;
         private Guid _selectedDepartmentId = Guid.Empty;
+        private Guid? _selectedSectionId;
         private string _editFactoryName = string.Empty;
         private string _editDepartmentName = string.Empty;
+        private string? _editSectionName = string.Empty;
 
         private List<FactoryDto> _factories = new();
         private List<DepartmentDto> _departments = new();
+        private List<AquaSolution.Shared.Administration.Sections.SectionDto> _sections = new();
         private List<UserDto> _users = new();
         private List<CreateFlowStepRequest> _steps = new();
         #endregion
@@ -40,8 +43,11 @@ namespace AquaSolution.Client.Modals.ScrapManagement.FlowApprovalScraps
             _isEdit = false;
             _selectedFactoryId = Guid.Empty;
             _selectedDepartmentId = Guid.Empty;
+            _selectedSectionId = null;
             _editFactoryName = string.Empty;
             _editDepartmentName = string.Empty;
+            _editSectionName = string.Empty;
+            _sections = new();
             _steps = new();
 
             await LoadInitialData();
@@ -55,8 +61,10 @@ namespace AquaSolution.Client.Modals.ScrapManagement.FlowApprovalScraps
             _isEdit = true;
             _selectedFactoryId = flow.FactoryId;
             _selectedDepartmentId = flow.DepartmentId;
+            _selectedSectionId = flow.SectionId;
             _editFactoryName = flow.FactoryName;
             _editDepartmentName = flow.DepartmentName;
+            _editSectionName = flow.SectionName;
 
             // Map sang CreateFlowStepRequest để bind vào table
             _steps = flow.Steps.Select(s => new CreateFlowStepRequest
@@ -121,6 +129,33 @@ namespace AquaSolution.Client.Modals.ScrapManagement.FlowApprovalScraps
                 _loading = false;
             }
         }
+
+        private async Task LoadSections(Guid departmentId)
+        {
+            try
+            {
+                var result = await Http.GetFromJsonAsync<List<AquaSolution.Shared.Administration.Sections.SectionDto>>($"api/section/by-department/{departmentId}");
+                _sections = result ?? new();
+            }
+            catch
+            {
+                _sections = new();
+            }
+        }
+
+        private async Task OnDepartmentChanged(DepartmentDto item)
+        {
+            if (item != null)
+            {
+                await LoadSections(item.Id);
+                _selectedSectionId = null;
+            }
+            else
+            {
+                _sections.Clear();
+                _selectedSectionId = null;
+            }
+        }
         #endregion
 
         #region Actions
@@ -182,6 +217,7 @@ namespace AquaSolution.Client.Modals.ScrapManagement.FlowApprovalScraps
             {
                 FactoryId = _selectedFactoryId,
                 DepartmentId = _selectedDepartmentId,
+                SectionId = _selectedSectionId,
                 Steps = _steps
             };
 

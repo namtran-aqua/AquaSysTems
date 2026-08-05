@@ -26,6 +26,7 @@ namespace AquaSolution.Shared.UserManagements
         public string CreatedBy { get; set; } = string.Empty;
         public string? Avatar { get; set; }
         public Guid? DepartmentId { get; set; }
+        public Guid? SectionId { get; set; }
         public Guid? PositionId { get; set; }
         public Guid? FactoryId { get; set; }
         public bool IsDeleted { get; set; }
@@ -33,6 +34,7 @@ namespace AquaSolution.Shared.UserManagements
         public string ManagerWorkDay { get; set; }
         public string? GroupName { get; set; }
         public string? DepartmentName { get; set; }
+        public string? SectionName { get; set; }
         public string? PositionName { get; set; }
         public string? FactoryName { get; set; }
         public bool IsActive { get; set; }

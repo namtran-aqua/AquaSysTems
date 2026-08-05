@@ -1,4 +1,4 @@
-﻿using AquaSolution.Server.Services.ScrapManagetment.FlowApprovalServices;
+using AquaSolution.Server.Services.ScrapManagetment.FlowApprovalServices;
 using AquaSolution.Shared.ScrapManagement.FlowApprovals;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,11 +16,11 @@ namespace AquaSolution.Server.Controllers.ScrapManagement
         }
 
         [HttpGet("get-by-department/{departmentId}/{factoryId}")]
-        public async Task<IActionResult> GetFlowApproval(Guid departmentId, Guid factoryId)
+        public async Task<IActionResult> GetFlowApproval(Guid departmentId, Guid factoryId, [FromQuery] Guid? sectionId = null)
         {
             try
             {
-                var result = await _flowApprovalService.GetFlowApprovalAsync(departmentId, factoryId);
+                var result = await _flowApprovalService.GetFlowApprovalAsync(departmentId, factoryId, sectionId);
                 if (result == null)
                     return NotFound(new { message = "Không tìm thấy luồng duyệt" });
 
@@ -98,11 +98,11 @@ namespace AquaSolution.Server.Controllers.ScrapManagement
         }
 
         [HttpDelete("delete-flow/{departmentId}/{factoryId}")]
-        public async Task<IActionResult> DeleteFlowApproval(Guid departmentId, Guid factoryId)
+        public async Task<IActionResult> DeleteFlowApproval(Guid departmentId, Guid factoryId, [FromQuery] Guid? sectionId = null)
         {
             try
             {
-                var result = await _flowApprovalService.DeleteFlowApprovalAsync(departmentId, factoryId);
+                var result = await _flowApprovalService.DeleteFlowApprovalAsync(departmentId, factoryId, sectionId);
                 if (!result)
                     return NotFound(new { message = "Không tìm thấy luồng duyệt cần xóa" });
 
