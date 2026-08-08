@@ -61,6 +61,24 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
             var department = await _departmentRepository.GetByIdAsync(createScrapDto.DepartmentId)
                 ?? throw new Exception($"Department không tồn tại: {createScrapDto.DepartmentId}");
 
+            var flowSteps = await _flowApprovalScrapRepository.Query()
+                .Where(x => x.FactoryId == createScrapDto.FactoryId && x.DepartmentId == createScrapDto.DepartmentId && x.SectionId == createScrapDto.SectionId)
+                .OrderBy(x => x.Step)
+                .ToListAsync();
+
+            if (!flowSteps.Any())
+            {
+                flowSteps = await _flowApprovalScrapRepository.Query()
+                    .Where(x => x.FactoryId == createScrapDto.FactoryId && x.DepartmentId == createScrapDto.DepartmentId && x.SectionId == null)
+                    .OrderBy(x => x.Step)
+                    .ToListAsync();
+            }
+
+            if (!flowSteps.Any())
+            {
+                throw new Exception($"Không có flow approval nào được cấu hình cho FactoryId: {createScrapDto.FactoryId}, DepartmentId: {createScrapDto.DepartmentId}, SectionId: {createScrapDto.SectionId}");
+            }
+
             var historyScrapId = Guid.NewGuid();
             decimal totalAmount = 0;
             if (createScrapDto.HistoryDetails != null && createScrapDto.HistoryDetails.Any())
@@ -104,42 +122,21 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
                 await _historyScrapDetailRepository.InsertRangeAsync(historyDetails);
             }
 
-            var flowSteps = await _flowApprovalScrapRepository.Query()
-                .Where(x => x.FactoryId == createScrapDto.FactoryId && x.DepartmentId == createScrapDto.DepartmentId && x.SectionId == createScrapDto.SectionId)
-                .OrderBy(x => x.Step)
-                .ToListAsync();
-
-            if (!flowSteps.Any())
+            var requestApprovals = flowSteps.Select((step, index) => new RequestApproval
             {
-                flowSteps = await _flowApprovalScrapRepository.Query()
-                    .Where(x => x.FactoryId == createScrapDto.FactoryId && x.DepartmentId == createScrapDto.DepartmentId && x.SectionId == null)
-                    .OrderBy(x => x.Step)
-                    .ToListAsync();
-            }
+                Id = Guid.NewGuid(),
+                HistoryScrapId = historyScrapId,
+                Title = step.Name,
+                Step = step.Step,
+                DecisionMaker = step.DecisionMaker,
+                Status = step.Step == 1 ? StatusScrap.InterView : StatusScrap.Pending,
+                Comment = null,
+                ActionBy = null,
+                ActionDate = null
+            }).ToList();
 
-            if (flowSteps.Any())
-            {
-                var requestApprovals = flowSteps.Select((step, index) => new RequestApproval
-                {
-                    Id = Guid.NewGuid(),
-                    HistoryScrapId = historyScrapId,
-                    Title = step.Name,
-                    Step = step.Step,
-                    DecisionMaker = step.DecisionMaker,
-                    Status = step.Step == 1 ? StatusScrap.InterView : StatusScrap.Pending,
-                    Comment = null,
-                    ActionBy = null,
-                    ActionDate = null
-                }).ToList();
-
-                await _requestApprovalRepository.InsertRangeAsync(requestApprovals);
-                await _historyScrapRepository.SaveChangesAsync();
-            }
-            else
-            {
-                throw new Exception ($"Không có flow approval nào được cấu hình cho FactoryId: {createScrapDto.FactoryId}, DepartmentId: {createScrapDto.DepartmentId}, SectionId: {createScrapDto.SectionId}"); 
-            }
-
+            await _requestApprovalRepository.InsertRangeAsync(requestApprovals);
+            await _historyScrapRepository.SaveChangesAsync();
         }
 
         // ── Không đụng vào ──────────────────────────────────────────────────────────

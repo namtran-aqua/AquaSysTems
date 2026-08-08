@@ -100,11 +100,12 @@
             </Col>
             <Col Span="8">
             <FormItem Label="Section">
-                <Select TItem="BaseDto" TItemValue="Guid?"
+                <Select Mode="SelectMode.Multiple"
+                        TItem="BaseDto" TItemValue="Guid"
                         DataSource="@ListSection"
-                        @bind-Value="@CreatedUserDto.SectionId"
+                        @bind-Values="@CreatedUserDto.SectionIds"
                         AllowClear="true"
-                        ItemValue="c => c.Id"
+                        ItemValue="c => c.Id ?? Guid.Empty"
                         ItemLabel="c => c.Name">
                 </Select>
             </FormItem>

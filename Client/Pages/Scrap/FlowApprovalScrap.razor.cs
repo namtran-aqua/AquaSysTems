@@ -24,8 +24,10 @@ namespace AquaSolution.Client.Pages.Scrap
 
         private List<string> _factoryOptions { get; set; } = new();
         private List<string> _departmentOptions { get; set; } = new();
+        private List<string> _sectionOptions { get; set; } = new();
         private string _filterFactory { get; set; } = string.Empty;
         private string _filterDepartment { get; set; } = string.Empty;
+        private string _filterSection { get; set; } = string.Empty;
         #endregion
 
         #region Init
@@ -50,11 +52,19 @@ namespace AquaSolution.Client.Pages.Scrap
                     ListFlowApproval = result;
                     _factoryOptions = result
                         .Select(x => x.FactoryName)
+                        .Where(x => !string.IsNullOrEmpty(x))
                         .Distinct()
                         .OrderBy(x => x)
                         .ToList();
                     _departmentOptions = result
                         .Select(x => x.DepartmentName)
+                        .Where(x => !string.IsNullOrEmpty(x))
+                        .Distinct()
+                        .OrderBy(x => x)
+                        .ToList();
+                    _sectionOptions = result
+                        .Select(x => x.SectionName)
+                        .Where(x => !string.IsNullOrEmpty(x))
                         .Distinct()
                         .OrderBy(x => x)
                         .ToList();
@@ -79,7 +89,8 @@ namespace AquaSolution.Client.Pages.Scrap
             ListFiltered = ListFlowApproval
                 .Where(x =>
                     (string.IsNullOrEmpty(_filterFactory) || x.FactoryName == _filterFactory) &&
-                    (string.IsNullOrEmpty(_filterDepartment) || x.DepartmentName == _filterDepartment))
+                    (string.IsNullOrEmpty(_filterDepartment) || x.DepartmentName == _filterDepartment) &&
+                    (string.IsNullOrEmpty(_filterSection) || x.SectionName == _filterSection))
                 .ToList();
             StateHasChanged();
         }
@@ -99,7 +110,13 @@ namespace AquaSolution.Client.Pages.Scrap
 
         private void OnFilterDepartment(string value)
         {
-            _filterDepartment = value;
+            _filterDepartment = value ?? string.Empty;
+            ApplyFilter();
+        }
+
+        private void OnFilterSection(string value)
+        {
+            _filterSection = value ?? string.Empty;
             ApplyFilter();
         }
 
@@ -107,6 +124,7 @@ namespace AquaSolution.Client.Pages.Scrap
         {
             _filterFactory = string.Empty;
             _filterDepartment = string.Empty;
+            _filterSection = string.Empty;
             _departmentOptions = ListFlowApproval
                 .Select(x => x.DepartmentName)
                 .Distinct()

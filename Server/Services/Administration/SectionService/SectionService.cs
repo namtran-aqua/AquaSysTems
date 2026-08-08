@@ -16,19 +16,22 @@ namespace AquaSolution.Server.Services.Administration.SectionService
         private readonly IRepository<User> _userRepo;
         private readonly IRepository<FlowApprovalScrap> _flowApprovalRepo;
         private readonly IRepository<HistoryScrap> _historyScrapRepo;
+        private readonly IRepository<UserSection> _userSectionRepo;
 
         public SectionService(
             IRepository<Section> sectionRepo,
             IRepository<Department> departmentRepo,
             IRepository<User> userRepo,
             IRepository<FlowApprovalScrap> flowApprovalRepo,
-            IRepository<HistoryScrap> historyScrapRepo)
+            IRepository<HistoryScrap> historyScrapRepo,
+            IRepository<UserSection> userSectionRepo)
         {
             _sectionRepo = sectionRepo;
             _departmentRepo = departmentRepo;
             _userRepo = userRepo;
             _flowApprovalRepo = flowApprovalRepo;
             _historyScrapRepo = historyScrapRepo;
+            _userSectionRepo = userSectionRepo;
         }
 
         public async Task<bool> CreatedSection(SectionDto sectionDto)
@@ -62,8 +65,8 @@ namespace AquaSolution.Server.Services.Administration.SectionService
             if (section == null) return false;
 
             // Restrict delete if used
-            var isUsedByUser = await _userRepo.AnyAsync(x => x.SectionId == sectionId);
-            if (isUsedByUser) throw new Exception("Không thể xóa do đã có User thuộc khu vực này.");
+            var isUsedByUserSection = await _userSectionRepo.AnyAsync(x => x.SectionId == sectionId);
+            if (isUsedByUserSection) throw new Exception("Không thể xóa do đã có User thuộc khu vực này.");
 
             var isUsedByFlow = await _flowApprovalRepo.AnyAsync(x => x.SectionId == sectionId);
             if (isUsedByFlow) throw new Exception("Không thể xóa do khu vực này đang được cấu hình trong Approval Flow.");
@@ -127,13 +130,13 @@ namespace AquaSolution.Server.Services.Administration.SectionService
             // Validate changing department if already has data
             if (section.DepartmentId != sectionDto.DepartmentId)
             {
-                var isUsedByUser = await _userRepo.AnyAsync(x => x.SectionId == sectionDto.Id);
-                var isUsedByFlow = await _flowApprovalRepo.AnyAsync(x => x.SectionId == sectionDto.Id);
-                var isUsedByScrap = await _historyScrapRepo.AnyAsync(x => x.SectionId == sectionDto.Id);
+                var isSectionInUse = await _userSectionRepo.AnyAsync(us => us.SectionId == sectionDto.Id) ||
+                                     await _flowApprovalRepo.AnyAsync(f => f.SectionId == sectionDto.Id) ||
+                                     await _historyScrapRepo.AnyAsync(h => h.SectionId == sectionDto.Id);
                 
-                if (isUsedByUser || isUsedByFlow || isUsedByScrap)
+                if (isSectionInUse)
                 {
-                    throw new Exception("Không thể đổi Department do Section này đã phát sinh dữ liệu (User, Flow hoặc Scrap). Bạn cần tạo Section mới thay vì sửa đổi.");
+                    throw new Exception("Không thể đổi Department do Section này đã phát sinh dữ liệu (User, UserSection, Flow hoặc Scrap). Bạn cần tạo Section mới thay vì sửa đổi.");
                 }
             }
 

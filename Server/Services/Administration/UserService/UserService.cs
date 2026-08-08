@@ -14,6 +14,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
+using AquaSolution.Data.Connection;
 
 public class UserService : IUserService
 {
@@ -29,6 +30,8 @@ public class UserService : IUserService
     private readonly IRepository<Factory> _factoryRepo;
     private readonly IRepository<Position> _positionRepo;
     private readonly IRepository<Section> _sectionRepo;
+    private readonly IRepository<UserSection> _userSectionRepo;
+    private readonly AquaDbContext _context;
     private readonly IConfiguration _config;
     private readonly IHttpContextAccessor _httpContextAccessor;
     public UserService(
@@ -45,6 +48,8 @@ public class UserService : IUserService
         IRepository<Factory> factoryRepo,
         IRepository<Position> positionRepo,
         IRepository<Section> sectionRepo,
+        IRepository<UserSection> userSectionRepo,
+        AquaDbContext context,
         IConfiguration config)
     {
         _userRepo = userRepo;
@@ -61,6 +66,8 @@ public class UserService : IUserService
         _factoryRepo = factoryRepo;
         _positionRepo = positionRepo;
         _sectionRepo = sectionRepo;
+        _userSectionRepo = userSectionRepo;
+        _context = context;
     }
 
     public async Task<LoginResponse?> LoginAsync(LoginRequest loginRequest)
@@ -93,9 +100,10 @@ public class UserService : IUserService
                     {
                         new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                         new Claim(ClaimTypes.Name, user.FullName),
-                        new Claim(ClaimTypes.Email, user.Email ?? ""),
-                        new Claim("SectionId", user.SectionId?.ToString() ?? "")
+                        new Claim(ClaimTypes.Email, user.Email ?? "")
                     };
+            
+
             //add Claim
             var perrmission_user = await GetPermissionRole(user.Id);
             foreach (var p in perrmission_user)
@@ -147,7 +155,11 @@ public class UserService : IUserService
             var department = await _departmentRepo.FirstOrDefaultAsync(x => x.Id == user.DepartmentId);
             var factory = await _factoryRepo.FirstOrDefaultAsync(x => x.Id == user.FactoryId);
             var position = await _positionRepo.FirstOrDefaultAsync(x => x.Id == user.PositionId);
-            var section = await _sectionRepo.FirstOrDefaultAsync(x => x.Id == user.SectionId);
+
+            var userSections = await _userSectionRepo.WhereAsync(us => us.UserId == user.Id);
+            var sectionIds = userSections.Select(us => us.SectionId).ToList();
+            var sections = await _sectionRepo.WhereAsync(s => sectionIds.Contains(s.Id));
+
             var userDto = new UserDto
             {
                 Id = user.Id,
@@ -168,8 +180,14 @@ public class UserService : IUserService
                             : $"{baseUrl}/{user.Avatar.TrimStart('/')}",
                 DepartmentName = department?.Name,
                 DepartmentId = user.DepartmentId,
-                SectionId = user.SectionId,
-                SectionName = section?.Name,
+
+                SectionIds = sectionIds,
+                Sections = sections.Select(s => new AquaSolution.Shared.Administration.Sections.SectionDto 
+                            { 
+                                Id = s.Id, 
+                                Name = s.Name, 
+                                DepartmentId = s.DepartmentId 
+                            }).ToList(),
                 PositionId = user.PositionId,
                 FactoryId = user.FactoryId,
                 FactoryName = factory?.Name,
@@ -271,8 +289,6 @@ public class UserService : IUserService
                         join d in await _departmentRepo.GetQueryableAsync() on u.DepartmentId equals d.Id into d1
                         from department in d1.DefaultIfEmpty()
 
-                        join sec in await _sectionRepo.GetQueryableAsync() on u.SectionId equals sec.Id into sec1
-                        from section in sec1.DefaultIfEmpty()
 
                         join f in await _factoryRepo.GetQueryableAsync() on u.FactoryId equals f.Id into f1
                         from factory in f1.DefaultIfEmpty()
@@ -301,8 +317,7 @@ public class UserService : IUserService
                                 : $"{baseUrl}/{u.Avatar.TrimStart('/')}",
                             DepartmentId = u.DepartmentId,
                             DepartmentName = department.Name,
-                            SectionId = u.SectionId,
-                            SectionName = section.Name,
+
                             FactoryId = u.FactoryId,
                             FactoryName = factory.Name,
                             PositionId = u.PositionId,
@@ -321,6 +336,7 @@ public class UserService : IUserService
 
             // Lấy tất cả userRole và Role
             var userIds = userListData.Select(u => u.Id).ToList();
+            var allUserSections = await _userSectionRepo.WhereAsync(us => userIds.Contains(us.UserId));
             var userRoles = await _userRoleRepo.WhereAsync(ur => userIds.Contains(ur.UserId));
             var roleIds = userRoles.Select(ur => ur.RoleId).Distinct().ToList();
             var roles = await _roleRepo.WhereAsync(r => roleIds.Contains(r.Id));
@@ -340,6 +356,8 @@ public class UserService : IUserService
 
             foreach (var user in userListData)
             {
+                user.SectionIds = allUserSections.Where(us => us.UserId == user.Id).Select(us => us.SectionId).ToList();
+
                 var userRoleIds = userRoles.Where(ur => ur.UserId == user.Id).Select(ur => ur.RoleId).Distinct().ToList();
                 var userRolesData = roles.Where(r => userRoleIds.Contains(r.Id)).ToList();
 
@@ -404,6 +422,7 @@ public class UserService : IUserService
 
     public async Task<bool> CreatedAsync(CreatedAndUpdateUserDto createdUserDto)
     {
+        using var transaction = await _context.Database.BeginTransactionAsync();
         try
         {
             var password = _config["DefaultUser:Password"];
@@ -411,10 +430,11 @@ public class UserService : IUserService
                 throw new InvalidOperationException("Default password not configured in appsettings.json at DefaultUser:Password");
 
             var hashedPassword = PasswordHelper.HashPassword(password);
-            if (createdUserDto.SectionId.HasValue)
+            
+            if (createdUserDto.SectionIds != null && createdUserDto.SectionIds.Any())
             {
-                var section = await _sectionRepo.GetByIdAsync(createdUserDto.SectionId.Value);
-                if (section == null || section.DepartmentId != createdUserDto.DepartmentId)
+                var sections = await _sectionRepo.WhereAsync(s => createdUserDto.SectionIds.Contains(s.Id));
+                if (sections.Any(s => s.DepartmentId != createdUserDto.DepartmentId))
                 {
                     throw new Exception("Khu vực không hợp lệ hoặc không thuộc phòng ban đã chọn.");
                 }
@@ -437,22 +457,37 @@ public class UserService : IUserService
                 IsActive = true,
                 CreatedBy = createdUserDto.CreatedBy,
                 DepartmentId = createdUserDto.DepartmentId,
-                SectionId = createdUserDto.SectionId,
+
                 PositionId = createdUserDto.PositionId,
                 FactoryId = createdUserDto.FactoryId,
                 FlowApproval = createdUserDto.FlowApproval ?? 1,
                 Avatar = null,
-
             };
             await _userRepo.InsertAsync(user);
             await _userRepo.SaveChangesAsync();
+
+            // Insert UserSections
+            if (createdUserDto.SectionIds != null && createdUserDto.SectionIds.Any())
+            {
+                foreach (var sId in createdUserDto.SectionIds.Distinct())
+                {
+                    await _userSectionRepo.InsertAsync(new UserSection
+                    {
+                        UserId = user.Id,
+                        SectionId = sId
+                    });
+                }
+                await _userSectionRepo.SaveChangesAsync();
+            }
+
+            await transaction.CommitAsync();
             return true;
         }
         catch (Exception ex)
         {
+            await transaction.RollbackAsync();
             throw ex;
         }
-
     }
     public async Task<bool> DeleteAsync(Guid userId)
     {
@@ -465,16 +500,17 @@ public class UserService : IUserService
     }
     public async Task<bool> UpdateAsync(CreatedAndUpdateUserDto updateUserDto)
     {
+        using var transaction = await _context.Database.BeginTransactionAsync();
         try
         {
             var user = await _userRepo.FirstOrDefaultAsync(x => x.Id == updateUserDto.Id);
             if (user == null)
                 return false;
 
-            if (updateUserDto.SectionId.HasValue)
+            if (updateUserDto.SectionIds != null && updateUserDto.SectionIds.Any())
             {
-                var section = await _sectionRepo.GetByIdAsync(updateUserDto.SectionId.Value);
-                if (section == null || section.DepartmentId != updateUserDto.DepartmentId)
+                var sections = await _sectionRepo.WhereAsync(s => updateUserDto.SectionIds.Contains(s.Id));
+                if (sections.Any(s => s.DepartmentId != updateUserDto.DepartmentId))
                 {
                     throw new Exception("Khu vực không hợp lệ hoặc không thuộc phòng ban đã chọn.");
                 }
@@ -493,18 +529,37 @@ public class UserService : IUserService
             user.UpdateBy = updateUserDto.UpdateBy;
             user.UpdatedTime = updateUserDto.UpdatedTime;
             user.DepartmentId = updateUserDto.DepartmentId;
-            user.SectionId = updateUserDto.SectionId;
+
             user.FactoryId = updateUserDto.FactoryId;
             user.PositionId = updateUserDto.PositionId;
             user.FlowApproval = updateUserDto.FlowApproval ?? 1;
             await _userRepo.UpdateAsync(user);
+
+            // Update UserSections
+            var oldUserSections = await _userSectionRepo.WhereAsync(us => us.UserId == user.Id);
+            _userSectionRepo.RemoveRange(oldUserSections);
+            
+            if (updateUserDto.SectionIds != null && updateUserDto.SectionIds.Any())
+            {
+                foreach (var sId in updateUserDto.SectionIds.Distinct())
+                {
+                    await _userSectionRepo.InsertAsync(new UserSection
+                    {
+                        UserId = user.Id,
+                        SectionId = sId
+                    });
+                }
+            }
+            await _userSectionRepo.SaveChangesAsync();
+            await transaction.CommitAsync();
+
             return true;
         }
         catch (Exception ex)
         {
+            await transaction.RollbackAsync();
             throw ex;
         }
-
     }
 
     public async Task<bool> ChangePasswordAsync(ChangePassRequest changePassRequest)
@@ -604,10 +659,6 @@ public class UserService : IUserService
                    into f
                    from factory in f.DefaultIfEmpty()
 
-                   join section in await _sectionRepo.GetQueryableAsync()
-                   on userSelected.SectionId equals section.Id
-                   into s
-                   from section in s.DefaultIfEmpty()
                    where userSelected.IsActive == true
 
                    select new UserSelectedDto
@@ -616,8 +667,7 @@ public class UserService : IUserService
                        Name = userSelected.FullName,
                        DepartmentId = userSelected.DepartmentId,
                        DepartmentName = department.Name,
-                       SectionId = userSelected.SectionId,
-                       SectionName = section.Name,
+
                        WorkDayId = userSelected.WorkDayId,
                        FactoryId = userSelected.FactoryId,
                        FactoryName = factory.Name,

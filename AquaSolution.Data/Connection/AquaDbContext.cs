@@ -29,6 +29,7 @@ namespace AquaSolution.Data.Connection
         public DbSet<RolePermission> tbl_RolePermissions { get; set; }
         public DbSet<User> tbl_Users { get; set; }
         public DbSet<UserRole> tbl_UserRoles { get; set; }
+        public DbSet<UserSection> tbl_UserSections { get; set; }
         public DbSet<Groups> tbl_Groups { get; set; }
         public DbSet<Department> tbl_Departments { get; set; }
         public DbSet<Section> tbl_Sections { get; set; }
@@ -102,6 +103,7 @@ namespace AquaSolution.Data.Connection
             modelBuilder.ApplyConfiguration(new MenuConfiguration());
             modelBuilder.ApplyConfiguration(new PageConfiguration());
             modelBuilder.ApplyConfiguration(new PermissionConfiguration());
+            modelBuilder.ApplyConfiguration(new UserSectionConfiguration());
             modelBuilder.ApplyConfiguration(new RoleConfiguration());
             modelBuilder.ApplyConfiguration(new RolePermissionConfiguration());
             modelBuilder.ApplyConfiguration(new UserConfiguration());

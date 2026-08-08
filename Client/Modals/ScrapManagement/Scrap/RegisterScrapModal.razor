@@ -250,7 +250,28 @@
                 <div class="scrap-info-field">
                     <div class="scrap-info-label">Section:</div>
                     <div class="scrap-info-value">
-                        @(Mode == ScrapModalMode.Create ? CurrenUser?.SectionName : HandleScrap?.SectionName)
+                        @if (Mode == ScrapModalMode.Create)
+                        {
+                            if (CurrenUser?.Sections != null && CurrenUser.Sections.Any())
+                            {
+                                <Select TItem="AquaSolution.Shared.Administration.Sections.SectionDto" TItemValue="Guid?"
+                                        DataSource="@CurrenUser.Sections"
+                                        @bind-Value="@HandleScrap!.SectionId"
+                                        OnSelectedItemChanged="OnSectionChanged"
+                                        ItemValue="c => c.Id"
+                                        ItemLabel="c => c.Name"
+                                        Style="width: 150px;">
+                                </Select>
+                            }
+                            else
+                            {
+                                <span style="color:red">(No Section)</span>
+                            }
+                        }
+                        else
+                        {
+                            @HandleScrap?.SectionName
+                        }
                     </div>
                 </div>
             </div>
