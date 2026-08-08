@@ -1,4 +1,4 @@
-﻿
+
 using AntDesign;
 using AquaSolution.Client.Common;
 using AquaSolution.Client.Modals.Administration.Users;
@@ -108,7 +108,8 @@ namespace AquaSolution.Client.Pages.Administration
                 FactoryId = user.FactoryId,
                 PositionId = user.PositionId,
                 IsActive = user.IsActive,
-                FlowApproval = user.FlowApproval
+                FlowApproval = user.FlowApproval,
+                SectionIds = user.SectionIds != null ? user.SectionIds : new List<Guid>()
             };
             if (CurrenUser != null) await _userModal?.ShowModelAsync(true, updateDto, CurrenUser)!;
         }

@@ -64,14 +64,15 @@ namespace AquaSolution.Client.Modals.ScrapManagement.Scrap
             }
             else
             {
+                var defaultSectionId = user.Sections?.FirstOrDefault()?.Id;
                 HandleScrap = new HandleScrapDto
                 {
-                    Title = $"SCRAP - {user.FactoryName} - {user.DepartmentName} - {user.SectionName} - {DateTime.Now:yyyy-MM-dd HH:mm:ss}".ToUpper(),
+                    Title = $"SCRAP - {user.FactoryName} - {user.DepartmentName} - {user.Sections?.FirstOrDefault()?.Name} - {DateTime.Now:yyyy-MM-dd HH:mm:ss}".ToUpper(),
                     CreatedById = user.Id,
                     HistoryDetails = new(),
                     DepartmentId = user.DepartmentId ?? Guid.Empty,
                     FactoryId = user.FactoryId ?? Guid.Empty,
-                    SectionId = user.SectionId,
+                    SectionId = defaultSectionId,
                     CreatedDate = DateTime.Now
                 };
                 _details = HandleScrap.HistoryDetails;
@@ -132,11 +133,26 @@ namespace AquaSolution.Client.Modals.ScrapManagement.Scrap
             _details.Remove(row);
             StateHasChanged();
         }
+
+        private void OnSectionChanged(AquaSolution.Shared.Administration.Sections.SectionDto section)
+        {
+            if (Mode == ScrapModalMode.Create && HandleScrap != null && CurrenUser != null)
+            {
+                var sectionName = section?.Name ?? CurrenUser.SectionName;
+                HandleScrap.Title = $"SCRAP - {CurrenUser.FactoryName} - {CurrenUser.DepartmentName} - {sectionName} - {DateTime.Now:yyyy-MM-dd HH:mm:ss}".ToUpper();
+            }
+        }
         #endregion
 
         #region Submit Actions
         private async Task SubmitAsync()
         {
+            if (HandleScrap!.SectionId == null)
+            {
+                await Message.Warning("Bạn chưa được gán Section hoặc chưa chọn Section!");
+                return;
+            }
+
             if (!_details.Any())
             {
                 await Message.Warning("Vui lòng thêm ít nhất 1 dòng detail!");

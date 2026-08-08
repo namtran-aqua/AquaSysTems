@@ -139,6 +139,16 @@
                 AllowClear>
         </Select>
 
+        <Select TItem="string"
+                TItemValue="string"
+                DataSource="@_sectionOptions"
+                Value="@_filterSection"
+                ValueChanged="OnFilterSection"
+                Placeholder="-- Section --"
+                Style="width:160px"
+                AllowClear>
+        </Select>
+
         <Button OnClick="ClearFilter" Icon="clear">Xóa filter</Button>
 
         <span style="font-size:12px; color:#999;">
@@ -185,6 +195,7 @@
 
             <PropertyColumn Width="100px" Title="Factory" Property="c => c.FactoryName" />
             <PropertyColumn Width="130px" Title="Department" Property="c => c.DepartmentName" />
+            <PropertyColumn Width="130px" Title="Section" Property="c => c.SectionName" />
 
             <Column TData="string" Title="Các bước duyệt">
                 <Template>

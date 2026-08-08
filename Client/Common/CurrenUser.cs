@@ -26,19 +26,12 @@ namespace AquaSolution.Client.Common
                 var userIdStr = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 Guid.TryParse(userIdStr, out var userId);
 
-                var sectionIdStr = user.FindFirst("SectionId")?.Value;
-                Guid? sectionId = null;
-                if (Guid.TryParse(sectionIdStr, out var parsedSectionId))
-                {
-                    sectionId = parsedSectionId;
-                }
-
                 var users = new CurrentUserInfo
                 {
                     UserId = userId,
                     FullName = user.FindFirst("FullName")?.Value ?? "",
                     Email = user.FindFirst(ClaimTypes.Email)?.Value ?? "",
-                    SectionId = sectionId,
+
                     Roles = user.FindAll(ClaimTypes.Role).Select(r => r.Value).ToList(),
                     Permissions = user.FindAll("permission").Select(p => p.Value).ToList()
                 };

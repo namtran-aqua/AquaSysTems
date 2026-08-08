@@ -26,38 +26,48 @@ namespace AquaSolution.Client.Modals.Administration.Users
         private List<BaseDto> ListSection = new List<BaseDto>();
         private List<UserContributerDto> AllManagers = new();
         private List<ApprovalFlowDto>? ListApprovalFlow = new();
+        private bool _isInitializing = false;
         #endregion
         #region Innit
         
         public async Task ShowModelAsync(bool isEdit, CreatedAndUpdateUserDto createdAndUpdateUserDto, UserDto currenUser)
         {
+            _isInitializing = true;
             IsEdit = isEdit;
             CurrenUser = currenUser;
-            if (IsEdit)
-            {
-                CreatedUserDto = createdAndUpdateUserDto;
-            }
-            else
-            {
-                CreatedUserDto = new();
-            }
+            
             await LoadDepartment();
             await LoaPosition();
             await LoadFactory();
             await LoadManager();
             await FlowApproval();
 
-            if (CreatedUserDto.DepartmentId.HasValue)
+            if (createdAndUpdateUserDto.DepartmentId.HasValue)
             {
-                await LoadSections(CreatedUserDto.DepartmentId.Value);
+                await LoadSections(createdAndUpdateUserDto.DepartmentId.Value);
             }
             else
             {
                 ListSection.Clear();
             }
 
+            if (IsEdit)
+            {
+                CreatedUserDto = createdAndUpdateUserDto;
+                if (CreatedUserDto.SectionIds == null)
+                {
+                    CreatedUserDto.SectionIds = new List<Guid>();
+                }
+            }
+            else
+            {
+                CreatedUserDto = new();
+                CreatedUserDto.SectionIds = new List<Guid>();
+            }
+
             IsModalVisible = true;
             await InvokeAsync(StateHasChanged);
+            _isInitializing = false;
         }
         private async Task LoadDepartment()
         {
@@ -111,16 +121,17 @@ namespace AquaSolution.Client.Modals.Administration.Users
 
         private async Task OnDepartmentChanged(BaseDto item)
         {
+            if (_isInitializing) return;
+
             if (item != null && item.Id.HasValue)
             {
                 await LoadSections(item.Id.Value);
-                // Nếu department đổi, ta clear SectionId cũ (hoặc giữ nếu thuộc)
-                CreatedUserDto.SectionId = null;
+                CreatedUserDto.SectionIds = new List<Guid>();
             }
             else
             {
                 ListSection.Clear();
-                CreatedUserDto.SectionId = null;
+                CreatedUserDto.SectionIds = new List<Guid>();
             }
         }
         private async Task LoaPosition()

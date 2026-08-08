@@ -19,7 +19,6 @@ namespace AquaSolution.Data.Data.Entities.Admin
         public string CreatedBy { get; set; } = string.Empty;
         public string? Avatar { get; set; }
         public Guid? DepartmentId { get; set; }
-        public Guid? SectionId { get; set; }
         public Guid? PositionId { get;set; }
         public Guid? FactoryId { get; set; }
         public bool IsDeleted { get; set; }
@@ -27,5 +26,6 @@ namespace AquaSolution.Data.Data.Entities.Admin
         public int FlowApproval { get; set; }
         public bool IsChangeTask { get; set; }
         public int? ChangeTaskMonth { get; set; }
+        public ICollection<UserSection> UserSections { get; set; }
     }
 }

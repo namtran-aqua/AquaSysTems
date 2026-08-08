@@ -55,9 +55,18 @@ namespace AquaSolution.Server.Services.ImgsService
             var service = GetDriveService();
             var cutoffDate = DateTime.UtcNow.AddDays(-daysOld).ToString("yyyy-MM-ddTHH:mm:ssK");
             
-            // Tìm tất cả các file (không phải folder) cũ hơn số ngày quy định
+            // Lấy ID thư mục từ cấu hình
+            var folderId = _configuration["GoogleDrive:FolderId"];
+            
+            if (string.IsNullOrEmpty(folderId))
+            {
+                // Fallback nếu không có cấu hình
+                folderId = "1_hXVvUGEnyyj6WdbvVr_tX5oUSud48mZ";
+            }
+
+            // Tìm tất cả các file (không phải folder) trong thư mục cấu hình cũ hơn số ngày quy định
             var request = service.Files.List();
-            request.Q = $"mimeType != 'application/vnd.google-apps.folder' and createdTime < '{cutoffDate}' and trashed=false";
+            request.Q = $"'{folderId}' in parents and mimeType != 'application/vnd.google-apps.folder' and createdTime < '{cutoffDate}' and trashed=false";
             request.Fields = "nextPageToken, files(id, name, createdTime)";
             request.PageSize = 100;
 
