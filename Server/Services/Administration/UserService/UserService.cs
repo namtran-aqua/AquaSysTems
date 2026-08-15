@@ -712,10 +712,14 @@ public class UserService : IUserService
     public async Task<bool> SendOtpAsync(ForgotPasswordRequest request)
     {
         var user = await _userRepo.FirstOrDefaultAsync(u => u.WorkDayId == request.WorkDayId && u.IsActive && !u.IsDeleted);
-        if (user == null || string.IsNullOrEmpty(user.Email))
+        if (user == null)
         {
-            // Return true generically to prevent user enumeration
-            return true;
+            throw new Exception("WorkDay ID không tồn tại hoặc đã bị vô hiệu hoá.");
+        }
+
+        if (string.IsNullOrEmpty(user.Email) || !user.Email.Equals(request.Email, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new Exception("WorkDay ID và Email không trùng khớp.");
         }
 
         using var connection = new SqlConnection(_config.GetConnectionString("DefaultConnection"));
