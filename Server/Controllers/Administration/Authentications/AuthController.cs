@@ -64,12 +64,11 @@ public class AuthController : ControllerBase
         try
         {
             await _userService.SendOtpAsync(request);
-            // Always return success to prevent user enumeration
-            return Ok(new { message = "If the information is correct, an OTP has been sent to the registered email." });
+            return Ok(new { message = "Mã OTP đã được gửi đến email của bạn." });
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return Ok(new { message = "If the information is correct, an OTP has been sent to the registered email." });
+            return BadRequest(new { message = ex.Message });
         }
     }
 

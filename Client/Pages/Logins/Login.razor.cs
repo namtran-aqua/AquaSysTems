@@ -49,7 +49,7 @@ public partial class Login
             return;
         }
 
-        var response = await Http.PostAsJsonAsync("/api/auth/login", new LoginRequest
+        var response = await Http.PostAsJsonAsync("api/auth/login", new LoginRequest
         {
             UserName = username,
             Password = password
@@ -136,7 +136,7 @@ public partial class Login
             return;
         }
 
-        var response = await Http.PostAsJsonAsync("/api/auth/forgot-password", new ForgotPasswordRequest
+        var response = await Http.PostAsJsonAsync("api/auth/forgot-password", new ForgotPasswordRequest
         {
             WorkDayId = username,
             Email = resetEmail
@@ -144,13 +144,28 @@ public partial class Login
 
         if (response.IsSuccessStatusCode)
         {
-            await Message.Success("If the information is correct, an OTP has been sent to the registered email.");
+            var content = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+            if (content != null && content.ContainsKey("message"))
+            {
+                await Message.Success(content["message"]);
+            }
+            else
+            {
+                await Message.Success("Mã OTP đã được gửi đến email của bạn.");
+            }
             currentScreenState = LoginScreenState.VerifyOtp;
         }
         else
         {
-            await Message.Success("If the information is correct, an OTP has been sent to the registered email.");
-            currentScreenState = LoginScreenState.VerifyOtp;
+            var errorContent = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+            if (errorContent != null && errorContent.ContainsKey("message"))
+            {
+                await Message.Error(errorContent["message"]);
+            }
+            else
+            {
+                await Message.Error("Đã có lỗi xảy ra. Vui lòng thử lại sau.");
+            }
         }
     }
 
@@ -162,7 +177,7 @@ public partial class Login
             return;
         }
 
-        var response = await Http.PostAsJsonAsync("/api/auth/verify-otp", new VerifyOtpRequest
+        var response = await Http.PostAsJsonAsync("api/auth/verify-otp", new VerifyOtpRequest
         {
             WorkDayId = username,
             Otp = otpCode
@@ -206,7 +221,7 @@ public partial class Login
             return;
         }
 
-        var response = await Http.PostAsJsonAsync("/api/auth/reset-password-with-token", new ResetPasswordRequest
+        var response = await Http.PostAsJsonAsync("api/auth/reset-password-with-token", new ResetPasswordRequest
         {
             ResetToken = resetToken,
             NewPassword = newPassword,
