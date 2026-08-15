@@ -12,6 +12,7 @@ using AquaSolution.Server.Services.Administration.SystemLock;
 using AquaSolution.Server.Services.Administration.UserService;
 using AquaSolution.Server.Services.Common.HandleInventories;
 using AquaSolution.Server.Services.Common.UserConnectionManager;
+using AquaSolution.Server.Services.Common.EmailService;
 using AquaSolution.Server.Services.ePAD;
 using AquaSolution.Server.Services.HRMS;
 using AquaSolution.Server.Services.ImgsService;
@@ -98,6 +99,7 @@ namespace AquaSolution.Server
             #endregion
             #region Common
             services.AddScoped<IUserConnectionManager, UserConnectionManager>();
+            services.AddScoped<IEmailService, EmailService>();
             #endregion
             #region ePAD
             services.AddScoped<IePADService, ePADService>();

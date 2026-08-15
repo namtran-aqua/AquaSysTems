@@ -64,15 +64,21 @@ namespace AquaSolution.Server.Services.ImgsService
                 folderId = "1_hXVvUGEnyyj6WdbvVr_tX5oUSud48mZ";
             }
 
-            // Tìm tất cả các file (không phải folder) trong thư mục cấu hình cũ hơn số ngày quy định
-            var request = service.Files.List();
-            request.Q = $"'{folderId}' in parents and mimeType != 'application/vnd.google-apps.folder' and createdTime < '{cutoffDate}' and trashed=false";
-            request.Fields = "nextPageToken, files(id, name, createdTime)";
-            request.PageSize = 100;
+            // Gọi hàm đệ quy để xóa file trong thư mục hiện tại và các thư mục con
+            await DeleteOldFilesInFolderRecursiveAsync(service, folderId, cutoffDate);
+        }
+
+        private async Task DeleteOldFilesInFolderRecursiveAsync(DriveService service, string currentFolderId, string cutoffDate)
+        {
+            // 1. Xóa tất cả các file (không phải folder) trong thư mục hiện tại
+            var fileRequest = service.Files.List();
+            fileRequest.Q = $"'{currentFolderId}' in parents and mimeType != 'application/vnd.google-apps.folder' and createdTime < '{cutoffDate}' and trashed=false";
+            fileRequest.Fields = "nextPageToken, files(id, name, createdTime)";
+            fileRequest.PageSize = 100;
 
             do
             {
-                var result = await request.ExecuteAsync();
+                var result = await fileRequest.ExecuteAsync();
                 if (result.Files != null)
                 {
                     foreach (var file in result.Files)
@@ -88,8 +94,28 @@ namespace AquaSolution.Server.Services.ImgsService
                         }
                     }
                 }
-                request.PageToken = result.NextPageToken;
-            } while (request.PageToken != null);
+                fileRequest.PageToken = result.NextPageToken;
+            } while (fileRequest.PageToken != null);
+
+            // 2. Tìm tất cả các thư mục con và gọi đệ quy
+            var folderRequest = service.Files.List();
+            folderRequest.Q = $"'{currentFolderId}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed=false";
+            folderRequest.Fields = "nextPageToken, files(id, name)";
+            folderRequest.PageSize = 100;
+
+            do
+            {
+                var result = await folderRequest.ExecuteAsync();
+                if (result.Files != null)
+                {
+                    foreach (var folder in result.Files)
+                    {
+                        // Đệ quy vào từng thư mục con
+                        await DeleteOldFilesInFolderRecursiveAsync(service, folder.Id, cutoffDate);
+                    }
+                }
+                folderRequest.PageToken = result.NextPageToken;
+            } while (folderRequest.PageToken != null);
         }
     }
 }

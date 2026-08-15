@@ -1,4 +1,4 @@
-﻿using AquaService.Shared.AuthModels;
+using AquaService.Shared.AuthModels;
 using AquaSolution.Shared.Administration.UserManagements;
 using AquaSolution.Shared.AuthModels;
 using AquaSolution.Shared.CommonDto;
@@ -20,5 +20,8 @@ namespace AquaSolution.Server.Services.Administration.UserService
         Task<List<UserContributerDto>> GetContributer();
         Task<List<UserSelectedDto>> LoadUserSelected();
         Task<bool> ResetPasswordAsync(ResetPassword request);
+        Task<bool> SendOtpAsync(ForgotPasswordRequest request);
+        Task<string> VerifyOtpAsync(VerifyOtpRequest request);
+        Task<bool> ResetPasswordWithTokenAsync(ResetPasswordRequest request);
     }
 }

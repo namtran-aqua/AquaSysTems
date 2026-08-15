@@ -15,6 +15,10 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using AquaSolution.Data.Connection;
+using AquaSolution.Server.Services.Common.EmailService;
+using Dapper;
+using Microsoft.Data.SqlClient;
+using System.Security.Cryptography;
 
 public class UserService : IUserService
 {
@@ -34,6 +38,7 @@ public class UserService : IUserService
     private readonly AquaDbContext _context;
     private readonly IConfiguration _config;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IEmailService _emailService;
     public UserService(
         IRepository<User> userRepo,
         IRepository<UserRole> userRoleRepo,
@@ -50,7 +55,8 @@ public class UserService : IUserService
         IRepository<Section> sectionRepo,
         IRepository<UserSection> userSectionRepo,
         AquaDbContext context,
-        IConfiguration config)
+        IConfiguration config,
+        IEmailService emailService)
     {
         _userRepo = userRepo;
         _userRoleRepo = userRoleRepo;
@@ -68,6 +74,7 @@ public class UserService : IUserService
         _sectionRepo = sectionRepo;
         _userSectionRepo = userSectionRepo;
         _context = context;
+        _emailService = emailService;
     }
 
     public async Task<LoginResponse?> LoginAsync(LoginRequest loginRequest)
@@ -341,6 +348,10 @@ public class UserService : IUserService
             var roleIds = userRoles.Select(ur => ur.RoleId).Distinct().ToList();
             var roles = await _roleRepo.WhereAsync(r => roleIds.Contains(r.Id));
 
+            var sectionIdsForUsers = allUserSections.Select(us => us.SectionId).Distinct().ToList();
+            var allSections = await _sectionRepo.WhereAsync(s => sectionIdsForUsers.Contains(s.Id));
+            var sectionDict = allSections.ToDictionary(s => s.Id, s => s.Name);
+
             // Lấy tất cả rolePermission + Permission
             var rolePermissions = await _rolePermissionRepo.WhereAsync(rp => roleIds.Contains(rp.RoleId));
             var permissionIds = rolePermissions.Select(rp => rp.PermissionId).Distinct().ToList();
@@ -357,6 +368,8 @@ public class UserService : IUserService
             foreach (var user in userListData)
             {
                 user.SectionIds = allUserSections.Where(us => us.UserId == user.Id).Select(us => us.SectionId).ToList();
+                var userSectionNames = user.SectionIds.Select(id => sectionDict.TryGetValue(id, out var name) ? name : "").Where(n => !string.IsNullOrEmpty(n)).ToList();
+                user.SectionName = string.Join(", ", userSectionNames);
 
                 var userRoleIds = userRoles.Where(ur => ur.UserId == user.Id).Select(ur => ur.RoleId).Distinct().ToList();
                 var userRolesData = roles.Where(r => userRoleIds.Contains(r.Id)).ToList();
@@ -442,26 +455,27 @@ public class UserService : IUserService
 
             var user = new User
             {
-                Id = createdUserDto.Id,
+                Id = Guid.NewGuid(),
                 WorkDayId = createdUserDto.WorkDayId,
                 FirstName = createdUserDto.FirstName,
                 LastName = createdUserDto.LastName,
                 FullName = createdUserDto.FullName,
                 Email = createdUserDto.Email,
                 PhoneNumber = createdUserDto.PhoneNumber,
-                CreatedTime = createdUserDto.CreatedTime,
                 ManagerId = createdUserDto.ManagerId,
-                GroupId = createdUserDto.GroupId,
                 PasswordHash = hashedPassword,
+                GroupId = createdUserDto.GroupId,
                 NormalizedEmail = createdUserDto.Email?.ToUpper(),
-                IsActive = true,
-                CreatedBy = createdUserDto.CreatedBy,
                 DepartmentId = createdUserDto.DepartmentId,
-
-                PositionId = createdUserDto.PositionId,
+                IsActive = true,
+                CreatedTime = DateTime.Now,
+                CreatedBy = createdUserDto.CreatedBy,
                 FactoryId = createdUserDto.FactoryId,
+                PositionId = createdUserDto.PositionId,
                 FlowApproval = createdUserDto.FlowApproval ?? 1,
-                Avatar = null,
+                IsChangeTask = createdUserDto.IsChangeTask,
+                ChangeTaskMonth = createdUserDto.ChangeTaskMonth,
+                Avatar = null
             };
             await _userRepo.InsertAsync(user);
             await _userRepo.SaveChangesAsync();
@@ -533,6 +547,8 @@ public class UserService : IUserService
             user.FactoryId = updateUserDto.FactoryId;
             user.PositionId = updateUserDto.PositionId;
             user.FlowApproval = updateUserDto.FlowApproval ?? 1;
+            user.IsChangeTask = updateUserDto.IsChangeTask;
+            user.ChangeTaskMonth = updateUserDto.ChangeTaskMonth;
             await _userRepo.UpdateAsync(user);
 
             // Update UserSections
@@ -693,4 +709,145 @@ public class UserService : IUserService
         return permission_User.ToList();
     }
 
+    public async Task<bool> SendOtpAsync(ForgotPasswordRequest request)
+    {
+        var user = await _userRepo.FirstOrDefaultAsync(u => u.WorkDayId == request.WorkDayId && u.IsActive && !u.IsDeleted);
+        if (user == null || string.IsNullOrEmpty(user.Email))
+        {
+            // Return true generically to prevent user enumeration
+            return true;
+        }
+
+        using var connection = new SqlConnection(_config.GetConnectionString("DefaultConnection"));
+        await connection.OpenAsync();
+
+        // Invalidate old OTPs
+        var invalidateSql = "UPDATE Admin.Tbl_PasswordReset SET IsUsed = 1 WHERE UserID = @UserId AND IsUsed = 0";
+        await connection.ExecuteAsync(invalidateSql, new { UserId = user.Id });
+
+        // Generate 6-digit OTP
+        var otp = new Random().Next(100000, 999999).ToString();
+        var otpHash = PasswordHelper.HashPassword(otp);
+
+        var insertSql = @"
+            INSERT INTO Admin.Tbl_PasswordReset (UserID, OtpHash, Attempts, OtpExpiredAt, IsUsed, CreatedDate)
+            VALUES (@UserId, @OtpHash, 0, @OtpExpiredAt, 0, GETDATE())";
+
+        await connection.ExecuteAsync(insertSql, new
+        {
+            UserId = user.Id,
+            OtpHash = otpHash,
+            OtpExpiredAt = DateTime.Now.AddMinutes(5)
+        });
+
+        // Send email
+        await _emailService.SendPasswordResetOtpAsync(user.Email, user.WorkDayId, otp);
+
+        return true;
+    }
+
+    public async Task<string> VerifyOtpAsync(VerifyOtpRequest request)
+    {
+        var user = await _userRepo.FirstOrDefaultAsync(u => u.WorkDayId == request.WorkDayId && u.IsActive && !u.IsDeleted);
+        if (user == null)
+            throw new Exception("Invalid request.");
+
+        using var connection = new SqlConnection(_config.GetConnectionString("DefaultConnection"));
+        await connection.OpenAsync();
+
+        var selectSql = @"
+            SELECT TOP 1 ID, UserID, OtpHash, Attempts, OtpExpiredAt, IsUsed
+            FROM Admin.Tbl_PasswordReset
+            WHERE UserID = @UserId AND IsUsed = 0 AND OtpExpiredAt > GETDATE()
+            ORDER BY CreatedDate DESC";
+
+        var resetRecord = await connection.QueryFirstOrDefaultAsync<dynamic>(selectSql, new { UserId = user.Id });
+        if (resetRecord == null)
+            throw new Exception("OTP expired or invalid.");
+
+        if (resetRecord.Attempts >= 5)
+        {
+            await connection.ExecuteAsync("UPDATE Admin.Tbl_PasswordReset SET IsUsed = 1 WHERE ID = @Id", new { Id = resetRecord.ID });
+            throw new Exception("Too many attempts. Please request a new OTP.");
+        }
+
+        if (!PasswordHelper.VerifyPassword((string)resetRecord.OtpHash, request.Otp))
+        {
+            await connection.ExecuteAsync("UPDATE Admin.Tbl_PasswordReset SET Attempts = Attempts + 1 WHERE ID = @Id", new { Id = resetRecord.ID });
+            throw new Exception("Invalid OTP.");
+        }
+
+        // OTP is correct. Generate ResetToken.
+        var resetTokenBytes = new byte[32];
+        using (var rng = RandomNumberGenerator.Create())
+        {
+            rng.GetBytes(resetTokenBytes);
+        }
+        var resetToken = Convert.ToBase64String(resetTokenBytes);
+        var resetTokenHash = PasswordHelper.HashPassword(resetToken);
+
+        var updateSql = @"
+            UPDATE Admin.Tbl_PasswordReset
+            SET ResetToken = @ResetTokenHash,
+                ResetTokenExpiredAt = DATEADD(minute, 15, GETDATE())
+            WHERE ID = @Id";
+
+        await connection.ExecuteAsync(updateSql, new { ResetTokenHash = resetTokenHash, Id = resetRecord.ID });
+
+        return resetToken;
+    }
+
+    public async Task<bool> ResetPasswordWithTokenAsync(ResetPasswordRequest request)
+    {
+        if (request.NewPassword != request.ConfirmPassword)
+            throw new Exception("Confirm password does not match the new password.");
+
+        using var connection = new SqlConnection(_config.GetConnectionString("DefaultConnection"));
+        await connection.OpenAsync();
+
+        var selectSql = @"
+            SELECT TOP 1 ID, UserID, ResetToken, ResetTokenExpiredAt, IsUsed
+            FROM Admin.Tbl_PasswordReset
+            WHERE IsUsed = 0 AND ResetTokenExpiredAt > GETDATE()
+            ORDER BY CreatedDate DESC";
+
+        var resetRecords = await connection.QueryAsync<dynamic>(selectSql);
+        dynamic validRecord = null;
+        foreach (var record in resetRecords)
+        {
+            if (record.ResetToken != null && PasswordHelper.VerifyPassword((string)record.ResetToken, request.ResetToken))
+            {
+                validRecord = record;
+                break;
+            }
+        }
+
+        if (validRecord == null)
+            throw new Exception("Invalid or expired reset token.");
+
+        using var transaction = await connection.BeginTransactionAsync();
+        try
+        {
+            var user = await _userRepo.GetByIdAsync((Guid)validRecord.UserID);
+            if (user == null || user.IsDeleted || !user.IsActive)
+                throw new Exception("User does not exist or has been deactivated.");
+
+            var newHashedPassword = PasswordHelper.HashPassword(request.NewPassword);
+            user.PasswordHash = newHashedPassword;
+
+            // In EF Core, we should use the DbContext for updating user so it tracks it or just update it via _userRepo
+            await _userRepo.UpdateAsync(user);
+
+            var updateTokenSql = "UPDATE Admin.Tbl_PasswordReset SET IsUsed = 1 WHERE ID = @Id";
+            await connection.ExecuteAsync(updateTokenSql, new { Id = validRecord.ID }, transaction);
+
+            await transaction.CommitAsync();
+            return true;
+        }
+        catch (Exception)
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+    }
 }
