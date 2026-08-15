@@ -109,6 +109,8 @@ namespace AquaSolution.Client.Pages.Administration
                 PositionId = user.PositionId,
                 IsActive = user.IsActive,
                 FlowApproval = user.FlowApproval,
+                IsChangeTask = user.IsChangeTask,
+                ChangeTaskMonth = user.ChangeTaskMonth,
                 SectionIds = user.SectionIds != null ? user.SectionIds : new List<Guid>()
             };
             if (CurrenUser != null) await _userModal?.ShowModelAsync(true, updateDto, CurrenUser)!;

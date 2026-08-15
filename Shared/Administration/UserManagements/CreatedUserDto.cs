@@ -36,5 +36,7 @@ namespace AquaSolution.Shared.UserManagements
         public Guid? PositionId { get; set; }
         public Guid? FactoryId { get; set; }
         public int? FlowApproval { get; set; }
+        public bool IsChangeTask { get; set; }
+        public int? ChangeTaskMonth { get; set; }
     }
 }

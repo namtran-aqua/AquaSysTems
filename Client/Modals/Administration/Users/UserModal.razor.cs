@@ -13,6 +13,7 @@ namespace AquaSolution.Client.Modals.Administration.Users
     public partial class UserModal
     {
         #region Declaration
+        [Inject] private ModalService modal { get; set; }
         [Inject] private HttpClient Http { get; set; }
         [Parameter] public EventCallback OnSave { get; set; }
         private UserDto CurrenUser { get; set; }
@@ -26,6 +27,7 @@ namespace AquaSolution.Client.Modals.Administration.Users
         private List<BaseDto> ListSection = new List<BaseDto>();
         private List<UserContributerDto> AllManagers = new();
         private List<ApprovalFlowDto>? ListApprovalFlow = new();
+        private List<int> Months = new List<int> { 4,7};
         private bool _isInitializing = false;
         #endregion
         #region Innit
@@ -185,6 +187,26 @@ namespace AquaSolution.Client.Modals.Administration.Users
 
         #endregion
         #region Action
+        private async Task OnChangeTaskToggle(bool value)
+        {
+            // TODO: Yêu cầu quyền "ChangeTask". Hiện tại tạm mở để sau này admin tự phân quyền.
+            var confirm = await AquaSolution.Client.Common.MessageBox.Confirm(modal, value ? "Xác nhận bật trạng thái IsChangeTask?" : "Xác nhận tắt trạng thái IsChangeTask?");
+            if (confirm)
+            {
+                CreatedUserDto.IsChangeTask = value;
+                if (!value)
+                {
+                    CreatedUserDto.ChangeTaskMonth = null;
+                }
+            }
+            else
+            {
+                // Hoàn tác lại giá trị UI của Switch do người dùng chọn "No"
+                CreatedUserDto.IsChangeTask = !value;
+            }
+            await InvokeAsync(StateHasChanged);
+        }
+
         private void Close()
         {
             IsModalVisible = false;

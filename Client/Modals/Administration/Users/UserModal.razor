@@ -131,6 +131,26 @@
                     </FormItem>
                 </AntDesign.Col>
             }
+            <AntDesign.Col Span="4">
+                <FormItem Label="IsChangeTask">
+                    <Switch Value="@CreatedUserDto.IsChangeTask" OnChange="OnChangeTaskToggle" />
+                </FormItem>
+            </AntDesign.Col>
+            
+            @if (CreatedUserDto.IsChangeTask)
+            {
+                <AntDesign.Col Span="6">
+                    <FormItem Label="Change Month">
+                        <Select TItem="int" TItemValue="int?"
+                                DataSource="@Months"
+                                @bind-Value="@CreatedUserDto.ChangeTaskMonth"
+                                ItemValue="c => c"
+                                ItemLabel="c => c.ToString()"
+                                AllowClear="true">
+                        </Select>
+                    </FormItem>
+                </AntDesign.Col>
+            }
 
         </Row>
     </Form>

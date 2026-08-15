@@ -118,6 +118,11 @@
                         <DescriptionsItem Span="2" Title="Department">@User.DepartmentName</DescriptionsItem>
                         <DescriptionsItem Span="2" Title="Section">@User.SectionName</DescriptionsItem>
                         <DescriptionsItem Span="2" Title="IsActive">@User.IsActive</DescriptionsItem>
+                        <DescriptionsItem Span="2" Title="Is Change Task">@User.IsChangeTask</DescriptionsItem>
+                        @if (User.IsChangeTask)
+                        {
+                            <DescriptionsItem Span="2" Title="Change Month">@User.ChangeTaskMonth</DescriptionsItem>
+                        }
                     </Descriptions>
                 </Panel>
                 <Panel Header="Roles" Key="2">
