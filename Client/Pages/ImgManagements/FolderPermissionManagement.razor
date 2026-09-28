@@ -1,0 +1,66 @@
+@page "/folder-permission-management"
+@using AquaSolution.Shared.UserManagements
+@using AquaSolution.Shared.Imgs
+@using AntDesign
+
+<PageHeader Title="Quản lý Phân Quyền Thư Mục Google Drive" />
+
+<Spin Spinning="@loading">
+    @if (foldersList != null && foldersList.Any())
+    {
+        <Collapse Accordion="true">
+            @foreach (var folder in foldersList)
+            {
+                int permCount = folderPermissionsMap.ContainsKey(folder.Id) ? folderPermissionsMap[folder.Id].Count : 0;
+                int selectedCount = selectedUsersMap.ContainsKey(folder.Id) ? selectedUsersMap[folder.Id].Count() : 0;
+                string folderDisplayName = string.IsNullOrEmpty(folder.Name) ? "Không có tên" : folder.Name;
+                <Panel Key="@folder.Id" Header="@($"{folderDisplayName} ({permCount})")">
+                    <div style="margin-bottom: 16px; display: flex; gap: 16px; align-items: center;">
+                        <div style="flex: 1;">
+                            <Select TItem="UserDto"
+                                    TItemValue="string"
+                                    DataSource="@allUsers"
+                                    @bind-Value="@selectValueMap[folder.Id]"
+                                    ValueName="@nameof(UserDto.WorkDayId)"
+                                    LabelName="@nameof(UserDto.SearchLabel)"
+                                    EnableSearch
+                                    OnSelectedItemChanged="@((UserDto u) => OnUserSelected(folder.Id, u))"
+                                    Placeholder="Tìm và chọn user theo tên hoặc mã NV..."
+                                    Style="width: 100%;">
+                            </Select>
+                        </div>
+                        <div style="white-space: nowrap;">
+                            <span style="margin-right: 16px;">
+                                <Text Strong>Danh sách chờ lưu: @selectedCount</Text>
+                            </span>
+                            <Button Type="ButtonType.Primary" OnClick="@(() => SavePermissions(folder))" Loading="@(savingMap.ContainsKey(folder.Id) && savingMap[folder.Id])">
+                                Lưu Phân Quyền
+                            </Button>
+                        </div>
+                    </div>
+
+                    <Table TItem="UserDto"
+                           DataSource="@selectedUsersMap[folder.Id]"
+                           Size="TableSize.Small"
+                           Bordered
+                           PageSize="10"
+                           RowKey="x => x.WorkDayId">
+                        
+                        <ColumnDefinitions Context="row">
+                            <PropertyColumn Title="Mã NV" Property="c => c.WorkDayId" />
+                            <PropertyColumn Title="Họ Tên" Property="c => c.FullName" />
+                            <PropertyColumn Title="Phòng Ban" Property="c => c.DepartmentName" />
+                            <ActionColumn Title="Thao tác" Align="ColumnAlign.Center">
+                                <Button Type="ButtonType.Text" Danger OnClick="@(() => RemoveUser(folder.Id, row))">Xóa</Button>
+                            </ActionColumn>
+                        </ColumnDefinitions>
+                    </Table>
+                </Panel>
+            }
+        </Collapse>
+    }
+    else if (!loading)
+    {
+        <Empty Description="@("Không có thư mục nào để hiển thị")" />
+    }
+</Spin>

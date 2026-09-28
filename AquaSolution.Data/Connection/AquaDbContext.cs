@@ -11,6 +11,8 @@ using AquaSolution.Data.Data.MappingConfigurations.RequestITSuport;
 using AquaSolution.Data.Data.MappingConfigurations.Scraps;
 using AquaSolution.Data.Entities.Scraps;
 using AquaSolution.Data.KPI.Entities;
+using AquaSolution.Data.Data.Entities.Imgs;
+using AquaSolution.Data.Data.MappingConfigurations.Imgs;
 using Microsoft.EntityFrameworkCore;
 
 namespace AquaSolution.Data.Connection
@@ -98,6 +100,9 @@ namespace AquaSolution.Data.Connection
 
 
         #endregion
+        #region Imgs
+        public DbSet<FolderPermission> tbl_FolderPermissions { get; set; }
+        #endregion
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfiguration(new MenuConfiguration());
@@ -173,6 +178,10 @@ namespace AquaSolution.Data.Connection
             modelBuilder.ApplyConfiguration(new WeightConfiguration());
             modelBuilder.ApplyConfiguration(new FlowApprovalScrapConfiguration());
             
+            #endregion
+
+            #region Imgs
+            modelBuilder.ApplyConfiguration(new FolderPermissionConfiguration());
             #endregion
         }
     }

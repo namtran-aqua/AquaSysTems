@@ -65,9 +65,12 @@ namespace AquaSolution.Client.Modals.ScrapManagement.Scrap
             else
             {
                 var defaultSectionId = user.Sections?.FirstOrDefault()?.Id;
+                var sectionPart = user.Sections?.FirstOrDefault()?.Name;
+                var titleParts = new[] { "SCRAP", user.FactoryName, user.DepartmentName, sectionPart, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") }
+                    .Where(p => !string.IsNullOrWhiteSpace(p));
                 HandleScrap = new HandleScrapDto
                 {
-                    Title = $"SCRAP - {user.FactoryName} - {user.DepartmentName} - {user.Sections?.FirstOrDefault()?.Name} - {DateTime.Now:yyyy-MM-dd HH:mm:ss}".ToUpper(),
+                    Title = string.Join(" - ", titleParts).ToUpper(),
                     CreatedById = user.Id,
                     HistoryDetails = new(),
                     DepartmentId = user.DepartmentId ?? Guid.Empty,
@@ -139,7 +142,9 @@ namespace AquaSolution.Client.Modals.ScrapManagement.Scrap
             if (Mode == ScrapModalMode.Create && HandleScrap != null && CurrenUser != null)
             {
                 var sectionName = section?.Name ?? CurrenUser.SectionName;
-                HandleScrap.Title = $"SCRAP - {CurrenUser.FactoryName} - {CurrenUser.DepartmentName} - {sectionName} - {DateTime.Now:yyyy-MM-dd HH:mm:ss}".ToUpper();
+                var parts = new[] { "SCRAP", CurrenUser.FactoryName, CurrenUser.DepartmentName, sectionName, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") }
+                    .Where(p => !string.IsNullOrWhiteSpace(p));
+                HandleScrap.Title = string.Join(" - ", parts).ToUpper();
             }
         }
         #endregion
@@ -147,9 +152,12 @@ namespace AquaSolution.Client.Modals.ScrapManagement.Scrap
         #region Submit Actions
         private async Task SubmitAsync()
         {
-            if (HandleScrap!.SectionId == null)
+            // Chỉ bắt buộc chọn Section nếu user được gán section
+            // Nếu user không có section nào → phòng ban không phân section, cho phép tạo
+            var userHasSections = CurrenUser?.Sections != null && CurrenUser.Sections.Any();
+            if (userHasSections && HandleScrap!.SectionId == null)
             {
-                await Message.Warning("Bạn chưa được gán Section hoặc chưa chọn Section!");
+                await Message.Warning("Vui lòng chọn Section!");
                 return;
             }
 

@@ -1,4 +1,4 @@
-﻿using AntDesign;
+using AntDesign;
 using AquaSolution.Data.Connection;
 using AquaSolution.Shared.HRMSLOCAL;
 using AquaSolution.Shared.SemiReport;
@@ -56,8 +56,8 @@ namespace AquaSolution.Server.Services.SemiReport.SemiReportService
                 {
                     result.Add(new SemiReportDto
                     {
-                        InnerBarcode = reader.GetString(0),
-                        ScanTimeInner = reader.GetDateTime(1),
+                        InnerBarcode = reader.IsDBNull(0) ? string.Empty : reader.GetString(0),
+                        ScanTimeInner = reader.IsDBNull(1) ? default(DateTime) : reader.GetDateTime(1),
                         ScrapBarcode = reader.IsDBNull(2) ? null : reader.GetString(2),
                         ScanTimeScrap = reader.IsDBNull(3) ? null : reader.GetDateTime(3),
                         OuterBarcode = reader.IsDBNull(4) ? null : reader.GetString(4),
@@ -73,7 +73,8 @@ namespace AquaSolution.Server.Services.SemiReport.SemiReportService
             }
             catch (Exception ex)
             {
-                throw ex;
+                // Preserve stack trace and throw
+                throw new Exception($"Error loading SemiReport data: {ex.Message}", ex);
             }
 
         }

@@ -1,4 +1,4 @@
-﻿
+
 using AquaSolution.Data.Connection;
 using AquaSolution.Shared.HRMSLOCAL;
 using AquaSolution.Shared.SemiReport;
@@ -60,7 +60,7 @@ namespace AquaSolution.Server.Services.SemiReport.RollReportService
             }
             catch (Exception ex)
             {
-                throw ex;
+                throw new Exception($"Error loading RollReport data: {ex.Message}", ex);
             }
 
         }

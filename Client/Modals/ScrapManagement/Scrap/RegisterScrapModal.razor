@@ -380,26 +380,27 @@
                                 <Select TItem="ConfirmUnitType"
                                         TItemValue="ConfirmUnitType"
                                         DataSource="@(Enum.GetValues(typeof(ConfirmUnitType)).Cast<ConfirmUnitType>())"
-                                        @bind-Value="context.ConfirmUnitType"
+                                        Value="context.ConfirmUnitType"
+                                        ValueChanged="@((ConfirmUnitType val) => { context.ConfirmUnitType = val; StateHasChanged(); })"
                                         Disabled="@_isConfirmed"
                                         Style="width:100%">
                                     <ItemTemplate Context="unitType">
-                                        @(unitType == ConfirmUnitType.Weight ? "Kg" : "Cái")
+                                        @unitType.ToString()
                                     </ItemTemplate>
                                 </Select>
                             </Column>
                             <Column TData="decimal?" Title="Thực nhận" Width="110px">
                                 <AntDesign.InputNumber TValue="decimal?"
-                                                       @bind-Value="context.ConfirmAmount"
+                                                       Value="context.ConfirmAmount"
+                                                       ValueChanged="@((decimal? val) => { context.ConfirmAmount = val; })"
                                                        Min="0"
                                                        Disabled="@_isConfirmed"
                                                        Style="width:100%"
-                                                       Parser="@(context.ConfirmUnitType == ConfirmUnitType.Unit ? (Func<string, string>)(val => System.Text.RegularExpressions.Regex.Replace(val ?? "", @"[^\d]", "")) : null)"
-                                                       Formatter="@(context.ConfirmUnitType == ConfirmUnitType.Unit ? (Func<decimal?, string>)(val => val?.ToString("N0") ?? "") : (Func<decimal?, string>)(val => val?.ToString("N2") ?? ""))"
                                                        Placeholder="@(context.ConfirmUnitType == ConfirmUnitType.Weight ? "kg" : "cái")" />
                             </Column>
                             <Column TData="string" Title="Ghi chú nhận" Width="150px">
-                                <AntDesign.Input @bind-Value="context.ConfirmNote"
+                                <AntDesign.Input Value="context.ConfirmNote"
+                                                 ValueChanged="@((string val) => context.ConfirmNote = val)"
                                                  Disabled="@_isConfirmed"
                                                  Placeholder="Ghi chú..." />
                             </Column>

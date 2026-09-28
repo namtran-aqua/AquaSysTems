@@ -69,6 +69,7 @@ namespace AquaSolution.Server
             services.AddScoped<IApprovalFlowService, ApprovalFlowService>();
             services.AddScoped<ISystemLockService, SystemLockService>();
             services.AddScoped<IImgService, ImgService>();
+            services.AddScoped<IFolderPermissionService, FolderPermissionService>();
             services.AddScoped<ISectionService, SectionService>();
 
             #endregion

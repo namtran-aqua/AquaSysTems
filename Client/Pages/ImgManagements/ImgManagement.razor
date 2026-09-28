@@ -1,4 +1,4 @@
-﻿@page "/img-management"
+@page "/img-management"
 @using AquaSolution.Client.Common
 @using AquaSolution.Client.Modals.Administration.Users
 @using AntDesign
@@ -66,21 +66,18 @@
     <div style="display: flex;  align-items: center; margin-bottom: 10px;">
     </div>
 </div>
-<style>
-    
-    window.downloadFile = async (url, fileName) = > {
+<script>
+    window.downloadFile = async (url, fileName) => {
         const res = await fetch(url);
         const blob = await res.blob();
         const link = document.createElement("a");
-        link .href = URL.createObjectURL(blob);
-        link .download = fileName;
-        document .body.appendChild(link);
-        link .click();
-        document .body.removeChild(link);
-    }
-
-    ;
-</style>
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+</script>
 <div style="width:100%;overflow-x:scroll ;max-height:70vh; ">
 
     
@@ -96,52 +93,49 @@
      
             @foreach (var group in images)
             {
-                <Panel Header="@($"{group.WorkId} ({group.CloudinaryImageDtos.Count})")">
-                    @if (CurrenUser.WorkDayId == group.WorkId || CurrenUser.Roles.Any(x => x.Name == "Admin"))
+                <Panel Header="@($"{group.FolderName} ({group.GoogleDriveImageDtos.Count})")">
+                    @if (CurrenUser.Roles.Any(x => x.Name == "Admin"))
                     {
-                        <Button OnClick="@(async () => await DeleteAllImg(group.WorkId))">
+                        <Button OnClick="@(async () => await DeleteAllImg(group.FolderName))">
                             <Icon Type="delete" /> Delete All
                         </Button>
                     }
-                    
-                    @if (!SelectedMap.ContainsKey(group.WorkId))
+                    <Button OnClick="@(async () => await DownloadSelectedImg(group.FolderName))" Style="margin-left: 8px;">
+                        <Icon Type="download" /> Download Selected
+                    </Button>
+                    @if (!SelectedMap.ContainsKey(group.FolderName))
                     {
-                        SelectedMap[group.WorkId] = new List<CloudinaryImageDto>();
+                        SelectedMap[group.FolderName] = new List<GoogleDriveImageDto>();
                     }
 
-                    <Table TItem="CloudinaryImageDto"
-                           DataSource="group.CloudinaryImageDtos"
+                    <Table TItem="GoogleDriveImageDto"
+                           DataSource="group.GoogleDriveImageDtos"
                            Size="TableSize.Small"
                            Bordered
-                           RowKey="x => x.PublicId"
-                           OnSelectAll="(b) => OnSelectAll(b, group.WorkId)"
-                           @bind-SelectedRows="SelectedMap[group.WorkId]"
+                           RowKey="x => x.FileId"
+                           OnSelectAll="(b) => OnSelectAll(b, group.FolderName)"
+                           @bind-SelectedRows="SelectedMap[group.FolderName]"
                            HidePagination
                            Loading="@Loading"
                            Class="customTable fix-table-header">
                        
                         <ColumnDefinitions Context="row">
-                            @if (CurrenUser.WorkDayId == group.WorkId || CurrenUser.Roles.Any(x => x.Name == "Admin"))
-                            {
-                                <Selection></Selection>
-                            }
+                            <Selection></Selection>
                             <!-- Action -->
-                            <Column Align="ColumnAlign.Center" TData="CloudinaryImageDto" Width="50px" Title="Action">
-                                @if (CurrenUser.WorkDayId == row.WorkId || CurrenUser.Roles.Any(x => x.Name == "Admin"))
+                            <Column Align="ColumnAlign.Center" TData="GoogleDriveImageDto" Width="50px" Title="Action">
+                                @if (CurrenUser.Roles.Any(x => x.Name == "Admin"))
                                 {
-                                   
                                     <Template Style="gap:5px">
                                         <ActionColumn>
                                             <Button Type="ButtonType.Text" OnClick="@(async () => await Delete(row))" Style="text-align: left;">
                                                 <Icon Type="delete" /> Delete
                                             </Button>
                                         </ActionColumn>
-              
                                     </Template>
                                 }
                                 <Template Style="gap:5px">
                                     <ActionColumn>
-                                        <a href="@row.SecureUrl" target="_blank" style="width:500px;height:500px;">
+                                        <a href="/api/Img/thumbnail/@row.FileId" target="_blank" style="width:500px;height:500px;">
                                             👁View
                                         </a>
                                     </ActionColumn>
@@ -150,33 +144,32 @@
                                
                             </Column>
                             <!-- Ảnh -->
-                            <Column Align="ColumnAlign.Center" TData="CloudinaryImageDto" Width="170px" Title="Image">
+                            <Column Align="ColumnAlign.Center" TData="GoogleDriveImageDto" Width="170px" Title="Image">
                                 <Template>
-                                    <img src="@row.SecureUrl"
+                                    <img src="@(string.IsNullOrEmpty(row.ThumbnailLink) ? $"/api/Img/thumbnail/{row.FileId}" : row.ThumbnailLink)"
                                          style="width:100px;height:100px;object-fit:cover;border-radius:4px;"
                                          loading="lazy" />
                                 </Template>
                             </Column>
 
 
-                            <PropertyColumn Align="ColumnAlign.Center" Width="280px"
-                                            Title="Public Id"
-                                            Property="c => c.PublicId" />
+                            <PropertyColumn Align="ColumnAlign.Center" Width="200px"
+                                            Title="File Name"
+                                            Property="c => c.FileName" />
 
                             <!-- File Size -->
-                            <Column Align="ColumnAlign.Center" TData="CloudinaryImageDto" Width="100px" Title="Size">
+                            <Column Align="ColumnAlign.Center" TData="GoogleDriveImageDto" Width="100px" Title="Size">
                                 <Template>
-                                    @($"{row.FileSize} {row.FileSizeUnit}")
+                                    @(row.FileSize.HasValue ? $"{Math.Round((double)row.FileSize.Value / 1024, 2)} KB" : "")
                                 </Template>
                             </Column>
 
                             <!-- Upload Date -->
-                            <Column Align="ColumnAlign.Center" Sortable TData="CloudinaryImageDto" Width="160px" Title="Uploaded At">
+                            <Column Align="ColumnAlign.Center" Sortable TData="GoogleDriveImageDto" Width="160px" Title="Uploaded At">
                                 <Template>
-                                    @row.UpLoadDate.ToString("dd/MM/yyyy HH:mm")
+                                    @(row.CreatedTime?.ToString("dd/MM/yyyy HH:mm") ?? "")
                                 </Template>
                             </Column>
-
 
                         </ColumnDefinitions>
                     </Table>

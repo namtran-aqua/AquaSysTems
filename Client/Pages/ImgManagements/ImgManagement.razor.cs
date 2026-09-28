@@ -85,51 +85,23 @@ namespace AquaSolution.Client.Pages.ImgManagements
 
             try
             {
-                var allImages = await Http.GetFromJsonAsync<List<CloudinaryImageDto>>(
-                    "api/Img/get-all-img");
+                var isAdmin = CurrenUser.Roles.Any(r => r.Name == "Admin");
+                var allImages = await Http.GetFromJsonAsync<List<GoogleDriveImageDto>>(
+                    $"api/Img/get-all-img?workDayId={CurrenUser.WorkDayId}&isAdmin={isAdmin}");
 
                 if (allImages == null || !allImages.Any())
                 {
                     images = new List<GroupImg>();
                     return;
                 }
-                if (CurrenUser.Roles.Any(r => r.Name == "Admin"))
-                {
-                    images = allImages
-                        .Where(x => !string.IsNullOrWhiteSpace(x.WorkId))
-                        .GroupBy(x => x.WorkId)
-                        .Select(g => new GroupImg
-                        {
-                            WorkId = g.Key,
-                            CloudinaryImageDtos = g
-                                .OrderByDescending(x => x.UpLoadDate)
-                                .ToList()
-                        })
-                        .ToList();
-
-                    return;
-                }
-
-                if (Contributors == null || !Contributors.Any())
-                {
-                    images = new List<GroupImg>();
-                    return;
-                }
-
-                var allowedWorkIds = Contributors
-                    .Select(c => c.WorkDayId?.ToString())
-                    .ToHashSet();
 
                 images = allImages
-                    .Where(img =>
-                        !string.IsNullOrWhiteSpace(img.WorkId) &&
-                        allowedWorkIds.Contains(img.WorkId))
-                    .GroupBy(img => img.WorkId)
+                    .GroupBy(img => img.FolderName)
                     .Select(g => new GroupImg
                     {
-                        WorkId = g.Key,
-                        CloudinaryImageDtos = g
-                            .OrderByDescending(x => x.UpLoadDate)
+                        FolderName = g.Key,
+                        GoogleDriveImageDtos = g
+                            .OrderByDescending(x => x.CreatedTime)
                             .ToList()
                     })
                     .ToList();
@@ -142,26 +114,26 @@ namespace AquaSolution.Client.Pages.ImgManagements
         }
         #endregion
 
-        void OnSelectAll(bool selectAll, string workId)
+        void OnSelectAll(bool selectAll, string folderName)
         {
             if (!selectAll)
             {
-                SelectedMap[workId] = new List<CloudinaryImageDto>();
+                SelectedMap[folderName] = new List<GoogleDriveImageDto>();
             }
         }
 
-        private Dictionary<string, IEnumerable<CloudinaryImageDto>> SelectedMap
+        private Dictionary<string, IEnumerable<GoogleDriveImageDto>> SelectedMap
             = new();
-        private async Task DeleteAllImg(string workId)
+        private async Task DeleteAllImg(string folderName)
         {
             var confirm = await JSRuntime.InvokeAsync<bool>("confirm", "Bạn có chắc chắn muốn xóa không?");
             if (!confirm)
                 return;
 
-            if (!SelectedMap.ContainsKey(workId))
+            if (!SelectedMap.ContainsKey(folderName))
                 return;
 
-            var listDelete = SelectedMap[workId].ToList();
+            var listDelete = SelectedMap[folderName].ToList();
 
             if (!listDelete.Any())
                 return;
@@ -169,7 +141,7 @@ namespace AquaSolution.Client.Pages.ImgManagements
             try
             {
                 await Task.WhenAll(listDelete.Select(DeleteInternal));
-                SelectedMap[workId] = new List<CloudinaryImageDto>();
+                SelectedMap[folderName] = new List<GoogleDriveImageDto>();
                 await GetIMG();
                 await InvokeAsync(StateHasChanged);
             }
@@ -179,15 +151,33 @@ namespace AquaSolution.Client.Pages.ImgManagements
             }
         }
 
-        private async Task DeleteInternal(CloudinaryImageDto row)
+        private async Task DownloadSelectedImg(string folderName)
+        {
+            if (SelectedMap.TryGetValue(folderName, out var selected) && selected.Any())
+            {
+                foreach (var img in selected)
+                {
+                    var url = $"/api/Img/thumbnail/{img.FileId}";
+                    await JSRuntime.InvokeVoidAsync("downloadFile", url, img.FileName);
+                    // Add a tiny delay to not overwhelm the browser's download queue
+                    await Task.Delay(100);
+                }
+            }
+            else
+            {
+                await Message.Warning("Vui lòng chọn ít nhất 1 hình ảnh để tải xuống!");
+            }
+        }
+
+        private async Task DeleteInternal(GoogleDriveImageDto row)
         {
             if (Http == null || row == null) return;
 
             try
             {
-                var publicId = Uri.EscapeDataString(row.PublicId);
+                var fileId = Uri.EscapeDataString(row.FileId);
 
-                var res = await Http.DeleteAsync($"api/Img/delete?publicId={publicId}");
+                var res = await Http.DeleteAsync($"api/Img/delete?fileId={fileId}");
 
                 if (!res.IsSuccessStatusCode)
                 {
@@ -198,12 +188,12 @@ namespace AquaSolution.Client.Pages.ImgManagements
 
                 await InvokeAsync(() =>
                 {
-                    var group = images.FirstOrDefault(x => x.WorkId == row.WorkId);
+                    var group = images.FirstOrDefault(x => x.FolderName == row.FolderName);
                     if (group != null)
                     {
-                        group.CloudinaryImageDtos.Remove(row);
+                        group.GoogleDriveImageDtos.Remove(row);
 
-                        if (!group.CloudinaryImageDtos.Any())
+                        if (!group.GoogleDriveImageDtos.Any())
                         {
                             images.Remove(group);
                         }
@@ -215,7 +205,7 @@ namespace AquaSolution.Client.Pages.ImgManagements
                 Console.WriteLine(ex.Message);
             }
         }
-       private async Task Delete(CloudinaryImageDto row)
+       private async Task Delete(GoogleDriveImageDto row)
         {
             var confirm = await JSRuntime.InvokeAsync<bool>("confirm", "Bạn có chắc chắn muốn xóa không?");
             if (!confirm)
@@ -223,10 +213,10 @@ namespace AquaSolution.Client.Pages.ImgManagements
 
             await DeleteInternal(row);
 
-            if (SelectedMap.ContainsKey(row.WorkId))
+            if (SelectedMap.ContainsKey(row.FolderName))
             {
-                SelectedMap[row.WorkId] = SelectedMap[row.WorkId]
-                    .Where(x => x.PublicId != row.PublicId)
+                SelectedMap[row.FolderName] = SelectedMap[row.FolderName]
+                    .Where(x => x.FileId != row.FileId)
                     .ToList();
             }
 

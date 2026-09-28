@@ -726,7 +726,11 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
                             TYPE = d.TYPE,
                             Plant = d.Plant,
                             ScrapHistoryId = d.ScrapHistoryId,
-                            Reson = d.Reson
+                            Reson = d.Reson,
+                            // Confirm fields
+                            ConfirmAmount = d.ConfirmAmount,
+                            ConfirmUnitType = d.ConfirmUnitType,
+                            ConfirmNote = d.ConfirmNote
                         };
                     }).ToList();
                 }
@@ -799,37 +803,56 @@ namespace AquaSolution.Server.Services.ScrapManagetment.ScapServices
                 }
             }
 
-            using var transaction = await _context.Database.BeginTransactionAsync();
-            try
+            // ── Ghi nhận confirm từng detail trực tiếp qua context ──────────────
+            // Không dùng transaction thủ công vì UpdateAsync đã tự SaveChanges bên trong,
+            // thay vào đó: cập nhật entity trong memory rồi SaveChanges một lần duy nhất.
+            foreach (var detailDto in request.Details)
             {
-                // Update từng detail
-                foreach (var detailDto in request.Details)
-                {
-                    var detailToUpdate = existingDetails.First(d => d.Id == detailDto.HistoryDetailId);
-                    detailToUpdate.ConfirmAmount = detailDto.ConfirmAmount;
-                    detailToUpdate.ConfirmUnitType = detailDto.ConfirmUnitType;
-                    detailToUpdate.ConfirmNote = detailDto.ConfirmNote;
-                    await _historyScrapDetailRepository.UpdateAsync(detailToUpdate);
-                }
-
-                // Update Header
-                scrap.Status = StatusScrap.Done;
-                scrap.Confirmer = request.ConfirmerId;
-                scrap.ConfirmDate = DateTime.Now;
-
-                // Tuỳ chọn: tính tổng cho ConfirmAmount nếu cần (hiện tại bỏ trống vì khác đơn vị)
-                // scrap.ConfirmAmount = request.Details.Sum(d => d.ConfirmAmount);
-                // scrap.ConfirmationStatusType = ??? (có thể tính dựa vào tổng nhận so với tổng yêu cầu)
-
-                await _historyScrapRepository.UpdateAsync(scrap);
-
-                await transaction.CommitAsync();
+                var detailToUpdate = existingDetails.First(d => d.Id == detailDto.HistoryDetailId);
+                detailToUpdate.ConfirmAmount    = detailDto.ConfirmAmount;
+                detailToUpdate.ConfirmUnitType  = detailDto.ConfirmUnitType;
+                detailToUpdate.ConfirmNote      = detailDto.ConfirmNote;
+                _context.Set<HistoryScrapDetail>().Update(detailToUpdate);
             }
-            catch (Exception)
+
+            // ── Tính ConfirmAmount header (quy về kg) ────────────────────────────
+            // Weight type: ConfirmAmount đã là kg → cộng thẳng
+            // Unit   type: ConfirmAmount là số cái, không quy đổi được vì thiếu weight/cái
+            //              → cộng ConfirmAmount * d.Weight (weight/piece từ detail)
+            //              → nếu d.Weight = 0 thì bỏ qua (không biết khối lượng)
+            decimal totalConfirmKg = existingDetails.Sum(d =>
             {
-                await transaction.RollbackAsync();
-                throw;
-            }
+                var dto = request.Details.FirstOrDefault(x => x.HistoryDetailId == d.Id);
+                if (dto == null) return 0m;
+
+                if (dto.ConfirmUnitType == ConfirmUnitType.Weight)
+                    return dto.ConfirmAmount;                   // đã là kg
+
+                // Unit type: cái × kg/cái (d.Weight là kg per unit)
+                return d.Weight > 0 ? dto.ConfirmAmount * d.Weight : 0m;
+            });
+
+            // ── Xác định ConfirmationStatusType ─────────────────────────────────
+            // So sánh tổng thực nhận (quy kg) với tổng yêu cầu (TotalAmount = kg)
+            var totalRequest = scrap.TotalAmount ?? 0;
+            var tolerance    = 0.001m;  // tránh lỗi floating point
+            var confirmStatus = Math.Abs(totalConfirmKg - totalRequest) <= tolerance
+                ? ConfirmationStatusType.Received
+                : totalConfirmKg > totalRequest
+                    ? ConfirmationStatusType.Overreceived
+                    : ConfirmationStatusType.Underreceived;
+
+            // ── Cập nhật header scrap ─────────────────────────────────────────────
+            scrap.Status                  = StatusScrap.Done;
+            scrap.Confirmer               = request.ConfirmerId;
+            scrap.ConfirmDate             = DateTime.Now;
+            scrap.ConfirmAmount           = totalConfirmKg;
+            scrap.ConfirmationStatusType  = confirmStatus;
+
+            _context.Set<HistoryScrap>().Update(scrap);
+
+            // ── Lưu tất cả thay đổi một lần duy nhất ────────────────────────────
+            await _context.SaveChangesAsync();
         }
     }
 }
