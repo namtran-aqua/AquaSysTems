@@ -70,8 +70,39 @@
     <!-- ✅ Chart custom -->
     <!--<script src="js/reportCharts.js"></script>-->
 
-    <!-- Ant Design -->
-    <script src="_content/AntDesign/js/ant-design-blazor.js"></script>
+    <!-- Clipboard Helper -->
+    <script>
+        window.clipboardCopy = {
+            copyText: function (text) {
+                if (navigator.clipboard && window.isSecureContext) {
+                    return navigator.clipboard.writeText(text).then(function () {
+                        return true;
+                    }).catch(function () {
+                        return window.clipboardCopy.fallbackCopy(text);
+                    });
+                }
+                return Promise.resolve(window.clipboardCopy.fallbackCopy(text));
+            },
+            fallbackCopy: function (text) {
+                var textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-9999px";
+                textArea.style.top = "-9999px";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                var successful = false;
+                try {
+                    successful = document.execCommand('copy');
+                } catch (err) {
+                    successful = false;
+                }
+                document.body.removeChild(textArea);
+                return successful;
+            }
+        };
+    </script>
 
     <!-- ✅ Blazor ALWAYS LAST -->
     <script src="_framework/blazor.webassembly.js"></script>

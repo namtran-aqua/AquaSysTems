@@ -25,7 +25,7 @@
             <button class="btn btn-outline-primary btn-action" @onclick="CopyPublicLink">
                 <Icon Type="copy" /> Sao Chép Liên Kết Form
             </button>
-            <a href="/feedback-form" target="_blank" class="btn btn-primary btn-action">
+            <a href="@GetPublicFormUrl()" target="_blank" class="btn btn-primary btn-action">
                 <Icon Type="link" /> Mở Form Khảo Sát
             </a>
         </div>
@@ -400,18 +400,43 @@
         isModalVisible = true;
     }
 
+    private string GetPublicFormUrl()
+    {
+        return Navigation.ToAbsoluteUri("feedback-form").ToString();
+    }
+
     private async Task CopyPublicLink()
     {
-        var publicUrl = Navigation.ToAbsoluteUri("feedback-form").ToString();
+        var publicUrl = GetPublicFormUrl();
         try
         {
-            await JS.InvokeVoidAsync("navigator.clipboard.writeText", publicUrl);
-            await Message.Success($"Đã sao chép liên kết Form: {publicUrl}");
+            var success = await JS.InvokeAsync<bool>("clipboardCopy.copyText", publicUrl);
+            if (success)
+            {
+                await Message.Success($"Đã sao chép liên kết Form: {publicUrl}");
+                return;
+            }
         }
         catch
         {
-            await Message.Info($"Đường dẫn Form: {publicUrl}");
+            try
+            {
+                await JS.InvokeVoidAsync("eval", $@"
+                    var t = document.createElement('textarea');
+                    t.value = '{publicUrl}';
+                    t.style.position = 'fixed';
+                    t.style.left = '-9999px';
+                    document.body.appendChild(t);
+                    t.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(t);
+                ");
+                await Message.Success($"Đã sao chép liên kết Form: {publicUrl}");
+                return;
+            }
+            catch { }
         }
+        await Message.Info($"Đường dẫn Form: {publicUrl}");
     }
 
     private void OpenPreviewImage(string url, string title)
