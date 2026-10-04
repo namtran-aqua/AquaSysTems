@@ -1,0 +1,831 @@
+@page "/feedback-management"
+@page "/itsm/feedback-management"
+
+@using AntDesign
+@using AquaSolution.Shared.Enum
+@using AquaSolution.Shared.Feedbacks
+@using Microsoft.JSInterop
+@inject HttpClient Http
+@inject IMessageService Message
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+
+<PageTitle>Quản Lý Ý Kiến & Đóng Góp - Admin</PageTitle>
+
+<div class="feedback-admin-container">
+    <!-- PAGE HEADER -->
+    <div class="page-top-header">
+        <div class="header-left">
+            <h2 class="page-title">
+                <Icon Type="message" Style="color: #1890ff;" /> Quản Lý Ý Kiến & Đóng Góp
+            </h2>
+            <p class="page-subtitle">Theo dõi, tiếp nhận và xử lý các ý kiến, phản ánh từ người dùng (Không cần đăng nhập để gửi)</p>
+        </div>
+        <div class="header-right">
+            <button class="btn btn-outline-primary btn-action" @onclick="CopyPublicLink">
+                <Icon Type="copy" /> Sao Chép Liên Kết Form
+            </button>
+            <a href="/feedback-form" target="_blank" class="btn btn-primary btn-action">
+                <Icon Type="link" /> Mở Form Khảo Sát
+            </a>
+        </div>
+    </div>
+
+    <!-- STATS CARD -->
+    <div class="stats-row">
+        <div class="stat-card stat-total">
+            <div class="stat-icon-wrap bg-blue-subtle">
+                <Icon Type="mail" Class="stat-icon text-blue" />
+            </div>
+            <div class="stat-data">
+                <span class="stat-label">Tổng số lượng ý kiến (theo điều kiện lọc)</span>
+                <span class="stat-value">@totalCount</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- FILTER CARD -->
+    <div class="filter-card">
+        <div class="row g-3 align-items-end">
+            <!-- Search Text -->
+            <div class="col-md-3">
+                <label class="filter-label">Tìm kiếm từ khóa</label>
+                <Input Placeholder="Họ tên, SĐT, tiêu đề..." 
+                       @bind-Value="filter.SearchTerm" 
+                       Prefix="@SearchIcon" 
+                       AllowClear="true" 
+                       OnPressEnter="() => LoadData(1)" />
+            </div>
+
+            <!-- Factory Filter -->
+            <div class="col-md-2">
+                <label class="filter-label">Nhà máy</label>
+                <Select TItemValue="string" 
+                        TItem="string" 
+                        @bind-Value="filter.Factory" 
+                        Placeholder="Tất cả nhà máy" 
+                        AllowClear="true" 
+                        Style="width:100%;">
+                    <SelectOptions>
+                        <SelectOption Value="@("")" Label="Tất cả nhà máy" />
+                        @foreach (var f in factories)
+                        {
+                            <SelectOption Value="@f" Label="@f" />
+                        }
+                    </SelectOptions>
+                </Select>
+            </div>
+
+            <!-- Department Filter -->
+            <div class="col-md-2">
+                <label class="filter-label">Phòng ban</label>
+                <Select TItemValue="string" 
+                        TItem="string" 
+                        @bind-Value="filter.Department" 
+                        Placeholder="Tất cả phòng ban" 
+                        AllowClear="true" 
+                        Style="width:100%;">
+                    <SelectOptions>
+                        <SelectOption Value="@("")" Label="Tất cả phòng ban" />
+                        @foreach (var d in departments)
+                        {
+                            <SelectOption Value="@d" Label="@d" />
+                        }
+                    </SelectOptions>
+                </Select>
+            </div>
+
+            <!-- Date Range Filter -->
+            <div class="col-md-2">
+                <label class="filter-label">Từ ngày</label>
+                <DatePicker TValue="DateTime?" @bind-Value="filter.FromDate" Style="width:100%;" Format="dd/MM/yyyy" Placeholder="@("Từ ngày")" />
+            </div>
+
+            <div class="col-md-2">
+                <label class="filter-label">Đến ngày</label>
+                <DatePicker TValue="DateTime?" @bind-Value="filter.ToDate" Style="width:100%;" Format="dd/MM/yyyy" Placeholder="@("Đến ngày")" />
+            </div>
+
+            <!-- Filter Buttons -->
+            <div class="col-md-1 d-flex gap-2">
+                <Button Type="@ButtonType.Primary" Icon="search" OnClick="() => LoadData(1)" Loading="@isLoading">
+                    Lọc
+                </Button>
+                <Button Icon="reload" OnClick="ResetFilter">
+                </Button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DATA TABLE CARD -->
+    <div class="table-card">
+        <Table TItem="UserFeedbackDto" 
+               DataSource="@feedbacks" 
+               Loading="@isLoading" 
+               RowKey="x => x.Id.ToString()"
+               Total="@totalCount"
+               PageIndex="@filter.PageIndex"
+               PageSize="@filter.PageSize"
+               OnPageIndexChange="OnPageChange"
+               Bordered="true"
+               ScrollX="1100"
+               Size="TableSize.Middle">
+            <ColumnDefinitions Context="row">
+                <PropertyColumn Title="STT" Width="60" Property="c => c.Id">
+                    <span>@((filter.PageIndex - 1) * filter.PageSize + feedbacks.IndexOf(row) + 1)</span>
+                </PropertyColumn>
+
+                <PropertyColumn Title="Người gửi" Width="170" Property="c => c.FullName">
+                    <div class="user-cell">
+                        <span class="user-name">@row.FullName</span>
+                        @if (!string.IsNullOrWhiteSpace(row.PhoneNumber))
+                        {
+                            <span class="user-phone"><Icon Type="phone" /> @row.PhoneNumber</span>
+                        }
+                    </div>
+                </PropertyColumn>
+
+                <PropertyColumn Title="Nhà máy" Property="c => c.Factory" Width="140" />
+
+                <PropertyColumn Title="Phòng ban" Property="c => c.Department" Width="160" />
+
+                <PropertyColumn Title="Tiêu đề" Property="c => c.Title">
+                    <div class="title-cell" @onclick="() => ViewDetail(row)">
+                        <span class="feedback-title">@row.Title</span>
+                        <p class="feedback-snippet">@GetSnippet(row.Content)</p>
+                    </div>
+                </PropertyColumn>
+
+                <PropertyColumn Title="Đính kèm" Property="c => c.Attachments.Count" Width="100">
+                    @if (row.Attachments != null && row.Attachments.Count > 0)
+                    {
+                        <span class="pointer-tag" @onclick="() => ViewDetail(row)">
+                            <Tag Color="@("cyan")">
+                                <Icon Type="paper-clip" /> @row.Attachments.Count tệp
+                            </Tag>
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="text-muted">-</span>
+                    }
+                </PropertyColumn>
+
+                <PropertyColumn Title="Ngày gửi" Property="c => c.CreatedAt" Format="dd/MM/yyyy HH:mm" Width="150" />
+
+                <ActionColumn Title="Thao tác" Width="90" Align="ColumnAlign.Center">
+                    <Button Type="@ButtonType.Primary" Size="@ButtonSize.Small" Icon="eye" OnClick="() => ViewDetail(row)">
+                        Xem
+                    </Button>
+                </ActionColumn>
+            </ColumnDefinitions>
+        </Table>
+    </div>
+</div>
+
+<!-- DETAIL & PROCESSING MODAL -->
+@if (isModalVisible && selectedFeedback != null)
+{
+    <Modal Title="@modalTitle" 
+           Visible="@isModalVisible" 
+           OnCancel="() => isModalVisible = false" 
+           Footer="@null" 
+           Width="850">
+        <div class="feedback-detail-modal">
+            <!-- SENDER INFO CARD -->
+            <div class="detail-section-card">
+                <div class="detail-row">
+                    <div class="detail-item">
+                        <span class="d-label">Người gửi:</span>
+                        <strong class="d-value text-primary">@selectedFeedback.FullName</strong>
+                    </div>
+                    <div class="detail-item">
+                        <span class="d-label">Nhà máy:</span>
+                        <Tag Color="@("cyan")">@(string.IsNullOrEmpty(selectedFeedback.Factory) ? "Chưa rõ" : selectedFeedback.Factory)</Tag>
+                    </div>
+                    <div class="detail-item">
+                        <span class="d-label">Phòng ban:</span>
+                        <Tag Color="@("blue")">@selectedFeedback.Department</Tag>
+                    </div>
+                    <div class="detail-item">
+                        <span class="d-label">Số điện thoại:</span>
+                        <span class="d-value">@(string.IsNullOrEmpty(selectedFeedback.PhoneNumber) ? "Không có" : selectedFeedback.PhoneNumber)</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="d-label">Thời gian gửi:</span>
+                        <span class="d-value">@selectedFeedback.CreatedAt.ToString("dd/MM/yyyy HH:mm:ss")</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTENT CARD -->
+            <div class="detail-section-card mt-3">
+                <h4 class="detail-heading">Tiêu đề: @selectedFeedback.Title</h4>
+                <div class="detail-content-box">
+                    @selectedFeedback.Content
+                </div>
+            </div>
+
+            <!-- ATTACHMENTS GALLERY -->
+            @if (selectedFeedback.Attachments != null && selectedFeedback.Attachments.Count > 0)
+            {
+                <div class="detail-section-card mt-3">
+                    <h5 class="section-subtitle">
+                        <Icon Type="paper-clip" /> Tệp & Hình ảnh đính kèm (@selectedFeedback.Attachments.Count)
+                    </h5>
+                    <div class="attachment-gallery">
+                        @foreach (var att in selectedFeedback.Attachments)
+                        {
+                            <div class="gallery-card">
+                                @if (IsImageFile(att.FileName) && !string.IsNullOrEmpty(att.FilePath))
+                                {
+                                    var fullImgUrl = GetFullImageUrl(att.FilePath);
+                                    <div class="gallery-thumb-wrap" @onclick="() => OpenPreviewImage(fullImgUrl, att.OriginalFileName)">
+                                        <img src="@fullImgUrl" alt="@att.OriginalFileName" class="gallery-thumb" />
+                                        <div class="gallery-thumb-overlay">
+                                            <Icon Type="zoom-in" /> Xem lớn
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="gallery-file-wrap">
+                                        <Icon Type="file" Class="generic-doc-icon" />
+                                    </div>
+                                }
+                                <div class="gallery-meta">
+                                    <span class="g-name" title="@att.OriginalFileName">@att.OriginalFileName</span>
+                                    <span class="g-size">@FormatFileSize(att.FileSize)</span>
+                                    @if (!string.IsNullOrEmpty(att.FilePath))
+                                    {
+                                        <a href="@GetFullImageUrl(att.FilePath)" target="_blank" download="@att.OriginalFileName" class="g-download">
+                                            <Icon Type="download" /> Tải về
+                                        </a>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <div class="text-end mt-3">
+                <Button Type="@ButtonType.Default" OnClick="() => isModalVisible = false">
+                    Đóng
+                </Button>
+            </div>
+        </div>
+    </Modal>
+}
+
+<!-- IMAGE PREVIEW MODAL -->
+@if (isImagePreviewVisible && !string.IsNullOrEmpty(previewImageUrl))
+{
+    <Modal Visible="@isImagePreviewVisible" 
+           Footer="@null" 
+           OnCancel="() => isImagePreviewVisible = false" 
+           Width="900" 
+           Centered="true">
+        <div class="lightbox-container">
+            <h5 class="lightbox-title">@previewImageTitle</h5>
+            <div class="lightbox-img-wrap">
+                <img src="@previewImageUrl" alt="@previewImageTitle" class="lightbox-img" />
+            </div>
+            <div class="lightbox-actions text-center mt-3">
+                <a href="@previewImageUrl" target="_blank" download="@previewImageTitle" class="btn btn-outline-primary btn-sm">
+                    <Icon Type="download" /> Tải ảnh gốc
+                </a>
+            </div>
+        </div>
+    </Modal>
+}
+
+@code {
+    private RenderFragment SearchIcon => @<Icon Type="search" />;
+
+    private List<UserFeedbackDto> feedbacks = new();
+    private List<string> factories = new();
+    private List<string> departments = new();
+    private UserFeedbackFilterDto filter = new() { PageIndex = 1, PageSize = 10 };
+    private int totalCount = 0;
+    private bool isLoading = false;
+
+    // Detail Modal
+    private bool isModalVisible = false;
+    private UserFeedbackDto? selectedFeedback;
+    private string modalTitle => selectedFeedback != null ? $"Chi Tiết Ý Kiến - {selectedFeedback.FullName}" : "Chi Tiết Ý Kiến";
+
+    // Image Lightbox
+    private bool isImagePreviewVisible = false;
+    private string previewImageUrl = "";
+    private string previewImageTitle = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadFactories();
+        await LoadDepartments();
+        await LoadData(1);
+    }
+
+    private async Task LoadFactories()
+    {
+        try
+        {
+            var res = await Http.GetFromJsonAsync<List<string>>("api/UserFeedback/factories");
+            if (res != null) factories = res;
+        }
+        catch { }
+    }
+
+    private async Task LoadDepartments()
+    {
+        try
+        {
+            var res = await Http.GetFromJsonAsync<List<string>>("api/UserFeedback/departments");
+            if (res != null) departments = res;
+        }
+        catch { }
+    }
+
+    private async Task LoadData(int pageIndex)
+    {
+        try
+        {
+            isLoading = true;
+            filter.PageIndex = pageIndex;
+
+            var queryString = $"api/UserFeedback/list?pageIndex={filter.PageIndex}&pageSize={filter.PageSize}";
+            if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
+                queryString += $"&searchTerm={Uri.EscapeDataString(filter.SearchTerm)}";
+            if (!string.IsNullOrWhiteSpace(filter.Factory))
+                queryString += $"&factory={Uri.EscapeDataString(filter.Factory)}";
+            if (!string.IsNullOrWhiteSpace(filter.Department))
+                queryString += $"&department={Uri.EscapeDataString(filter.Department)}";
+            if (filter.FromDate.HasValue)
+                queryString += $"&fromDate={filter.FromDate.Value:yyyy-MM-dd}";
+            if (filter.ToDate.HasValue)
+                queryString += $"&toDate={filter.ToDate.Value:yyyy-MM-dd}";
+
+            var res = await Http.GetFromJsonAsync<FeedbackPagedResult<UserFeedbackDto>>(queryString);
+            if (res != null)
+            {
+                feedbacks = res.Items;
+                totalCount = res.TotalCount;
+            }
+        }
+        catch (Exception ex)
+        {
+            await Message.Error($"Lỗi tải danh sách: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task OnPageChange(PaginationEventArgs args)
+    {
+        await LoadData(args.Page);
+    }
+
+    private async Task ResetFilter()
+    {
+        filter = new UserFeedbackFilterDto { PageIndex = 1, PageSize = 10 };
+        await LoadData(1);
+    }
+
+    private void ViewDetail(UserFeedbackDto item)
+    {
+        selectedFeedback = item;
+        isModalVisible = true;
+    }
+
+    private async Task CopyPublicLink()
+    {
+        var publicUrl = Navigation.ToAbsoluteUri("feedback-form").ToString();
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", publicUrl);
+            await Message.Success($"Đã sao chép liên kết Form: {publicUrl}");
+        }
+        catch
+        {
+            await Message.Info($"Đường dẫn Form: {publicUrl}");
+        }
+    }
+
+    private void OpenPreviewImage(string url, string title)
+    {
+        previewImageUrl = url;
+        previewImageTitle = title;
+        isImagePreviewVisible = true;
+    }
+
+    private bool IsImageFile(string? fileName)
+    {
+        if (string.IsNullOrWhiteSpace(fileName)) return false;
+        var ext = Path.GetExtension(fileName).ToLower();
+        return ext is ".jpg" or ".jpeg" or ".png" or ".webp" or ".gif" or ".bmp" or ".svg";
+    }
+
+    private string FormatFileSize(long bytes)
+    {
+        if (bytes < 1024) return $"{bytes} B";
+        if (bytes < 1024 * 1024) return $"{(bytes / 1024.0):F1} KB";
+        return $"{(bytes / (1024.0 * 1024.0)):F1} MB";
+    }
+
+    private string GetFullImageUrl(string filePath)
+    {
+        if (string.IsNullOrEmpty(filePath)) return "";
+        if (filePath.StartsWith("http", StringComparison.OrdinalIgnoreCase)) return filePath;
+        return $"{Navigation.BaseUri.TrimEnd('/')}/{filePath.TrimStart('/')}";
+    }
+
+    private string GetSnippet(string content)
+    {
+        if (string.IsNullOrEmpty(content)) return "";
+        return content.Length > 80 ? content.Substring(0, 80) + "..." : content;
+    }
+}
+
+<style>
+    .feedback-admin-container {
+        padding: 16px 20px;
+        background: #f8fafc;
+        min-height: calc(100vh - 60px);
+    }
+
+    .page-top-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .page-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: #1e293b;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .page-subtitle {
+        color: #64748b;
+        margin: 4px 0 0 0;
+        font-size: 13px;
+    }
+
+    .header-right {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 600;
+        font-size: 13px;
+        border-radius: 8px;
+        padding: 6px 14px;
+    }
+
+    /* STATS CARDS */
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    .stat-card {
+        background: #ffffff;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    .stat-icon-wrap {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .stat-icon {
+        font-size: 22px;
+    }
+
+    .bg-blue-subtle { background: #eff6ff; }
+    .text-blue { color: #2563eb; }
+
+    .bg-red-subtle { background: #fef2f2; }
+    .text-red { color: #dc2626; }
+
+    .bg-amber-subtle { background: #fffbeb; }
+    .text-amber { color: #d97706; }
+
+    .bg-green-subtle { background: #ecfdf5; }
+    .text-green { color: #059669; }
+
+    .stat-data {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .stat-label {
+        font-size: 12px;
+        color: #64748b;
+        font-weight: 500;
+    }
+
+    .stat-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: #1e293b;
+        line-height: 1.2;
+    }
+
+    /* FILTER CARD */
+    .filter-card {
+        background: #ffffff;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        padding: 16px 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    .filter-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #475569;
+        margin-bottom: 4px;
+        display: block;
+    }
+
+    /* TABLE CARD */
+    .table-card {
+        background: #ffffff;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        padding: 16px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    .user-cell {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .user-name {
+        font-weight: 600;
+        color: #1e293b;
+    }
+
+    .user-age {
+        font-size: 11px;
+        color: #64748b;
+    }
+
+    .user-phone {
+        font-size: 11px;
+        color: #2563eb;
+    }
+
+    .title-cell {
+        cursor: pointer;
+    }
+
+    .feedback-title {
+        font-weight: 600;
+        color: #2563eb;
+        display: block;
+        margin-bottom: 2px;
+    }
+
+    .feedback-title:hover {
+        text-decoration: underline;
+    }
+
+    .feedback-snippet {
+        font-size: 12px;
+        color: #64748b;
+        margin: 0;
+    }
+
+    .pointer-tag {
+        cursor: pointer;
+    }
+
+    /* MODAL STYLES */
+    .detail-section-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 16px;
+    }
+
+    .highlight-admin-card {
+        background: #f0f7ff;
+        border-color: #bfdbfe;
+    }
+
+    .detail-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+    }
+
+    .detail-item {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .d-label {
+        font-size: 11px;
+        color: #64748b;
+        font-weight: 500;
+    }
+
+    .d-value {
+        font-size: 13px;
+        color: #1e293b;
+    }
+
+    .detail-heading {
+        font-size: 16px;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 8px;
+    }
+
+    .detail-content-box {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 14px;
+        white-space: pre-wrap;
+        font-size: 14px;
+        line-height: 1.6;
+        color: #334155;
+    }
+
+    .section-subtitle {
+        font-size: 14px;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    /* GALLERY */
+    .attachment-gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 12px;
+    }
+
+    .gallery-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .gallery-thumb-wrap {
+        height: 110px;
+        background: #f1f5f9;
+        position: relative;
+        cursor: pointer;
+        overflow: hidden;
+    }
+
+    .gallery-thumb {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .gallery-thumb-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+
+    .gallery-thumb-wrap:hover .gallery-thumb-overlay {
+        opacity: 1;
+    }
+
+    .gallery-file-wrap {
+        height: 90px;
+        background: #f8fafc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .generic-doc-icon {
+        font-size: 36px;
+        color: #64748b;
+    }
+
+    .gallery-meta {
+        padding: 8px 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .g-name {
+        font-size: 12px;
+        font-weight: 600;
+        color: #1e293b;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .g-size {
+        font-size: 10px;
+        color: #64748b;
+    }
+
+    .g-download {
+        font-size: 11px;
+        color: #2563eb;
+        margin-top: 4px;
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        text-decoration: none;
+    }
+
+    .g-download:hover {
+        text-decoration: underline;
+    }
+
+    .admin-history-badge {
+        font-size: 12px;
+        color: #1e40af;
+        background: #dbeafe;
+        padding: 6px 12px;
+        border-radius: 6px;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    /* LIGHTBOX */
+    .lightbox-img-wrap {
+        max-height: 70vh;
+        overflow: auto;
+        display: flex;
+        justify-content: center;
+        background: #0f172a;
+        border-radius: 8px;
+        padding: 10px;
+    }
+
+    .lightbox-img {
+        max-width: 100%;
+        max-height: 65vh;
+        object-fit: contain;
+    }
+
+    .lightbox-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 12px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+</style>

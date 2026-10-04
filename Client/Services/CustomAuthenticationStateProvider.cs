@@ -1,4 +1,4 @@
-﻿using Blazored.SessionStorage;
+using Blazored.SessionStorage;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using System.IdentityModel.Tokens.Jwt;
@@ -20,11 +20,12 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
         var token = await _sessionStorage.GetItemAsync<string>("authToken");
         var currentUri = _navigation.Uri;
 
-        bool isLoginPage = currentUri.EndsWith("/login", StringComparison.OrdinalIgnoreCase);
+        bool isPublicPage = currentUri.Contains("/login", StringComparison.OrdinalIgnoreCase) ||
+                            currentUri.Contains("feedback-form", StringComparison.OrdinalIgnoreCase);
 
         if (string.IsNullOrWhiteSpace(token) || token.Count(c => c == '.') != 2)
         {
-            if (!isLoginPage)
+            if (!isPublicPage)
             {
                 _navigation.NavigateTo($"{_navigation.BaseUri}login", forceLoad: false);
             }
@@ -39,7 +40,7 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
             if (jwt.ValidTo < DateTime.UtcNow)
             {
                 await _sessionStorage.RemoveItemAsync("authToken");
-                if (!isLoginPage)
+                if (!isPublicPage)
                 {
                     _navigation.NavigateTo($"{_navigation.BaseUri}login", forceLoad: false);
                 }
@@ -53,7 +54,7 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
         }
         catch
         {
-            if (!isLoginPage)
+            if (!isPublicPage)
             {
                 _navigation.NavigateTo($"{_navigation.BaseUri}login", forceLoad: false);
             }

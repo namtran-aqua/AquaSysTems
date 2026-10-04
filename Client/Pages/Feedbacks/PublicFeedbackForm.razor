@@ -1,0 +1,1015 @@
+@page "/feedback-form"
+@page "/itsm/feedback-form"
+@attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+
+@layout LoginLayout
+@using AntDesign
+@using AquaSolution.Shared.Feedbacks
+@using Microsoft.AspNetCore.Components.Forms
+@inject HttpClient Http
+@inject IMessageService Message
+@inject NavigationManager Navigation
+
+<PageTitle>Phiếu Gửi Ý Kiến & Phản Hồi - Aqua Systems</PageTitle>
+
+<div class="feedback-page-wrapper">
+    <div class="feedback-container">
+        @if (isSubmitted)
+        {
+            <!-- SUCCESS STATE SCREEN -->
+            <div class="card form-card success-card animate-fade-in">
+                <div class="card-header-accent success-accent"></div>
+                <div class="success-content text-center">
+                    <div class="success-icon-box">
+                        <Icon Type="check-circle" Theme="@IconThemeType.Fill" Class="success-icon" />
+                    </div>
+                    <h2 class="success-title">Gửi Ý Kiến Thành Công!</h2>
+                    <p class="success-desc">
+                        Cảm ơn bạn đã dành thời gian đóng góp ý kiến. Thông tin của bạn đã được ghi nhận vào hệ thống và sẽ được bộ phận liên quan xem xét, xử lý kịp thời.
+                    </p>
+                    <div class="success-summary">
+                        <div class="summary-item">
+                            <span class="label">Người gửi:</span>
+                            <span class="value">@submittedName</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Nhà máy:</span>
+                            <span class="value">@submittedFactory</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Phòng ban:</span>
+                            <span class="value">@submittedDept</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">Thời gian:</span>
+                            <span class="value">@DateTime.Now.ToString("dd/MM/yyyy HH:mm")</span>
+                        </div>
+                    </div>
+                    <div class="success-actions">
+                        <button class="btn btn-primary btn-submit-another" @onclick="ResetForm">
+                            <Icon Type="form" /> Gửi phản hồi / ý kiến khác
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <!-- FORM BANNER -->
+            <div class="card form-card banner-card animate-fade-in">
+                <div class="card-header-accent primary-accent"></div>
+                <div class="banner-body">
+                    <div class="badge-public">
+                        <Icon Type="unlock" /> Mở công khai - Không cần đăng nhập
+                    </div>
+                    <h1 class="form-title">Form tiếp nhận thông tin</h1>
+                    <p class="form-subtitle">
+                        Form tiếp nhận thông tin.
+                    </p>
+                    <div class="form-notice">
+                        <Icon Type="info-circle" Theme="@IconThemeType.Fill" Class="notice-icon" />
+                        <span>Mục có dấu <strong class="text-danger">*</strong> là bắt buộc điền. Hình ảnh / tệp đính kèm tối đa 50MB mỗi tệp.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 1: THÔNG TIN NGƯỜI GỬI -->
+            <div class="card form-card animate-fade-in">
+                <div class="section-header">
+                    <div class="section-badge">1</div>
+                    <div class="section-title-wrap">
+                        <h3 class="section-title">Thông Tin Người Gửi</h3>
+                        <p class="section-desc">Cung cấp thông tin</p>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Họ và tên -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">
+                            Họ và tên <span class="text-danger">*</span>
+                        </label>
+                        <Input Placeholder="Nhập họ và tên" 
+                               @bind-Value="formModel.FullName" 
+                               Size="@InputSize.Large" 
+                               Prefix="@FullNameIcon" />
+                        @if (showValidation && string.IsNullOrWhiteSpace(formModel.FullName))
+                        {
+                            <span class="validation-error">Vui lòng nhập họ và tên</span>
+                        }
+                    </div>
+
+                    <!-- Số điện thoại / Zalo -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">
+                            Số điện thoại / Zalo liên hệ
+                        </label>
+                        <Input Placeholder="Nhập số điện thoại (tùy chọn)" 
+                               @bind-Value="formModel.PhoneNumber" 
+                               Size="@InputSize.Large" 
+                               Prefix="@PhoneIcon" />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Nhà máy -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">
+                            Nhà máy <span class="text-danger">*</span>
+                        </label>
+                        <Select TItemValue="string" 
+                                TItem="string" 
+                                @bind-Value="formModel.Factory" 
+                                Placeholder="Chọn nhà máy" 
+                                Size="@InputSize.Large" 
+                                EnableSearch="true"
+                                Style="width: 100%;">
+                            <SelectOptions>
+                                @foreach (var f in factories)
+                                {
+                                    <SelectOption Value="@f" Label="@f" />
+                                }
+                            </SelectOptions>
+                        </Select>
+                        @if (showValidation && string.IsNullOrWhiteSpace(formModel.Factory))
+                        {
+                            <span class="validation-error">Vui lòng chọn nhà máy</span>
+                        }
+                    </div>
+
+                    <!-- Phòng ban / Bộ phận -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">
+                            Phòng ban / Bộ phận <span class="text-danger">*</span>
+                        </label>
+                        <Select TItemValue="string" 
+                                TItem="string" 
+                                @bind-Value="formModel.Department" 
+                                Placeholder="Chọn phòng ban" 
+                                Size="@InputSize.Large" 
+                                EnableSearch="true"
+                                Style="width: 100%;">
+                            <SelectOptions>
+                                @foreach (var d in departments)
+                                {
+                                    <SelectOption Value="@d" Label="@d" />
+                                }
+                            </SelectOptions>
+                        </Select>
+                        @if (showValidation && string.IsNullOrWhiteSpace(formModel.Department))
+                        {
+                            <span class="validation-error">Vui lòng chọn phòng ban</span>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 2: NỘI DUNG Ý KIẾN -->
+            <div class="card form-card animate-fade-in">
+                <div class="section-header">
+                    <div class="section-badge">2</div>
+                    <div class="section-title-wrap">
+                        <h3 class="section-title">Nội Dung Ý Kiến</h3>
+                        <p class="section-desc">Mô tả chi tiết nội dung</p>
+                    </div>
+                </div>
+
+                <!-- Tiêu đề ý kiến -->
+                <div class="mb-3">
+                    <label class="form-label">
+                        Tiêu đề ý kiến <span class="text-danger">*</span>
+                    </label>
+                    <Input  
+                           @bind-Value="formModel.Title" 
+                           Size="@InputSize.Large" 
+                           Prefix="@TitleIcon" />
+                    @if (showValidation && string.IsNullOrWhiteSpace(formModel.Title))
+                    {
+                        <span class="validation-error">Vui lòng nhập tiêu đề</span>
+                    }
+                </div>
+
+                <!-- Chi tiết nội dung -->
+                <div class="mb-2">
+                    <label class="form-label">
+                        Nội dung chi tiết <span class="text-danger">*</span>
+                    </label>
+                    <TextArea Rows="5" 
+                              @bind-Value="formModel.Content" 
+                              MaxLength="4000" 
+                              ShowCount="true" />
+                    @if (showValidation && string.IsNullOrWhiteSpace(formModel.Content))
+                    {
+                        <span class="validation-error">Vui lòng nhập chi tiết nội dung</span>
+                    }
+                </div>
+            </div>
+
+            <!-- SECTION 3: ĐÍNH KÈM HÌNH ẢNH / TỆP -->
+            <div class="card form-card animate-fade-in">
+                <div class="section-header">
+                    <div class="section-badge">3</div>
+                    <div class="section-title-wrap">
+                        <h3 class="section-title">Hình Ảnh & Tệp Đính Kèm</h3>
+                        <p class="section-desc">Tải lên hình ảnh hoặc tài liệu liên quan (không bắt buộc)</p>
+                    </div>
+                </div>
+
+                <!-- Dropzone Input File -->
+                <div class="upload-dropzone @(isDragging ? "dragging" : "")">
+                    <InputFile id="fileInput" 
+                               OnChange="HandleFilesSelected" 
+                               multiple 
+                               class="hidden-file-input" 
+                               accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" />
+                    <label for="fileInput" class="dropzone-label">
+                        <div class="dropzone-icon">
+                            <Icon Type="cloud-upload" />
+                        </div>
+                        <div class="dropzone-text">
+                            <strong>Bấm vào đây để chọn tệp</strong> hoặc kéo thả tệp vào khung
+                        </div>
+                        <div class="dropzone-hint">
+                            Hỗ trợ: Hình ảnh (JPG, PNG, WEBP, GIF), PDF, Word, Excel (Tối đa 20MB/tệp)
+                        </div>
+                    </label>
+                </div>
+
+                <!-- Selected Files Preview Grid -->
+                @if (selectedFiles.Count > 0)
+                {
+                    <div class="file-preview-section mt-3">
+                        <div class="file-preview-header">
+                            <span class="file-count">Đã chọn: @selectedFiles.Count tệp</span>
+                            <button type="button" class="btn-clear-all" @onclick="ClearAllFiles">
+                                <Icon Type="delete" /> Xóa tất cả
+                            </button>
+                        </div>
+
+                        <div class="file-preview-grid">
+                            @foreach (var file in selectedFiles)
+                            {
+                                <div class="file-preview-card" @key="file.UniqueKey">
+                                    @if (!string.IsNullOrEmpty(file.PreviewUrl))
+                                    {
+                                        <div class="preview-thumb-box">
+                                            <img src="@file.PreviewUrl" alt="@file.Name" class="preview-img" />
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="preview-thumb-box generic-file">
+                                            <Icon Type="@GetFileIcon(file.Name)" Class="file-type-icon" />
+                                        </div>
+                                    }
+
+                                    <div class="preview-info">
+                                        <div class="preview-name" title="@file.Name">@file.Name</div>
+                                        <div class="preview-size">@FormatFileSize(file.Size)</div>
+                                    </div>
+
+                                    <button type="button" class="btn-remove-file" title="Xóa tệp này" @onclick="() => RemoveFile(file)">
+                                        <Icon Type="close" />
+                                    </button>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- SUBMIT BUTTON -->
+            <div class="form-submit-container">
+                <button type="button" 
+                        class="btn-gradient-submit" 
+                        disabled="@isSubmitting" 
+                        @onclick="SubmitForm">
+                    @if (isSubmitting)
+                    {
+                        <Icon Type="loading" Class="spin-icon" />
+                        <span>Đang gửi ý kiến & tải tệp lên (@selectedFiles.Count tệp)...</span>
+                    }
+                    else
+                    {
+                        <Icon Type="send" />
+                        <span>GỬI</span>
+                    }
+                </button>
+            </div>
+        }
+
+        <!-- FOOTER -->
+        <footer class="form-footer text-center">
+            <p>© @DateTime.Now.Year Aqua Systems - Form thông tin</p>
+        </footer>
+    </div>
+</div>
+
+@code {
+    private RenderFragment FullNameIcon => @<Icon Type="user" />;
+    private RenderFragment PhoneIcon => @<Icon Type="phone" />;
+    private RenderFragment TitleIcon => @<Icon Type="bulb" />;
+
+    private FormSubmitModel formModel = new();
+    private List<string> factories = new();
+    private List<string> departments = new();
+    private List<SelectedFileModel> selectedFiles = new();
+
+    private bool isDragging = false;
+    private bool isSubmitting = false;
+    private bool isSubmitted = false;
+    private bool showValidation = false;
+
+    private string submittedName = "";
+    private string submittedFactory = "";
+    private string submittedDept = "";
+
+    public class FormSubmitModel
+    {
+        public string FullName { get; set; } = string.Empty;
+        public string Factory { get; set; } = string.Empty;
+        public string Department { get; set; } = string.Empty;
+        public string? PhoneNumber { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Content { get; set; } = string.Empty;
+    }
+
+    public class SelectedFileModel
+    {
+        public string UniqueKey { get; set; } = Guid.NewGuid().ToString();
+        public IBrowserFile BrowserFile { get; set; } = default!;
+        public string Name { get; set; } = string.Empty;
+        public long Size { get; set; }
+        public string? PreviewUrl { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadFactories();
+        await LoadDepartments();
+    }
+
+    private async Task LoadFactories()
+    {
+        try
+        {
+            var res = await Http.GetFromJsonAsync<List<string>>("api/UserFeedback/factories");
+            if (res != null && res.Count > 0)
+            {
+                factories = res;
+            }
+        }
+        catch (Exception)
+        {
+            factories = new List<string>
+            {
+                "Nhà máy 1",
+                "Nhà máy 2",
+                "Nhà máy 3",
+                "Văn phòng chính (Head Office)"
+            };
+        }
+    }
+
+    private async Task LoadDepartments()
+    {
+        try
+        {
+            var res = await Http.GetFromJsonAsync<List<string>>("api/UserFeedback/departments");
+            if (res != null && res.Count > 0)
+            {
+                departments = res;
+            }
+        }
+        catch (Exception)
+        {
+            // fallback list if API is unreachable
+            departments = new List<string>
+            {
+                "Ban Giám Đốc",
+                "Phòng Nhân Sự (HR)",
+                "Phòng Kế Toán (Finance)",
+                "Phòng IT - Công Nghệ Thông Tin",
+                "Phòng Kế Hoạch (Planning)",
+                "Phòng Mua Hàng (Purchasing)",
+                "Bộ Phận Sản Xuất (Production)",
+                "Bộ Phận Quản Lý Chất Lượng (QA/QC)",
+                "Bộ Phận Bảo Trì (Maintenance)",
+                "Bộ Phận Kho Vận (Warehouse/Logistics)"
+            };
+        }
+    }
+
+    private async Task HandleFilesSelected(InputFileChangeEventArgs e)
+    {
+        var files = e.GetMultipleFiles(20); // max 20 files at once
+        foreach (var file in files)
+        {
+            if (file.Size > 50 * 1024 * 1024)
+            {
+                await Message.Warning($"Tệp {file.Name} vượt quá dung lượng tối đa 50MB.");
+                continue;
+            }
+
+            var item = new SelectedFileModel
+            {
+                BrowserFile = file,
+                Name = file.Name,
+                Size = file.Size
+            };
+
+            // If it's an image, create preview
+            if (file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    var resized = await file.RequestImageFileAsync(file.ContentType, 300, 300);
+                    var buffer = new byte[resized.Size];
+                    using var stream = resized.OpenReadStream(10 * 1024 * 1024);
+                    await stream.ReadAsync(buffer);
+                    item.PreviewUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
+                }
+                catch
+                {
+                    // Preview failed, continue without preview
+                }
+            }
+
+            selectedFiles.Add(item);
+        }
+    }
+
+    private void RemoveFile(SelectedFileModel file)
+    {
+        selectedFiles.Remove(file);
+    }
+
+    private void ClearAllFiles()
+    {
+        selectedFiles.Clear();
+    }
+
+    private string GetFileIcon(string fileName)
+    {
+        var ext = Path.GetExtension(fileName).ToLower();
+        return ext switch
+        {
+            ".pdf" => "file-pdf",
+            ".doc" or ".docx" => "file-word",
+            ".xls" or ".xlsx" => "file-excel",
+            ".ppt" or ".pptx" => "file-ppt",
+            ".zip" or ".rar" or ".7z" => "file-zip",
+            _ => "file"
+        };
+    }
+
+    private string FormatFileSize(long bytes)
+    {
+        if (bytes < 1024) return $"{bytes} B";
+        if (bytes < 1024 * 1024) return $"{(bytes / 1024.0):F1} KB";
+        return $"{(bytes / (1024.0 * 1024.0)):F1} MB";
+    }
+
+    private async Task SubmitForm()
+    {
+        showValidation = true;
+
+        if (string.IsNullOrWhiteSpace(formModel.FullName) ||
+            string.IsNullOrWhiteSpace(formModel.Factory) ||
+            string.IsNullOrWhiteSpace(formModel.Department) ||
+            string.IsNullOrWhiteSpace(formModel.Title) ||
+            string.IsNullOrWhiteSpace(formModel.Content))
+        {
+            await Message.Error("Vui lòng điền đầy đủ các thông tin bắt buộc (*).");
+            return;
+        }
+
+        try
+        {
+            isSubmitting = true;
+
+            using var content = new MultipartFormDataContent();
+            content.Add(new StringContent(formModel.FullName), "fullName");
+            content.Add(new StringContent(formModel.Factory), "factory");
+            content.Add(new StringContent(formModel.Department), "department");
+            if (!string.IsNullOrWhiteSpace(formModel.PhoneNumber))
+                content.Add(new StringContent(formModel.PhoneNumber), "phoneNumber");
+            content.Add(new StringContent(formModel.Title), "title");
+            content.Add(new StringContent(formModel.Content), "content");
+
+            foreach (var f in selectedFiles)
+            {
+                var streamContent = new StreamContent(f.BrowserFile.OpenReadStream(60 * 1024 * 1024));
+                content.Add(streamContent, "files", f.Name);
+            }
+
+            var response = await Http.PostAsync("api/UserFeedback/submit", content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                submittedName = formModel.FullName;
+                submittedFactory = formModel.Factory;
+                submittedDept = formModel.Department;
+                isSubmitted = true;
+                await Message.Success("Gửi ý kiến thành công!");
+            }
+            else
+            {
+                var err = await response.Content.ReadAsStringAsync();
+                await Message.Error(string.IsNullOrWhiteSpace(err) ? "Gửi ý kiến thất bại. Vui lòng thử lại." : err);
+            }
+        }
+        catch (Exception ex)
+        {
+            await Message.Error($"Có lỗi xảy ra: {ex.Message}");
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void ResetForm()
+    {
+        formModel = new FormSubmitModel();
+        selectedFiles.Clear();
+        showValidation = false;
+        isSubmitted = false;
+    }
+}
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+    .feedback-page-wrapper {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100vw;
+        height: 100vh;
+        overflow-y: auto !important;
+        overflow-x: hidden;
+        background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        padding: 40px 16px 80px 16px;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        -webkit-overflow-scrolling: touch;
+        z-index: 100;
+    }
+
+    .feedback-page-wrapper::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .feedback-page-wrapper::-webkit-scrollbar-track {
+        background: #f1f5f9;
+    }
+
+    .feedback-page-wrapper::-webkit-scrollbar-thumb {
+        background: #94a3b8;
+        border-radius: 4px;
+    }
+
+    .feedback-page-wrapper::-webkit-scrollbar-thumb:hover {
+        background: #64748b;
+    }
+
+    .feedback-container {
+        width: 100%;
+        max-width: 780px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    /* CARD STYLING */
+    .form-card {
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.05), 0 8px 10px -6px rgba(15, 23, 42, 0.03);
+        overflow: hidden;
+        padding: 28px 32px;
+        position: relative;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .form-card:hover {
+        box-shadow: 0 15px 30px -5px rgba(15, 23, 42, 0.08);
+    }
+
+    /* BANNER CARD */
+    .banner-card {
+        padding: 0;
+    }
+
+    .card-header-accent {
+        height: 10px;
+        width: 100%;
+    }
+
+    .primary-accent {
+        background: linear-gradient(90deg, #2563eb, #7c3aed, #ec4899);
+    }
+
+    .success-accent {
+        background: linear-gradient(90deg, #10b981, #059669);
+    }
+
+    .banner-body {
+        padding: 32px 32px 28px 32px;
+    }
+
+    .badge-public {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #ecfdf5;
+        color: #059669;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 4px 12px;
+        border-radius: 20px;
+        border: 1px solid #a7f3d0;
+        margin-bottom: 14px;
+    }
+
+    .form-title {
+        font-size: 26px;
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 10px;
+        line-height: 1.3;
+    }
+
+    .form-subtitle {
+        font-size: 15px;
+        color: #475569;
+        line-height: 1.6;
+        margin-bottom: 18px;
+    }
+
+    .form-notice {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #eff6ff;
+        border-left: 4px solid #3b82f6;
+        padding: 10px 14px;
+        border-radius: 6px;
+        font-size: 13px;
+        color: #1e40af;
+    }
+
+    .notice-icon {
+        font-size: 16px;
+        color: #3b82f6;
+    }
+
+    /* SECTION HEADERS */
+    .section-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        margin-bottom: 22px;
+        border-bottom: 1px solid #f1f5f9;
+        padding-bottom: 14px;
+    }
+
+    .section-badge {
+        width: 32px;
+        height: 32px;
+        background: #eff6ff;
+        color: #2563eb;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 15px;
+        flex-shrink: 0;
+    }
+
+    .section-title-wrap {
+        flex: 1;
+    }
+
+    .section-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #1e293b;
+        margin: 0 0 4px 0;
+    }
+
+    .section-desc {
+        font-size: 13px;
+        color: #64748b;
+        margin: 0;
+    }
+
+    .form-label {
+        font-size: 14px;
+        font-weight: 600;
+        color: #334155;
+        margin-bottom: 6px;
+        display: block;
+    }
+
+    .validation-error {
+        font-size: 12px;
+        color: #ef4444;
+        margin-top: 4px;
+        display: block;
+        font-weight: 500;
+    }
+
+    /* DROPZONE */
+    .upload-dropzone {
+        border: 2px dashed #cbd5e1;
+        border-radius: 12px;
+        background: #f8fafc;
+        padding: 28px 20px;
+        text-align: center;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .upload-dropzone:hover, .upload-dropzone.dragging {
+        border-color: #3b82f6;
+        background: #eff6ff;
+    }
+
+    .hidden-file-input {
+        display: none;
+    }
+
+    .dropzone-label {
+        cursor: pointer;
+        display: block;
+        margin: 0;
+    }
+
+    .dropzone-icon {
+        font-size: 38px;
+        color: #3b82f6;
+        margin-bottom: 10px;
+    }
+
+    .dropzone-text {
+        font-size: 15px;
+        color: #1e293b;
+        margin-bottom: 4px;
+    }
+
+    .dropzone-hint {
+        font-size: 12px;
+        color: #64748b;
+    }
+
+    /* FILE PREVIEW */
+    .file-preview-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .file-count {
+        font-size: 13px;
+        font-weight: 600;
+        color: #475569;
+    }
+
+    .btn-clear-all {
+        background: none;
+        border: none;
+        color: #ef4444;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .file-preview-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+        gap: 12px;
+    }
+
+    .file-preview-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 8px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        position: relative;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+    }
+
+    .preview-thumb-box {
+        width: 48px;
+        height: 48px;
+        border-radius: 6px;
+        overflow: hidden;
+        flex-shrink: 0;
+        background: #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .preview-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .file-type-icon {
+        font-size: 24px;
+        color: #3b82f6;
+    }
+
+    .preview-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .preview-name {
+        font-size: 13px;
+        font-weight: 600;
+        color: #1e293b;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .preview-size {
+        font-size: 11px;
+        color: #64748b;
+    }
+
+    .btn-remove-file {
+        background: #fee2e2;
+        color: #ef4444;
+        border: none;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 11px;
+        flex-shrink: 0;
+        transition: background 0.2s;
+    }
+
+    .btn-remove-file:hover {
+        background: #fecaca;
+    }
+
+    /* SUBMIT BUTTON */
+    .form-submit-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 10px;
+    }
+
+    .btn-gradient-submit {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        color: #ffffff;
+        border: none;
+        border-radius: 12px;
+        padding: 16px 40px;
+        font-size: 16px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 8px 20px -4px rgba(37, 99, 235, 0.4);
+        transition: all 0.25s ease;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .btn-gradient-submit:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 24px -4px rgba(37, 99, 235, 0.5);
+        background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+    }
+
+    .btn-gradient-submit:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+
+    .spin-icon {
+        animation: spin 1s linear infinite;
+    }
+
+    @@keyframes spin {
+        100% { transform: rotate(360deg); }
+    }
+
+    /* SUCCESS CARD */
+    .success-card {
+        padding: 0;
+    }
+
+    .success-content {
+        padding: 48px 32px;
+    }
+
+    .success-icon-box {
+        margin-bottom: 20px;
+    }
+
+    .success-icon {
+        font-size: 68px;
+        color: #10b981;
+    }
+
+    .success-title {
+        font-size: 26px;
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 12px;
+    }
+
+    .success-desc {
+        font-size: 15px;
+        color: #475569;
+        max-width: 520px;
+        margin: 0 auto 24px auto;
+        line-height: 1.6;
+    }
+
+    .success-summary {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 16px 20px;
+        max-width: 420px;
+        margin: 0 auto 28px auto;
+        text-align: left;
+    }
+
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;
+        font-size: 14px;
+    }
+
+    .summary-item .label {
+        color: #64748b;
+    }
+
+    .summary-item .value {
+        font-weight: 600;
+        color: #0f172a;
+    }
+
+    .btn-submit-another {
+        background: #2563eb;
+        color: #fff;
+        border-radius: 10px;
+        padding: 10px 24px;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-submit-another:hover {
+        background: #1d4ed8;
+    }
+
+    /* FOOTER */
+    .form-footer {
+        color: #94a3b8;
+        font-size: 13px;
+        margin-top: 10px;
+    }
+
+    .animate-fade-in {
+        animation: fadeIn 0.35s ease-in-out;
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
