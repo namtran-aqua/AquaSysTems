@@ -41,6 +41,7 @@ using AquaSolution.Server.Services.SemiReport.PcbReportService;
 using AquaSolution.Server.Services.SemiReport.RollReportService;
 using AquaSolution.Server.Services.SemiReport.SemiReportService;
 using AquaSolution.Server.Services.Administration.SectionService;
+using AquaSolution.Server.Services.Feedbacks;
 
 namespace AquaSolution.Server
 {
@@ -71,6 +72,7 @@ namespace AquaSolution.Server
             services.AddScoped<IImgService, ImgService>();
             services.AddScoped<IFolderPermissionService, FolderPermissionService>();
             services.AddScoped<ISectionService, SectionService>();
+            services.AddScoped<IUserFeedbackService, UserFeedbackService>();
 
             #endregion
             #region Medical
