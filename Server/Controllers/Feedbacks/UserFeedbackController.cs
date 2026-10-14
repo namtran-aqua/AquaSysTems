@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using AquaSolution.Server.Common;
 using AquaSolution.Server.Services.Feedbacks;
 using AquaSolution.Shared.Feedbacks;
 using Microsoft.AspNetCore.Authorization;
@@ -17,14 +18,26 @@ namespace AquaSolution.Server.Controllers.Feedbacks
     public class UserFeedbackController : ControllerBase
     {
         private readonly IUserFeedbackService _feedbackService;
+        private readonly IFeedbackSyncService _syncService;
+        private readonly AquaSolution.Server.Services.ImgsService.IGoogleDriveService _driveService;
+        private readonly AquaSolution.Data.Connection.AquaDbContext _context;
         private readonly IWebHostEnvironment _env;
+        private readonly Microsoft.Extensions.Logging.ILogger<UserFeedbackController> _logger;
 
         public UserFeedbackController(
             IUserFeedbackService feedbackService,
-            IWebHostEnvironment env)
+            IFeedbackSyncService syncService,
+            AquaSolution.Server.Services.ImgsService.IGoogleDriveService driveService,
+            AquaSolution.Data.Connection.AquaDbContext context,
+            IWebHostEnvironment env,
+            Microsoft.Extensions.Logging.ILogger<UserFeedbackController> logger)
         {
             _feedbackService = feedbackService;
+            _syncService = syncService;
+            _driveService = driveService;
+            _context = context;
             _env = env;
+            _logger = logger;
         }
 
         /// <summary>
@@ -187,6 +200,111 @@ namespace AquaSolution.Server.Controllers.Feedbacks
             var success = await _feedbackService.DeleteAsync(id);
             if (!success) return NotFound("Không tìm thấy ý kiến cần xóa.");
             return Ok(new { success = true, message = "Xóa ý kiến thành công." });
+        }
+
+        /// <summary>
+        /// Trigger sync from Google Sheet
+        /// </summary>
+        [HttpPost("sync")]
+        public async Task<IActionResult> SyncFromGoogleSheet()
+        {
+            try
+            {
+                var result = await _syncService.SyncAsync("Manual");
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Get latest sync status
+        /// </summary>
+        [HttpGet("sync-status")]
+        public async Task<IActionResult> GetSyncStatus()
+        {
+            var status = await _syncService.GetSyncStatusAsync();
+            return Ok(status);
+        }
+
+        /// <summary>
+        /// Proxy download/stream attachment via GoogleDriveService (Secure & no public drive link needed)
+        /// </summary>
+        [HttpGet("attachments/{id}")]
+        public async Task<IActionResult> GetAttachment(Guid id)
+        {
+            var att = await _context.tbl_UserFeedbackAttachments.FindAsync(id);
+            if (att == null) return NotFound("Không tìm thấy tệp đính kèm.");
+
+            try
+            {
+                // ƯU TIÊN 1: Phục vụ trực tiếp từ tệp cục bộ trên máy chủ (wwwroot/uploads/feedbacks)
+                // Đảm bảo tốc độ cao nhất và hoạt động vĩnh viễn kể cả khi Drive đã xóa file sau 30 ngày
+                if (!string.IsNullOrWhiteSpace(att.FilePath) && !att.FilePath.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+                {
+                    var cleanPath = att.FilePath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
+                    var localPhysicalPath = Path.Combine(_env.WebRootPath ?? "wwwroot", cleanPath);
+                    if (System.IO.File.Exists(localPhysicalPath))
+                    {
+                        var bytes = await System.IO.File.ReadAllBytesAsync(localPhysicalPath);
+                        var contentType = !string.IsNullOrWhiteSpace(att.FileType) ? att.FileType : "application/octet-stream";
+                        Response.Headers["X-Content-Type-Options"] = "nosniff";
+                        Response.Headers["Content-Disposition"] = $"inline; filename=\"{Uri.EscapeDataString(att.OriginalFileName ?? "file")}\"";
+                        return File(bytes, contentType);
+                    }
+                }
+
+                // ƯU TIÊN 2: Nếu chưa có file cục bộ trên máy chủ, tải từ Google Drive về, lưu bản sao vào server disk rồi phục vụ
+                if (!string.IsNullOrWhiteSpace(att.GoogleDriveFileId))
+                {
+                    var fileBytes = await _driveService.GetFileBytesAsync(att.GoogleDriveFileId);
+                    var fileName = att.OriginalFileName ?? $"{att.GoogleDriveFileId}.bin";
+
+                    // Kiểm tra an toàn tệp: Magic Bytes, chống giả mạo đuôi, chống file thực thi
+                    var (isValid, reason, detectedMime) = FileSecurityHelper.ValidateFile(fileBytes, fileName);
+                    if (!isValid)
+                    {
+                        return BadRequest($"Tệp không an toàn: {reason}");
+                    }
+
+                    var contentType = detectedMime;
+
+                    // Tự động lưu bản sao vĩnh viễn vào server disk
+                    try
+                    {
+                        var uploadDir = Path.Combine(_env.WebRootPath ?? "wwwroot", "uploads", "feedbacks");
+                        if (!Directory.Exists(uploadDir)) Directory.CreateDirectory(uploadDir);
+
+                        var ext = Path.GetExtension(fileName);
+                        if (string.IsNullOrEmpty(ext)) ext = contentType == "application/pdf" ? ".pdf" : ".jpg";
+                        var serverFileName = $"{att.GoogleDriveFileId}{ext}";
+                        var localPhysicalPath = Path.Combine(uploadDir, serverFileName);
+                        await System.IO.File.WriteAllBytesAsync(localPhysicalPath, fileBytes);
+
+                        att.FilePath = $"/uploads/feedbacks/{serverFileName}";
+                        att.FileType = contentType;
+                        att.FileSize = fileBytes.Length;
+                        att.SyncStatus = "LocalSaved";
+                        await _context.SaveChangesAsync();
+                    }
+                    catch (Exception saveEx)
+                    {
+                        _logger.LogWarning(saveEx, "Không thể lưu bản sao tệp {Id} vào disk máy chủ", id);
+                    }
+
+                    Response.Headers["X-Content-Type-Options"] = "nosniff";
+                    Response.Headers["Content-Disposition"] = $"inline; filename=\"{Uri.EscapeDataString(fileName)}\"";
+                    return File(fileBytes, contentType);
+                }
+
+                return NotFound("Tệp không tồn tại trên hệ thống lưu trữ.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi tải tệp: {ex.Message}");
+            }
         }
     }
 }

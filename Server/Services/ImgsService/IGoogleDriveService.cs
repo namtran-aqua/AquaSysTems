@@ -11,6 +11,7 @@ namespace AquaSolution.Server.Services.ImgsService
         Task<Dictionary<string, string>> GetFoldersAsync();
         Task<List<GoogleDriveImageDto>> GetAllImagesAsync(List<string> allowedFolderNames);
         Task<byte[]> GetFileBytesAsync(string fileId);
+        Task<(string Name, string MimeType, long? Size)?> GetFileMetadataAsync(string fileId);
         Task<bool> DeleteFileAsync(string fileId);
     }
 }

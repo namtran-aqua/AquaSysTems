@@ -138,6 +138,17 @@ lifetime.ApplicationStarted.Register(() =>
             TimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")
         }
     );
+
+    // Job đồng bộ phản ánh từ Google Sheet mỗi 15 phút
+    RecurringJob.AddOrUpdate<AquaSolution.Server.Services.Feedbacks.IFeedbackSyncService>(
+        "feedback-sheet-sync-15min",
+        service => service.SyncAsync("Hangfire", System.Threading.CancellationToken.None),
+        "*/15 * * * *",
+        new RecurringJobOptions
+        {
+            TimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")
+        }
+    );
 });
 
 // ===================== SWAGGER UI =====================

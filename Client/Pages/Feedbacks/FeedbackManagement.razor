@@ -13,34 +13,48 @@
 <PageTitle>Quản Lý Ý Kiến & Đóng Góp - Admin</PageTitle>
 
 <div class="feedback-admin-container">
-    <!-- PAGE HEADER -->
-    <div class="page-top-header">
-        <div class="header-left">
-            <h2 class="page-title">
-                <Icon Type="message" Style="color: #1890ff;" /> Quản Lý Ý Kiến & Đóng Góp
-            </h2>
-            <p class="page-subtitle">Theo dõi, tiếp nhận và xử lý các ý kiến, phản ánh từ người dùng (Không cần đăng nhập để gửi)</p>
+    <!-- APPS SCRIPT STYLE HEADER BANNER -->
+    <div class="appscript-header-banner">
+        <div class="banner-left">
+            <h1 class="banner-title">AQUA – KÊNH THEO DÕI & QUẢN LÝ PHẢN ÁNH</h1>
+            <p class="banner-subtitle">Bảng tiếp nhận thông tin gian lận & vi phạm liêm chính</p>
+            @if (lastSyncTime.HasValue)
+            {
+                <div class="banner-sync-info">
+                    <Icon Type="clock-circle" />
+                    <span>Lần đồng bộ gần nhất: <strong>@lastSyncTime.Value.ToString("dd/MM/yyyy HH:mm:ss")</strong></span>
+                    @if (!string.IsNullOrEmpty(lastSyncMessage))
+                    {
+                        <span class="sync-desc ms-1">(@lastSyncMessage)</span>
+                    }
+                </div>
+            }
         </div>
-        <div class="header-right">
-            <button class="btn btn-outline-primary btn-action" @onclick="CopyPublicLink">
-                <Icon Type="copy" /> Sao Chép Liên Kết Form
+        <div class="banner-right">
+            <button class="btn-appscript-refresh" @onclick="SyncFromGoogleSheet" disabled="@isSyncing" title="Đồng bộ dữ liệu mới nhất từ Google Sheet">
+                <Icon Type="sync" Spin="@isSyncing" Class="refresh-icon" />
+                <span>@(isSyncing ? "Đang đồng bộ..." : "Đồng bộ")</span>
             </button>
-            <a href="@GetPublicFormUrl()" target="_blank" class="btn btn-primary btn-action">
-                <Icon Type="link" /> Mở Form Khảo Sát
-            </a>
         </div>
     </div>
 
-    <!-- STATS CARD -->
-    <div class="stats-row">
-        <div class="stat-card stat-total">
-            <div class="stat-icon-wrap bg-blue-subtle">
-                <Icon Type="mail" Class="stat-icon text-blue" />
-            </div>
-            <div class="stat-data">
-                <span class="stat-label">Tổng số lượng ý kiến (theo điều kiện lọc)</span>
-                <span class="stat-value">@totalCount</span>
-            </div>
+    <!-- 4 STAT CARDS (THEO GIAO DIỆN APPS SCRIPT) -->
+    <div class="stats-grid-row">
+        <div class="stat-clean-card">
+            <div class="stat-clean-title">Tổng phản ánh</div>
+            <div class="stat-clean-number text-stat-blue">@dashboardStats.TotalCount</div>
+        </div>
+        <div class="stat-clean-card">
+            <div class="stat-clean-title">Ẩn danh</div>
+            <div class="stat-clean-number text-stat-slate">@dashboardStats.AnonymousCount</div>
+        </div>
+        <div class="stat-clean-card">
+            <div class="stat-clean-title">Bảo mật danh tính</div>
+            <div class="stat-clean-number text-stat-green">@dashboardStats.ConfidentialCount</div>
+        </div>
+        <div class="stat-clean-card">
+            <div class="stat-clean-title">Có bằng chứng / File</div>
+            <div class="stat-clean-number text-stat-amber">@dashboardStats.EvidenceCount</div>
         </div>
     </div>
 
@@ -50,7 +64,7 @@
             <!-- Search Text -->
             <div class="col-md-3">
                 <label class="filter-label">Tìm kiếm từ khóa</label>
-                <Input Placeholder="Họ tên, SĐT, tiêu đề..." 
+                <Input Placeholder="Họ tên, SĐT, nội dung..." 
                        @bind-Value="filter.SearchTerm" 
                        Prefix="@SearchIcon" 
                        AllowClear="true" 
@@ -128,14 +142,14 @@
                PageSize="@filter.PageSize"
                OnPageIndexChange="OnPageChange"
                Bordered="true"
-               ScrollX="1100"
+               ScrollX="1200"
                Size="TableSize.Middle">
             <ColumnDefinitions Context="row">
                 <PropertyColumn Title="STT" Width="60" Property="c => c.Id">
                     <span>@((filter.PageIndex - 1) * filter.PageSize + feedbacks.IndexOf(row) + 1)</span>
                 </PropertyColumn>
 
-                <PropertyColumn Title="Người gửi" Width="170" Property="c => c.FullName">
+                <PropertyColumn Title="Người gửi" Width="150" Property="c => c.FullName">
                     <div class="user-cell">
                         <span class="user-name">@row.FullName</span>
                         @if (!string.IsNullOrWhiteSpace(row.PhoneNumber))
@@ -145,18 +159,41 @@
                     </div>
                 </PropertyColumn>
 
-                <PropertyColumn Title="Nhà máy" Property="c => c.Factory" Width="140" />
+                <PropertyColumn Title="Hình thức" Property="c => c.FeedbackType" Width="130">
+                    <span class="text-dark">@(string.IsNullOrWhiteSpace(row.FeedbackType) ? "Thường" : row.FeedbackType)</span>
+                </PropertyColumn>
 
-                <PropertyColumn Title="Phòng ban" Property="c => c.Department" Width="160" />
+                <PropertyColumn Title="Nhà máy" Property="c => c.Factory" Width="110" />
 
-                <PropertyColumn Title="Tiêu đề" Property="c => c.Title">
+                <PropertyColumn Title="Phòng ban" Property="c => c.Department" Width="130" />
+
+                <Column Title="Nhóm vấn đề" Width="220" TData="string">
+                    @if (row.ParsedIssueGroups != null && row.ParsedIssueGroups.Count > 0)
+                    {
+                        <div class="issue-plain-list">
+                            @foreach (var issue in row.ParsedIssueGroups)
+                            {
+                                <div class="issue-plain-item">• @issue</div>
+                            }
+                        </div>
+                    }
+                    else if (!string.IsNullOrWhiteSpace(row.IssueGroups))
+                    {
+                        <div class="issue-plain-item">• @row.IssueGroups</div>
+                    }
+                    else
+                    {
+                        <span class="text-muted">-</span>
+                    }
+                </Column>
+
+                <PropertyColumn Title="Mô tả sự việc" Property="c => c.Content">
                     <div class="title-cell" @onclick="() => ViewDetail(row)">
-                        <span class="feedback-title">@row.Title</span>
-                        <p class="feedback-snippet">@GetSnippet(row.Content)</p>
+                        <span class="feedback-title">@GetSnippet(row.Content)</span>
                     </div>
                 </PropertyColumn>
 
-                <PropertyColumn Title="Đính kèm" Property="c => c.Attachments.Count" Width="100">
+                <PropertyColumn Title="Đính kèm" Property="c => c.Attachments.Count" Width="90" Align="ColumnAlign.Center">
                     @if (row.Attachments != null && row.Attachments.Count > 0)
                     {
                         <span class="pointer-tag" @onclick="() => ViewDetail(row)">
@@ -171,9 +208,9 @@
                     }
                 </PropertyColumn>
 
-                <PropertyColumn Title="Ngày gửi" Property="c => c.CreatedAt" Format="dd/MM/yyyy HH:mm" Width="150" />
+                <PropertyColumn Title="Ngày gửi" Property="c => c.CreatedAt" Format="dd/MM/yyyy HH:mm" Width="140" />
 
-                <ActionColumn Title="Thao tác" Width="90" Align="ColumnAlign.Center">
+                <ActionColumn Title="Thao tác" Width="80" Align="ColumnAlign.Center">
                     <Button Type="@ButtonType.Primary" Size="@ButtonSize.Small" Icon="eye" OnClick="() => ViewDetail(row)">
                         Xem
                     </Button>
@@ -190,22 +227,32 @@
            Visible="@isModalVisible" 
            OnCancel="() => isModalVisible = false" 
            Footer="@null" 
-           Width="850">
+           Width="900">
         <div class="feedback-detail-modal">
-            <!-- SENDER INFO CARD -->
+            <!-- 1. THÔNG TIN NGƯỜI GỬI -->
             <div class="detail-section-card">
-                <div class="detail-row">
+                <h5 class="section-subtitle mb-3"><Icon Type="user" /> 1. Thông tin người gửi</h5>
+                <!-- Dòng 1: Người gửi (1 phần - 25%) & Hình thức phản ánh (3 phần - 75%) -->
+                <div class="sender-grid-row-1 mb-3">
                     <div class="detail-item">
                         <span class="d-label">Người gửi:</span>
-                        <strong class="d-value text-primary">@selectedFeedback.FullName</strong>
+                        <strong class="d-value text-primary fs-6">@selectedFeedback.FullName</strong>
                     </div>
                     <div class="detail-item">
+                        <span class="d-label">Hình thức phản ánh:</span>
+                        <span class="d-value fw-medium">@(string.IsNullOrEmpty(selectedFeedback.FeedbackType) ? "Bình thường" : selectedFeedback.FeedbackType)</span>
+                    </div>
+                </div>
+
+                <!-- Dòng 2: Nhà máy, Phòng ban, Số điện thoại, Thời gian gửi (4 phần bằng nhau) -->
+                <div class="sender-grid-row-2">
+                    <div class="detail-item">
                         <span class="d-label">Nhà máy:</span>
-                        <Tag Color="@("cyan")">@(string.IsNullOrEmpty(selectedFeedback.Factory) ? "Chưa rõ" : selectedFeedback.Factory)</Tag>
+                        <span class="d-value">@(string.IsNullOrEmpty(selectedFeedback.Factory) ? "---" : selectedFeedback.Factory)</span>
                     </div>
                     <div class="detail-item">
                         <span class="d-label">Phòng ban:</span>
-                        <Tag Color="@("blue")">@selectedFeedback.Department</Tag>
+                        <span class="d-value">@(string.IsNullOrEmpty(selectedFeedback.Department) ? "---" : selectedFeedback.Department)</span>
                     </div>
                     <div class="detail-item">
                         <span class="d-label">Số điện thoại:</span>
@@ -218,52 +265,158 @@
                 </div>
             </div>
 
-            <!-- CONTENT CARD -->
+            <!-- 2. NHÓM VẤN ĐỀ VI PHẠM (MỖI Ý 1 DÒNG, TEXT THƯỜNG KHÔNG MÀU) -->
             <div class="detail-section-card mt-3">
-                <h4 class="detail-heading">Tiêu đề: @selectedFeedback.Title</h4>
-                <div class="detail-content-box">
-                    @selectedFeedback.Content
+                <h5 class="section-subtitle mb-2"><Icon Type="unordered-list" /> 2. Nhóm vấn đề vi phạm</h5>
+                <div class="detail-issue-box">
+                    @if (selectedFeedback.ParsedIssueGroups != null && selectedFeedback.ParsedIssueGroups.Count > 0)
+                    {
+                        @foreach (var issue in selectedFeedback.ParsedIssueGroups)
+                        {
+                            <div class="detail-issue-line">• @issue</div>
+                        }
+                    }
+                    else if (!string.IsNullOrEmpty(selectedFeedback.IssueGroups))
+                    {
+                        <div class="detail-issue-line">• @selectedFeedback.IssueGroups</div>
+                    }
+                    else
+                    {
+                        <span class="text-muted">Không có nhóm vấn đề cụ thể</span>
+                    }
                 </div>
             </div>
 
-            <!-- ATTACHMENTS GALLERY -->
+            <!-- 3. MÔ TẢ SỰ VIỆC & THÔNG TIN LIÊN QUAN -->
+            <div class="detail-section-card mt-3">
+                <h5 class="section-subtitle mb-2"><Icon Type="file-text" /> 3. Mô tả sự việc & Người liên quan</h5>
+                <div class="mb-2">
+                    <label class="fw-bold text-secondary">Mô tả sự việc:</label>
+                    <div class="detail-content-box">
+                        @selectedFeedback.Content
+                    </div>
+                </div>
+                <div class="detail-row mt-2">
+                    @if (!string.IsNullOrWhiteSpace(selectedFeedback.RelatedParties))
+                    {
+                        <div class="detail-item">
+                            <span class="d-label">Bộ phận/Người liên quan:</span>
+                            <span class="d-value">@selectedFeedback.RelatedParties</span>
+                        </div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(selectedFeedback.IncidentTimeLocation))
+                    {
+                        <div class="detail-item">
+                            <span class="d-label">Thời gian & Địa điểm:</span>
+                            <span class="d-value">@selectedFeedback.IncidentTimeLocation</span>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- 4. THIỆT HẠI & BẰNG CHỨNG -->
+            @if (!string.IsNullOrWhiteSpace(selectedFeedback.HasFinancialLoss) || !string.IsNullOrWhiteSpace(selectedFeedback.HasEvidence))
+            {
+                <div class="detail-section-card mt-3">
+                    <h5 class="section-subtitle mb-2"><Icon Type="safety-certificate" /> 4. Thiệt hại tài chính & Bằng chứng</h5>
+                    <div class="detail-row">
+                        <div class="detail-item">
+                            <span class="d-label">Liên quan thiệt hại tài chính:</span>
+                            <span class="d-value">@(selectedFeedback.HasFinancialLoss ?? "Không")</span>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(selectedFeedback.EstimatedLossAmount))
+                        {
+                            <div class="detail-item">
+                                <span class="d-label">Giá trị thiệt hại ước tính:</span>
+                                <span class="d-value text-danger fw-bold">@selectedFeedback.EstimatedLossAmount</span>
+                            </div>
+                        }
+                        <div class="detail-item">
+                            <span class="d-label">Có bằng chứng:</span>
+                            <span class="d-value">@(selectedFeedback.HasEvidence ?? "Không")</span>
+                        </div>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(selectedFeedback.EvidenceDescription))
+                    {
+                        <div class="mt-2">
+                            <span class="d-label">Mô tả bằng chứng:</span>
+                            <div class="p-2 bg-light rounded text-dark mt-1">@selectedFeedback.EvidenceDescription</div>
+                        </div>
+                    }
+                </div>
+            }
+
+            <!-- 5. TỆP ĐÍNH KÈM -->
             @if (selectedFeedback.Attachments != null && selectedFeedback.Attachments.Count > 0)
             {
                 <div class="detail-section-card mt-3">
                     <h5 class="section-subtitle">
-                        <Icon Type="paper-clip" /> Tệp & Hình ảnh đính kèm (@selectedFeedback.Attachments.Count)
+                        <Icon Type="paper-clip" /> 5. Tệp & Hình ảnh đính kèm (@selectedFeedback.Attachments.Count)
                     </h5>
                     <div class="attachment-gallery">
                         @foreach (var att in selectedFeedback.Attachments)
                         {
-                            <div class="gallery-card">
-                                @if (IsImageFile(att.FileName) && !string.IsNullOrEmpty(att.FilePath))
-                                {
-                                    var fullImgUrl = GetFullImageUrl(att.FilePath);
-                                    <div class="gallery-thumb-wrap" @onclick="() => OpenPreviewImage(fullImgUrl, att.OriginalFileName)">
-                                        <img src="@fullImgUrl" alt="@att.OriginalFileName" class="gallery-thumb" />
-                                        <div class="gallery-thumb-overlay">
+                            var proxyUrl = $"api/UserFeedback/attachments/{att.Id}";
+                            if (IsPdfFile(att))
+                            {
+                                <div class="gallery-card pdf-card">
+                                    <div class="gallery-pdf-wrap" @onclick="@(() => OpenInNewTab(proxyUrl))" title="Nhấn để xem PDF trên tab mới">
+                                        <div class="pdf-icon-badge">
+                                            <Icon Type="file-pdf" Class="pdf-symbol" />
+                                            <span class="pdf-badge-label">PDF</span>
+                                        </div>
+                                        <div class="gallery-overlay">
+                                            <Icon Type="eye" /> Xem PDF
+                                        </div>
+                                    </div>
+                                    <div class="gallery-meta">
+                                        <span class="g-name" title="@att.OriginalFileName">@att.OriginalFileName</span>
+                                        <div class="gallery-btn-group">
+                                            <a href="@proxyUrl" target="_blank" class="g-action-btn view-btn">
+                                                <Icon Type="eye" /> Xem PDF
+                                            </a>
+                                            <a href="@proxyUrl" target="_blank" download="@att.OriginalFileName" class="g-action-btn download-btn">
+                                                <Icon Type="download" /> Tải về
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            else if (IsImageFile(att.FileName) || IsImageFile(att.OriginalFileName) || att.FileType?.StartsWith("image/") == true)
+                            {
+                                <div class="gallery-card image-card">
+                                    <div class="gallery-thumb-wrap" @onclick="() => OpenPreviewImage(proxyUrl, att.OriginalFileName)" title="Nhấn để xem lớn">
+                                        <img src="@proxyUrl" alt="@att.OriginalFileName" class="gallery-thumb" loading="lazy" />
+                                        <div class="gallery-overlay">
                                             <Icon Type="zoom-in" /> Xem lớn
                                         </div>
                                     </div>
-                                }
-                                else
-                                {
-                                    <div class="gallery-file-wrap">
+                                    <div class="gallery-meta">
+                                        <span class="g-name" title="@att.OriginalFileName">@att.OriginalFileName</span>
+                                        <div class="gallery-btn-group">
+                                            <a href="@proxyUrl" target="_blank" download="@att.OriginalFileName" class="g-action-btn download-btn w-100 justify-content-center">
+                                                <Icon Type="download" /> Tải về
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="gallery-card doc-card">
+                                    <div class="gallery-file-wrap" @onclick="@(() => OpenInNewTab(proxyUrl))">
                                         <Icon Type="file" Class="generic-doc-icon" />
                                     </div>
-                                }
-                                <div class="gallery-meta">
-                                    <span class="g-name" title="@att.OriginalFileName">@att.OriginalFileName</span>
-                                    <span class="g-size">@FormatFileSize(att.FileSize)</span>
-                                    @if (!string.IsNullOrEmpty(att.FilePath))
-                                    {
-                                        <a href="@GetFullImageUrl(att.FilePath)" target="_blank" download="@att.OriginalFileName" class="g-download">
-                                            <Icon Type="download" /> Tải về
-                                        </a>
-                                    }
+                                    <div class="gallery-meta">
+                                        <span class="g-name" title="@att.OriginalFileName">@att.OriginalFileName</span>
+                                        <div class="gallery-btn-group">
+                                            <a href="@proxyUrl" target="_blank" download="@att.OriginalFileName" class="g-action-btn download-btn w-100 justify-content-center">
+                                                <Icon Type="download" /> Tải về
+                                            </a>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
+                            }
                         }
                     </div>
                 </div>
@@ -310,6 +463,9 @@
     private int totalCount = 0;
     private bool isLoading = false;
 
+    // Dashboard Statistics (Theo giao diện Apps Script)
+    private FeedbackDashboardStatsDto dashboardStats = new();
+
     // Detail Modal
     private bool isModalVisible = false;
     private UserFeedbackDto? selectedFeedback;
@@ -320,11 +476,90 @@
     private string previewImageUrl = "";
     private string previewImageTitle = "";
 
+    // Sync State
+    private bool isSyncing = false;
+    private DateTime? lastSyncTime;
+    private string lastSyncMessage = "";
+
     protected override async Task OnInitializedAsync()
     {
         await LoadFactories();
         await LoadDepartments();
+        await LoadSyncStatus();
+        await LoadStats();
         await LoadData(1);
+    }
+
+    private async Task LoadStats()
+    {
+        try
+        {
+            var res = await Http.GetFromJsonAsync<FeedbackDashboardStatsDto>("api/UserFeedback/dashboard-stats");
+            if (res != null)
+            {
+                dashboardStats = res;
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading dashboard stats: {ex.Message}");
+        }
+    }
+
+    private async Task LoadSyncStatus()
+    {
+        try
+        {
+            var res = await Http.GetFromJsonAsync<FeedbackSyncStatusDto>("api/UserFeedback/sync-status");
+            if (res != null && res.LastSyncTime.HasValue)
+            {
+                lastSyncTime = res.LastSyncTime;
+                lastSyncMessage = res.Status == "Success" ? $"Mới: {res.NewRows}, Đã có: {res.SkippedRows}" : res.Status;
+            }
+        }
+        catch { }
+    }
+
+    private async Task SyncFromGoogleSheet()
+    {
+        if (isSyncing) return;
+        try
+        {
+            isSyncing = true;
+            await Message.Loading("Đang kết nối và đồng bộ dữ liệu từ Google Sheet...", 1);
+
+            var res = await Http.PostAsync("api/UserFeedback/sync", null);
+            if (res.IsSuccessStatusCode)
+            {
+                var resultDto = await res.Content.ReadFromJsonAsync<FeedbackSyncResultDto>();
+                if (resultDto != null && resultDto.Success)
+                {
+                    lastSyncTime = resultDto.LastSyncTime ?? DateTime.Now;
+                    lastSyncMessage = $"Mới: {resultDto.NewCount}, Đã có: {resultDto.SkippedCount}";
+                    await Message.Success(resultDto.Message);
+                    await LoadStats();
+                    await LoadData(1);
+                }
+                else
+                {
+                    await Message.Warning(resultDto?.Message ?? "Đồng bộ không thành công.");
+                }
+            }
+            else
+            {
+                var err = await res.Content.ReadAsStringAsync();
+                await Message.Error($"Lỗi đồng bộ: {err}");
+            }
+        }
+        catch (Exception ex)
+        {
+            await Message.Error($"Lỗi kết nối: {ex.Message}");
+        }
+        finally
+        {
+            isSyncing = false;
+        }
     }
 
     private async Task LoadFactories()
@@ -372,6 +607,7 @@
                 feedbacks = res.Items;
                 totalCount = res.TotalCount;
             }
+            await LoadStats();
         }
         catch (Exception ex)
         {
@@ -400,50 +636,20 @@
         isModalVisible = true;
     }
 
-    private string GetPublicFormUrl()
-    {
-        return Navigation.ToAbsoluteUri("feedback-form").ToString();
-    }
-
-    private async Task CopyPublicLink()
-    {
-        var publicUrl = GetPublicFormUrl();
-        try
-        {
-            var success = await JS.InvokeAsync<bool>("clipboardCopy.copyText", publicUrl);
-            if (success)
-            {
-                await Message.Success($"Đã sao chép liên kết Form: {publicUrl}");
-                return;
-            }
-        }
-        catch
-        {
-            try
-            {
-                await JS.InvokeVoidAsync("eval", $@"
-                    var t = document.createElement('textarea');
-                    t.value = '{publicUrl}';
-                    t.style.position = 'fixed';
-                    t.style.left = '-9999px';
-                    document.body.appendChild(t);
-                    t.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(t);
-                ");
-                await Message.Success($"Đã sao chép liên kết Form: {publicUrl}");
-                return;
-            }
-            catch { }
-        }
-        await Message.Info($"Đường dẫn Form: {publicUrl}");
-    }
-
     private void OpenPreviewImage(string url, string title)
     {
         previewImageUrl = url;
         previewImageTitle = title;
         isImagePreviewVisible = true;
+    }
+
+    private bool IsPdfFile(UserFeedbackAttachmentDto? att)
+    {
+        if (att == null) return false;
+        if (!string.IsNullOrEmpty(att.FileType) && att.FileType.Equals("application/pdf", StringComparison.OrdinalIgnoreCase)) return true;
+        if (!string.IsNullOrEmpty(att.OriginalFileName) && att.OriginalFileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase)) return true;
+        if (!string.IsNullOrEmpty(att.FileName) && att.FileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase)) return true;
+        return false;
     }
 
     private bool IsImageFile(string? fileName)
@@ -453,18 +659,16 @@
         return ext is ".jpg" or ".jpeg" or ".png" or ".webp" or ".gif" or ".bmp" or ".svg";
     }
 
+    private async Task OpenInNewTab(string url)
+    {
+        await JS.InvokeVoidAsync("open", url, "_blank");
+    }
+
     private string FormatFileSize(long bytes)
     {
         if (bytes < 1024) return $"{bytes} B";
         if (bytes < 1024 * 1024) return $"{(bytes / 1024.0):F1} KB";
         return $"{(bytes / (1024.0 * 1024.0)):F1} MB";
-    }
-
-    private string GetFullImageUrl(string filePath)
-    {
-        if (string.IsNullOrEmpty(filePath)) return "";
-        if (filePath.StartsWith("http", StringComparison.OrdinalIgnoreCase)) return filePath;
-        return $"{Navigation.BaseUri.TrimEnd('/')}/{filePath.TrimStart('/')}";
     }
 
     private string GetSnippet(string content)
@@ -481,107 +685,133 @@
         min-height: calc(100vh - 60px);
     }
 
-    .page-top-header {
+    /* APPS SCRIPT BANNER */
+    .appscript-header-banner {
+        background: linear-gradient(135deg, #0056cc 0%, #0066e2 100%);
+        border-radius: 12px;
+        padding: 18px 24px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 20px;
+        box-shadow: 0 4px 14px rgba(0, 86, 204, 0.2);
+        margin-bottom: 16px;
         flex-wrap: wrap;
         gap: 12px;
     }
 
-    .page-title {
-        font-size: 22px;
+    .banner-title {
+        font-size: 20px;
         font-weight: 700;
-        color: #1e293b;
+        color: #ffffff;
+        letter-spacing: 0.3px;
         margin: 0;
-        display: flex;
-        align-items: center;
-        gap: 8px;
     }
 
-    .page-subtitle {
-        color: #64748b;
+    .banner-subtitle {
+        color: rgba(255, 255, 255, 0.9);
         margin: 4px 0 0 0;
         font-size: 13px;
     }
 
-    .header-right {
+    .banner-sync-info {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.85);
+        margin-top: 6px;
         display: flex;
-        gap: 10px;
-    }
-
-    .btn-action {
-        display: inline-flex;
         align-items: center;
         gap: 6px;
+    }
+
+    .sync-desc {
+        color: #e0e7ff;
+    }
+
+    .btn-appscript-refresh {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #ffffff;
+        color: #0056cc;
         font-weight: 600;
         font-size: 13px;
         border-radius: 8px;
-        padding: 6px 14px;
+        border: none;
+        padding: 8px 16px;
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    /* STATS CARDS */
-    .stats-row {
+    .btn-appscript-refresh:hover:not(:disabled) {
+        background: #f0f7ff;
+        color: #004bb5;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-appscript-refresh:active:not(:disabled) {
+        transform: translateY(0);
+    }
+
+    .btn-appscript-refresh:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+
+    /* 4 CLEAN STAT CARDS */
+    .stats-grid-row {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        grid-template-columns: repeat(4, 1fr);
         gap: 16px;
         margin-bottom: 20px;
     }
 
-    .stat-card {
+    @@media (max-width: 992px) {
+        .stats-grid-row {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @@media (max-width: 576px) {
+        .stats-grid-row {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .stat-clean-card {
         background: #ffffff;
-        border-radius: 12px;
         border: 1px solid #e2e8f0;
+        border-radius: 12px;
         padding: 16px 20px;
         display: flex;
-        align-items: center;
-        gap: 16px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-    }
-
-    .stat-icon-wrap {
-        width: 48px;
-        height: 48px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .stat-icon {
-        font-size: 22px;
-    }
-
-    .bg-blue-subtle { background: #eff6ff; }
-    .text-blue { color: #2563eb; }
-
-    .bg-red-subtle { background: #fef2f2; }
-    .text-red { color: #dc2626; }
-
-    .bg-amber-subtle { background: #fffbeb; }
-    .text-amber { color: #d97706; }
-
-    .bg-green-subtle { background: #ecfdf5; }
-    .text-green { color: #059669; }
-
-    .stat-data {
-        display: flex;
         flex-direction: column;
+        justify-content: center;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .stat-label {
-        font-size: 12px;
+    .stat-clean-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+    }
+
+    .stat-clean-title {
+        font-size: 13px;
         color: #64748b;
         font-weight: 500;
+        margin-bottom: 8px;
     }
 
-    .stat-value {
-        font-size: 24px;
+    .stat-clean-number {
+        font-size: 30px;
         font-weight: 700;
-        color: #1e293b;
-        line-height: 1.2;
+        line-height: 1.1;
     }
+
+    .text-stat-blue { color: #0056cc; }
+    .text-stat-slate { color: #1e293b; }
+    .text-stat-green { color: #16a34a; }
+    .text-stat-amber { color: #d97706; }
 
     /* FILTER CARD */
     .filter-card {
@@ -621,11 +851,6 @@
         color: #1e293b;
     }
 
-    .user-age {
-        font-size: 11px;
-        color: #64748b;
-    }
-
     .user-phone {
         font-size: 11px;
         color: #2563eb;
@@ -640,16 +865,12 @@
         color: #2563eb;
         display: block;
         margin-bottom: 2px;
+        transition: color 0.15s;
     }
 
     .feedback-title:hover {
         text-decoration: underline;
-    }
-
-    .feedback-snippet {
-        font-size: 12px;
-        color: #64748b;
-        margin: 0;
+        color: #004bb5;
     }
 
     .pointer-tag {
@@ -664,9 +885,38 @@
         padding: 16px;
     }
 
-    .highlight-admin-card {
-        background: #f0f7ff;
-        border-color: #bfdbfe;
+    .section-subtitle {
+        font-size: 14px;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    /* SECTION 1 GRID LAYOUTS */
+    .sender-grid-row-1 {
+        display: grid;
+        grid-template-columns: 1fr 3fr;
+        gap: 16px;
+        align-items: start;
+    }
+
+    .sender-grid-row-2 {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        align-items: start;
+    }
+
+    @@media (max-width: 768px) {
+        .sender-grid-row-1 {
+            grid-template-columns: 1fr;
+        }
+        .sender-grid-row-2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
     }
 
     .detail-row {
@@ -678,7 +928,7 @@
     .detail-item {
         display: flex;
         flex-direction: column;
-        gap: 2px;
+        gap: 3px;
     }
 
     .d-label {
@@ -690,13 +940,7 @@
     .d-value {
         font-size: 13px;
         color: #1e293b;
-    }
-
-    .detail-heading {
-        font-size: 16px;
-        font-weight: 700;
-        color: #1e293b;
-        margin-bottom: 8px;
+        word-break: break-word;
     }
 
     .detail-content-box {
@@ -710,32 +954,94 @@
         color: #334155;
     }
 
-    .section-subtitle {
-        font-size: 14px;
-        font-weight: 700;
-        color: #1e293b;
-        margin-bottom: 12px;
+    /* ISSUE LIST */
+    .issue-plain-list {
         display: flex;
-        align-items: center;
+        flex-direction: column;
+        gap: 3px;
+    }
+
+    .issue-plain-item {
+        font-size: 13px;
+        color: #1e293b;
+        line-height: 1.4;
+        white-space: normal;
+    }
+
+    .detail-issue-box {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 12px 16px;
+        display: flex;
+        flex-direction: column;
         gap: 6px;
     }
 
-    /* GALLERY */
+    .detail-issue-line {
+        font-size: 14px;
+        color: #1e293b;
+        line-height: 1.5;
+    }
+
+    /* ATTACHMENT GALLERY & CARDS */
     .attachment-gallery {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-        gap: 12px;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 14px;
     }
 
     .gallery-card {
         background: #ffffff;
         border: 1px solid #e2e8f0;
-        border-radius: 8px;
+        border-radius: 10px;
         overflow: hidden;
         display: flex;
         flex-direction: column;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        transition: transform 0.2s, box-shadow 0.2s;
     }
 
+    .gallery-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+    }
+
+    /* PDF Card Specifics */
+    .gallery-pdf-wrap {
+        height: 110px;
+        background: #fef2f2;
+        border-bottom: 1px solid #fee2e2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        cursor: pointer;
+    }
+
+    .pdf-icon-badge {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .pdf-symbol {
+        font-size: 38px;
+        color: #ef4444;
+    }
+
+    .pdf-badge-label {
+        font-size: 11px;
+        font-weight: 700;
+        background: #ef4444;
+        color: #ffffff;
+        padding: 1px 6px;
+        border-radius: 4px;
+        letter-spacing: 0.5px;
+    }
+
+    /* Image Card Specifics */
     .gallery-thumb-wrap {
         height: 110px;
         background: #f1f5f9;
@@ -748,9 +1054,14 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
+        transition: transform 0.3s ease;
     }
 
-    .gallery-thumb-overlay {
+    .gallery-card:hover .gallery-thumb {
+        transform: scale(1.05);
+    }
+
+    .gallery-overlay {
         position: absolute;
         inset: 0;
         background: rgba(0, 0, 0, 0.45);
@@ -758,35 +1069,39 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 4px;
+        gap: 5px;
         font-size: 12px;
         font-weight: 600;
         opacity: 0;
         transition: opacity 0.2s;
     }
 
-    .gallery-thumb-wrap:hover .gallery-thumb-overlay {
+    .gallery-pdf-wrap:hover .gallery-overlay,
+    .gallery-thumb-wrap:hover .gallery-overlay {
         opacity: 1;
     }
 
     .gallery-file-wrap {
-        height: 90px;
+        height: 110px;
         background: #f8fafc;
         display: flex;
         align-items: center;
         justify-content: center;
+        cursor: pointer;
     }
 
     .generic-doc-icon {
-        font-size: 36px;
+        font-size: 40px;
         color: #64748b;
     }
 
     .gallery-meta {
-        padding: 8px 10px;
+        padding: 10px 12px;
         display: flex;
         flex-direction: column;
-        gap: 2px;
+        gap: 6px;
+        flex: 1;
+        justify-content: space-between;
     }
 
     .g-name {
@@ -796,35 +1111,48 @@
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        display: block;
     }
 
-    .g-size {
-        font-size: 10px;
-        color: #64748b;
-    }
-
-    .g-download {
-        font-size: 11px;
-        color: #2563eb;
+    .gallery-btn-group {
+        display: flex;
+        align-items: center;
+        gap: 6px;
         margin-top: 4px;
+    }
+
+    .g-action-btn {
         display: inline-flex;
         align-items: center;
-        gap: 3px;
-        text-decoration: none;
-    }
-
-    .g-download:hover {
-        text-decoration: underline;
-    }
-
-    .admin-history-badge {
-        font-size: 12px;
-        color: #1e40af;
-        background: #dbeafe;
-        padding: 6px 12px;
+        gap: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 4px 8px;
         border-radius: 6px;
-        display: flex;
-        justify-content: space-between;
+        text-decoration: none;
+        transition: all 0.15s;
+    }
+
+    .g-action-btn.view-btn {
+        background: #eff6ff;
+        color: #2563eb;
+        border: 1px solid #bfdbfe;
+    }
+
+    .g-action-btn.view-btn:hover {
+        background: #2563eb;
+        color: #ffffff;
+    }
+
+    .g-action-btn.download-btn {
+        background: #f1f5f9;
+        color: #475569;
+        border: 1px solid #e2e8f0;
+    }
+
+    .g-action-btn.download-btn:hover {
+        background: #e2e8f0;
+        color: #0f172a;
     }
 
     /* LIGHTBOX */

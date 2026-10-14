@@ -108,6 +108,7 @@ namespace AquaSolution.Data.Connection
         #region Feedbacks
         public DbSet<UserFeedback> tbl_UserFeedbacks { get; set; }
         public DbSet<UserFeedbackAttachment> tbl_UserFeedbackAttachments { get; set; }
+        public DbSet<UserFeedbackSyncLog> tbl_UserFeedbackSyncLogs { get; set; }
         #endregion
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -193,6 +194,7 @@ namespace AquaSolution.Data.Connection
             #region Feedbacks
             modelBuilder.ApplyConfiguration(new UserFeedbackConfiguration());
             modelBuilder.ApplyConfiguration(new UserFeedbackAttachmentConfiguration());
+            modelBuilder.ApplyConfiguration(new UserFeedbackSyncLogConfiguration());
             #endregion
         }
     }
