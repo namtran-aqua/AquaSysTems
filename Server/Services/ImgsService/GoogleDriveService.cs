@@ -255,6 +255,23 @@ namespace AquaSolution.Server.Services.ImgsService
             return memoryStream.ToArray();
         }
 
+        public async Task<(string Name, string MimeType, long? Size)?> GetFileMetadataAsync(string fileId)
+        {
+            try
+            {
+                var service = GetDriveService();
+                var request = service.Files.Get(fileId);
+                request.Fields = "id, name, mimeType, size";
+                var file = await request.ExecuteAsync();
+                return (file.Name, file.MimeType, file.Size);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error retrieving Drive metadata for {fileId}: {ex.Message}");
+                return null;
+            }
+        }
+
         public async Task<bool> DeleteFileAsync(string fileId)
         {
             try

@@ -263,19 +263,29 @@ END";
         {
             await EnsureDatabaseTablesAsync();
 
-            var total = await _context.tbl_UserFeedbacks.CountAsync();
-            var newCount = await _context.tbl_UserFeedbacks.CountAsync(x => x.Status == FeedbackStatus.New);
-            var processing = await _context.tbl_UserFeedbacks.CountAsync(x => x.Status == FeedbackStatus.Processing);
-            var resolved = await _context.tbl_UserFeedbacks.CountAsync(x => x.Status == FeedbackStatus.Resolved);
-            var closed = await _context.tbl_UserFeedbacks.CountAsync(x => x.Status == FeedbackStatus.Closed);
+            var all = await _context.tbl_UserFeedbacks
+                                    .Include(x => x.Attachments)
+                                    .AsNoTracking()
+                                    .Select(x => new
+                                    {
+                                        x.Status,
+                                        x.FeedbackType,
+                                        x.FullName,
+                                        x.HasEvidence,
+                                        AttCount = x.Attachments.Count
+                                    })
+                                    .ToListAsync();
 
             return new FeedbackDashboardStatsDto
             {
-                TotalCount = total,
-                NewCount = newCount,
-                ProcessingCount = processing,
-                ResolvedCount = resolved,
-                ClosedCount = closed
+                TotalCount = all.Count,
+                NewCount = all.Count(x => x.Status == FeedbackStatus.New),
+                ProcessingCount = all.Count(x => x.Status == FeedbackStatus.Processing),
+                ResolvedCount = all.Count(x => x.Status == FeedbackStatus.Resolved),
+                ClosedCount = all.Count(x => x.Status == FeedbackStatus.Closed),
+                AnonymousCount = all.Count(x => (!string.IsNullOrEmpty(x.FeedbackType) && x.FeedbackType.Contains("Ẩn danh")) || x.FullName == "Ẩn danh"),
+                ConfidentialCount = all.Count(x => !string.IsNullOrEmpty(x.FeedbackType) && x.FeedbackType.Contains("Bảo mật")),
+                EvidenceCount = all.Count(x => (!string.IsNullOrEmpty(x.HasEvidence) && x.HasEvidence.Contains("Có")) || x.AttCount > 0)
             };
         }
 
@@ -346,6 +356,7 @@ END";
             return new UserFeedbackDto
             {
                 Id = entity.Id,
+                SubmissionId = entity.SubmissionId,
                 FullName = entity.FullName,
                 Age = entity.Age,
                 Factory = entity.Factory ?? string.Empty,
@@ -353,6 +364,15 @@ END";
                 PhoneNumber = entity.PhoneNumber,
                 Title = entity.Title,
                 Content = entity.Content,
+                FeedbackType = entity.FeedbackType,
+                IssueGroups = entity.IssueGroups,
+                ParsedIssueGroups = FeedbackSyncService.ParseIssueGroups(entity.IssueGroups),
+                RelatedParties = entity.RelatedParties,
+                IncidentTimeLocation = entity.IncidentTimeLocation,
+                HasFinancialLoss = entity.HasFinancialLoss,
+                EstimatedLossAmount = entity.EstimatedLossAmount,
+                HasEvidence = entity.HasEvidence,
+                EvidenceDescription = entity.EvidenceDescription,
                 Status = entity.Status,
                 AdminNote = entity.AdminNote,
                 ProcessedBy = entity.ProcessedBy,
@@ -367,7 +387,11 @@ END";
                     FilePath = a.FilePath,
                     FileType = a.FileType,
                     FileSize = a.FileSize,
-                    CreatedAt = a.CreatedAt
+                    CreatedAt = a.CreatedAt,
+                    GoogleDriveFileId = a.GoogleDriveFileId,
+                    DriveUrl = a.DriveUrl,
+                    SyncStatus = a.SyncStatus,
+                    ErrorMessage = a.ErrorMessage
                 }).ToList() ?? new List<UserFeedbackAttachmentDto>()
             };
         }

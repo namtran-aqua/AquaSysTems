@@ -73,6 +73,7 @@ namespace AquaSolution.Server
             services.AddScoped<IFolderPermissionService, FolderPermissionService>();
             services.AddScoped<ISectionService, SectionService>();
             services.AddScoped<IUserFeedbackService, UserFeedbackService>();
+            services.AddScoped<IFeedbackSyncService, FeedbackSyncService>();
 
             #endregion
             #region Medical
