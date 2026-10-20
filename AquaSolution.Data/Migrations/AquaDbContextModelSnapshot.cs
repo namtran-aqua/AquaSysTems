@@ -17,7 +17,7 @@ namespace AquaSolution.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.4")
+                .HasAnnotation("ProductVersion", "7.0.20")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -341,6 +341,41 @@ namespace AquaSolution.Data.Migrations
                     b.ToTable("tbl_RolePermissions", "Admin");
                 });
 
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.Admin.Section", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<Guid>("DepartmentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2400)
+                        .HasColumnType("nvarchar(2400)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DepartmentId");
+
+                    b.ToTable("tbl_Sections", "Admin");
+                });
+
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.Admin.SystemLock", b =>
                 {
                     b.Property<Guid>("Id")
@@ -376,6 +411,9 @@ namespace AquaSolution.Data.Migrations
 
                     b.Property<string>("Avatar")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("ChangeTaskMonth")
+                        .HasColumnType("int");
 
                     b.Property<string>("CreatedBy")
                         .IsRequired()
@@ -413,6 +451,9 @@ namespace AquaSolution.Data.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsChangeTask")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsDeleted")
@@ -478,6 +519,21 @@ namespace AquaSolution.Data.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("tbl_UserRoles", "Admin");
+                });
+
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.Admin.UserSection", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("SectionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("UserId", "SectionId");
+
+                    b.HasIndex("SectionId");
+
+                    b.ToTable("tbl_UserSections", "Admin");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.Clinic.Inventories", b =>
@@ -1188,6 +1244,203 @@ namespace AquaSolution.Data.Migrations
                     b.ToTable("tbl_WarehouseImportDetails", "Clinic");
                 });
 
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.Feedbacks.UserFeedback", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AdminNote")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<int?>("Age")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Department")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("EstimatedLossAmount")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("EvidenceDescription")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Factory")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FeedbackType")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("HasEvidence")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("HasFinancialLoss")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("IncidentTimeLocation")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("IssueGroups")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("ProcessedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ProcessedBy")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("RelatedParties")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SubmissionId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SubmissionId")
+                        .IsUnique()
+                        .HasFilter("[SubmissionId] IS NOT NULL");
+
+                    b.ToTable("tbl_UserFeedbacks", (string)null);
+                });
+
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.Feedbacks.UserFeedbackAttachment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DriveUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<Guid>("FeedbackId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<long>("FileSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("FileType")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("GoogleDriveFileId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("OriginalFileName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("SyncStatus")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FeedbackId");
+
+                    b.ToTable("tbl_UserFeedbackAttachments", (string)null);
+                });
+
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.Feedbacks.UserFeedbackSyncLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("AttachmentCount")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("FailedRows")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NewRows")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SkippedRows")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("StartedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("TotalRows")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TriggerType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("tbl_UserFeedbackSyncLogs", (string)null);
+                });
+
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.Formula", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1211,6 +1464,31 @@ namespace AquaSolution.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("tbl_Formulas", "KPI");
+                });
+
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.Imgs.FolderPermission", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("FolderId")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("FolderName")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("WorkDayId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("tbl_FolderPermissions", "Imgs");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPI.DealineKPISubmitManagement", b =>
@@ -1328,6 +1606,90 @@ namespace AquaSolution.Data.Migrations
                     b.HasIndex("SubmitId");
 
                     b.ToTable("tbl_KPIApprovalTasks", "KPI");
+                });
+
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPI.KPIEmployeeExemptMonth", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<int>("Month")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<Guid>("ScopeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ScopeId");
+
+                    b.HasIndex("UserId", "Year", "Month")
+                        .IsUnique();
+
+                    b.ToTable("tbl_KPIEmployeeExemptMonths", "KPI");
+                });
+
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPI.KPIEmployeeScope", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<DateTime?>("EffectiveDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("ScopeType")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("tbl_KPIEmployeeScopes", "KPI");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPI.QuarterCalculate", b =>
@@ -1972,6 +2334,9 @@ namespace AquaSolution.Data.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<Guid?>("SectionId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<int>("Step")
                         .HasColumnType("int");
 
@@ -2027,6 +2392,9 @@ namespace AquaSolution.Data.Migrations
                         .HasMaxLength(3000)
                         .HasColumnType("nvarchar(3000)");
 
+                    b.Property<Guid?>("SectionId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -2072,6 +2440,15 @@ namespace AquaSolution.Data.Migrations
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("ConfirmAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("ConfirmNote")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ConfirmUnitType")
+                        .HasColumnType("int");
 
                     b.Property<Guid>("MaterialId")
                         .HasColumnType("uniqueidentifier");
@@ -2333,6 +2710,15 @@ namespace AquaSolution.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.Admin.Section", b =>
+                {
+                    b.HasOne("AquaSolution.Data.Data.Entities.Admin.Department", null)
+                        .WithMany()
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.Admin.SystemLock", b =>
                 {
                     b.HasOne("AquaSolution.Data.Data.Entities.Admin.User", null)
@@ -2379,6 +2765,25 @@ namespace AquaSolution.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.Admin.UserSection", b =>
+                {
+                    b.HasOne("AquaSolution.Data.Data.Entities.Admin.Section", "Section")
+                        .WithMany()
+                        .HasForeignKey("SectionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("AquaSolution.Data.Data.Entities.Admin.User", "User")
+                        .WithMany("UserSections")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Section");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.Clinic.Inventories", b =>
@@ -2572,6 +2977,17 @@ namespace AquaSolution.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.Feedbacks.UserFeedbackAttachment", b =>
+                {
+                    b.HasOne("AquaSolution.Data.Data.Entities.Feedbacks.UserFeedback", "Feedback")
+                        .WithMany("Attachments")
+                        .HasForeignKey("FeedbackId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Feedback");
+                });
+
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPI.KPIActualMaster", b =>
                 {
                     b.HasOne("AquaSolution.Data.Data.Entities.Admin.User", null)
@@ -2604,6 +3020,17 @@ namespace AquaSolution.Data.Migrations
                         .HasForeignKey("SubmitId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPI.KPIEmployeeExemptMonth", b =>
+                {
+                    b.HasOne("AquaSolution.Data.Data.Entities.KPI.KPIEmployeeScope", "Scope")
+                        .WithMany("ExemptMonths")
+                        .HasForeignKey("ScopeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Scope");
                 });
 
             modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPI.RequestApprovalTask", b =>
@@ -2900,6 +3327,21 @@ namespace AquaSolution.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.Admin.User", b =>
+                {
+                    b.Navigation("UserSections");
+                });
+
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.Feedbacks.UserFeedback", b =>
+                {
+                    b.Navigation("Attachments");
+                });
+
+            modelBuilder.Entity("AquaSolution.Data.Data.Entities.KPI.KPIEmployeeScope", b =>
+                {
+                    b.Navigation("ExemptMonths");
                 });
 #pragma warning restore 612, 618
         }

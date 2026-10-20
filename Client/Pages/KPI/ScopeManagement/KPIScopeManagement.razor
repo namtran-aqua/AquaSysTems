@@ -1,0 +1,422 @@
+@page "/kpi-scope-management"
+@using AntDesign
+@using AquaSolution.Client.Modals.KPI.ScopeManagement
+@using AquaSolution.Shared.Enum.KPIType
+@using AquaSolution.Shared.KPI.Scope
+@using AquaSolution.Shared.Departments
+@inject IJSRuntime JS
+@inject IMessageService Message
+
+<PageTitle>Quản lý phạm vi đánh giá KPI</PageTitle>
+
+<div class="kpi-scope-container" style="padding: 16px;">
+    <!-- Page Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <div>
+            <h3 style="margin: 0; font-weight: 600; color: #1a3353;">
+                <Icon Type="solution" Theme="IconThemeType.Outline" Style="color: #1890ff; margin-right: 8px;" />
+                Quản lý phạm vi đánh giá KPI & Các tháng miễn KPI
+            </h3>
+            <span style="font-size: 13px; color: #6c757d;">
+                Cấu hình nhân viên mới, thai sản, nghỉ dài hạn và theo dõi ma trận tuân thủ KPI 12 tháng
+            </span>
+        </div>
+        <div>
+            <Button Type="ButtonType.Primary" Icon="plus" OnClick="OpenCreateModal">
+                Thêm mới hồ sơ
+            </Button>
+        </div>
+    </div>
+
+    <!-- Tabs: Scopes & Matrix -->
+    <Tabs DefaultActiveKey="1" Animated="true">
+        <!-- TAB 1: Danh sách hồ sơ -->
+        <TabPane Key="1">
+            <TabTemplate>
+                <span><Icon Type="unordered-list" /> Danh sách hồ sơ miễn KPI (@filteredScopes.Count)</span>
+            </TabTemplate>
+            <ChildContent>
+                <!-- Filter Bar -->
+                <Card Size="CardSize.Small" Style="margin-bottom: 16px; border-radius: 6px;">
+                    <AntDesign.Row Gutter="16" Align="RowAlign.Middle">
+                        <AntDesign.Col Span="4">
+                            <span style="font-size: 12px; color: #666;">Năm:</span>
+                            <AntDesign.InputNumber TValue="int" Value="@filterYear" Min="2020" Max="2035" Style="width: 100%;" OnChange="OnFilterYearChanged" />
+                        </AntDesign.Col>
+                        <AntDesign.Col Span="6">
+                            <span style="font-size: 12px; color: #666;">Phòng ban:</span>
+                            <Select TItem="DepartmentDto"
+                                    TItemValue="Guid?"
+                                    DataSource="@departments"
+                                    @bind-Value="@filterDepartmentId"
+                                    ItemValue="d => (Guid?)d.Id"
+                                    ItemLabel="d => d.Name"
+                                    AllowClear="true"
+                                    Placeholder="-- Tất cả phòng ban --"
+                                    OnSelectedItemChanged="_ => OnDepartmentFilterChanged()">
+                            </Select>
+                        </AntDesign.Col>
+                        <AntDesign.Col Span="5">
+                            <span style="font-size: 12px; color: #666;">Loại phạm vi:</span>
+                            <Select TItem="FilterOptionItem"
+                                    TItemValue="string"
+                                    DataSource="@scopeTypeOptions"
+                                    @bind-Value="@filterScopeTypeStr"
+                                    ItemValue="t => t.Value"
+                                    ItemLabel="t => t.Label"
+                                    OnSelectedItemChanged="_ => OnScopeTypeFilterChanged()">
+                            </Select>
+                        </AntDesign.Col>
+                        <AntDesign.Col Span="4">
+                            <span style="font-size: 12px; color: #666;">Trạng thái:</span>
+                            <Select TItem="FilterOptionItem"
+                                    TItemValue="string"
+                                    DataSource="@activeOptions"
+                                    @bind-Value="@filterActiveStr"
+                                    ItemValue="s => s.Value"
+                                    ItemLabel="s => s.Label"
+                                    OnSelectedItemChanged="_ => OnActiveStatusFilterChanged()">
+                            </Select>
+                        </AntDesign.Col>
+                        <AntDesign.Col Span="5">
+                            <span style="font-size: 12px; color: #666;">Tìm kiếm:</span>
+                            <Input Placeholder="Mã NV, Tên NV..." Value="@searchKeyword" @oninput="SearchInputChanged" AllowClear="true" />
+                        </AntDesign.Col>
+                    </AntDesign.Row>
+                </Card>
+
+                <!-- Scopes Table -->
+                <Table TItem="KPIScopeDto"
+                       DataSource="@filteredScopes"
+                       Loading="@isLoadingScopes"
+                       Bordered="true"
+                       Size="TableSize.Small"
+                       RowKey="s => s.Id.ToString()">
+                    <PropertyColumn Title="Mã NV" Property="s => s.UserName" Width="100" />
+                    <PropertyColumn Title="Họ và tên" Property="s => s.UserFullName" Width="180" />
+                    <PropertyColumn Title="Phòng ban" Property="s => s.DepartmentName" Width="160" />
+                    <Column Title="Loại phạm vi" TData="KPIScopeType" Width="140">
+                        @{
+                            var type = context.ScopeType;
+                            string color = type switch
+                            {
+                                KPIScopeType.NewEmployee => "blue",
+                                KPIScopeType.MaternityLeave => "magenta",
+                                KPIScopeType.LongTermLeave => "purple",
+                                _ => "orange"
+                            };
+                        }
+                        <Tag Color="@color">@context.ScopeTypeName</Tag>
+                    </Column>
+                    <Column Title="Thời gian áp dụng" TData="string" Width="180">
+                        @if (context.ScopeType == KPIScopeType.NewEmployee)
+                        {
+                            <span>Vào làm: <strong>@(context.EffectiveDate?.ToString("dd/MM/yyyy") ?? "--")</strong></span>
+                        }
+                        else
+                        {
+                            <span>@(context.StartDate?.ToString("dd/MM/yyyy") ?? "--") ~ @(context.EndDate?.ToString("dd/MM/yyyy") ?? "--")</span>
+                        }
+                    </Column>
+                    <Column Title="Tháng được miễn KPI" TData="string">
+                        <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                            @if (context.ExemptMonths != null && context.ExemptMonths.Any())
+                            {
+                                @foreach (var m in context.ExemptMonths)
+                                {
+                                    <Tooltip Title="@m.Note">
+                                        <Tag Color="@("default")" Style="cursor: pointer;">T@(m.Month)/@(m.Year)</Tag>
+                                    </Tooltip>
+                                }
+                            }
+                            else
+                            {
+                                <span style="color: #999; font-style: italic;">Chưa cấu hình tháng</span>
+                            }
+                        </div>
+                    </Column>
+                    <PropertyColumn Title="Lý do" Property="s => s.Reason" Ellipsis="true" />
+                    <Column Title="Trạng thái" TData="bool" Width="110">
+                        @if (context.IsActive)
+                        {
+                            <Badge Status="BadgeStatus.Success" Text="Hiệu lực" />
+                        }
+                        else
+                        {
+                            <Badge Status="BadgeStatus.Default" Text="Đã hủy" />
+                        }
+                    </Column>
+                    <ActionColumn Title="Thao tác" Width="130">
+                        <Space Size="SpaceSize.Small">
+                            <SpaceItem>
+                                <Button Type="ButtonType.Link" Size="ButtonSize.Small" Icon="edit" OnClick="() => EditScope(context)">
+                                    Sửa
+                                </Button>
+                            </SpaceItem>
+                            @if (context.IsActive)
+                            {
+                                <SpaceItem>
+                                    <Button Type="ButtonType.Link" Danger="true" Size="ButtonSize.Small" Icon="stop" OnClick="() => DeactivateScope(context)">
+                                        Hủy
+                                    </Button>
+                                </SpaceItem>
+                            }
+                        </Space>
+                    </ActionColumn>
+                </Table>
+            </ChildContent>
+        </TabPane>
+
+        <!-- TAB 2: Ma trận tuân thủ 12 tháng -->
+        <TabPane Key="2">
+            <TabTemplate>
+                <span><Icon Type="table" /> Ma trận tuân thủ KPI 12 tháng (@filteredMatrixData.Count)</span>
+            </TabTemplate>
+            <ChildContent>
+                <!-- Filter Bar (Tab 2) -->
+                <Card Size="CardSize.Small" Style="margin-bottom: 16px; border-radius: 6px;">
+                    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <span style="font-size: 13px; font-weight: 500; color: #555;">Năm:</span>
+                            <AntDesign.InputNumber TValue="int" Value="@matrixYear" Min="2020" Max="2035" Style="width: 90px;" OnChange="OnMatrixYearChanged" />
+                        </div>
+                        <div style="width: 220px;">
+                            <Select TItem="DepartmentDto"
+                                    TItemValue="Guid?"
+                                    DataSource="@departments"
+                                    @bind-Value="@matrixDepartmentId"
+                                    ItemValue="d => (Guid?)d.Id"
+                                    ItemLabel="d => d.Name"
+                                    AllowClear="true"
+                                    Placeholder="-- Tất cả phòng ban --"
+                                    OnSelectedItemChanged="_ => LoadMatrixData()">
+                            </Select>
+                        </div>
+                        <div style="width: 180px;">
+                            <Select TItem="FilterOptionItem"
+                                    TItemValue="string"
+                                    DataSource="@complianceFilterOptions"
+                                    @bind-Value="@matrixComplianceFilterStr"
+                                    ItemValue="c => c.Value"
+                                    ItemLabel="c => c.Label"
+                                    OnSelectedItemChanged="_ => OnMatrixComplianceFilterChanged()">
+                            </Select>
+                        </div>
+                        <div style="flex: 1; min-width: 220px;">
+                            <Input Placeholder="Tìm Mã NV, Tên NV, Chức vụ..." Value="@matrixSearchKeyword" @oninput="MatrixSearchInputChanged" AllowClear="true" />
+                        </div>
+                        <Button Type="ButtonType.Primary" Ghost="true" Icon="reload" OnClick="LoadMatrixData" Loading="@isLoadingMatrix">
+                            Tải lại
+                        </Button>
+                    </div>
+                </Card>
+
+                <!-- Matrix Table -->
+                <Table TItem="KPIComplianceMatrixDto"
+                       DataSource="@filteredMatrixData"
+                       Loading="@isLoadingMatrix"
+                       Bordered="true"
+                       Size="TableSize.Small"
+                       RowKey="m => m.UserId.ToString()"
+                       ScrollX="1600">
+                    <PropertyColumn Title="Mã NV" Property="m => m.UserName" Width="85" Fixed="ColumnFixPlacement.Left" />
+                    <PropertyColumn Title="Họ và tên" Property="m => m.UserFullName" Width="220" Fixed="ColumnFixPlacement.Left" />
+                    <PropertyColumn Title="Phòng ban" Property="m => m.DepartmentName" Width="130" />
+                    <PropertyColumn Title="Chức vụ" Property="m => m.PositionName" Width="110" />
+
+                    @for (int monthIndex = 1; monthIndex <= 12; monthIndex++)
+                    {
+                        int currentMonth = monthIndex;
+                        <Column Title="@($"T{currentMonth}")" TData="string" Width="75" Align="ColumnAlign.Center">
+                            @{
+                                var mDto = context.Months.FirstOrDefault(x => x.Month == currentMonth);
+                                if (mDto != null)
+                                {
+                                    @switch (mDto.Status)
+                                    {
+                                        case MonthKPIStatus.NotApplicable:
+                                            <Tooltip Title="@(string.IsNullOrEmpty(mDto.Note) ? "Miễn KPI" : mDto.Note)">
+                                                <Tag Color="@("default")" Style="cursor: help; margin: 0; font-size: 11px;">Miễn</Tag>
+                                            </Tooltip>
+                                            break;
+                                        case MonthKPIStatus.Approved:
+                                            <Tooltip Title="@($"Điểm: {mDto.TotalScore?.ToString("F2") ?? "--"}")">
+                                                <Tag Color="@("green")" Style="cursor: help; margin: 0; font-size: 11px;">
+                                                    @(mDto.TotalScore?.ToString("F2") ?? "Đạt")
+                                                </Tag>
+                                            </Tooltip>
+                                            break;
+                                        case MonthKPIStatus.Pending:
+                                            <Tooltip Title="Đang chờ phê duyệt">
+                                                <Tag Color="@("orange")" Style="cursor: help; margin: 0; font-size: 11px;">Chờ</Tag>
+                                            </Tooltip>
+                                            break;
+                                        case MonthKPIStatus.Rejected:
+                                            <Tooltip Title="KPI bị từ chối">
+                                                <Tag Color="@("volcano")" Style="cursor: help; margin: 0; font-size: 11px;">Từ chối</Tag>
+                                            </Tooltip>
+                                            break;
+                                        case MonthKPIStatus.Open:
+                                            <Tooltip Title="Chưa đến kỳ đánh giá">
+                                                <span style="color: #bfbfbf; font-size: 11px; font-weight: 500;">Open</span>
+                                            </Tooltip>
+                                            break;
+                                        case MonthKPIStatus.Missing:
+                                        default:
+                                            <Tooltip Title="Quá hạn, chưa nộp KPI">
+                                                <Tag Color="@("red")" Style="cursor: help; margin: 0; font-size: 11px;">Thiếu</Tag>
+                                            </Tooltip>
+                                            break;
+                                    }
+                                }
+                            }
+                        </Column>
+                    }
+
+                    <PropertyColumn Title="Miễn" Property="m => m.TotalExemptMonths" Width="60" Align="ColumnAlign.Center" />
+                    <PropertyColumn Title="Đã duyệt" Property="m => m.TotalApprovedMonths" Width="70" Align="ColumnAlign.Center" />
+                    <PropertyColumn Title="Chờ" Property="m => m.TotalPendingMonths" Width="60" Align="ColumnAlign.Center" />
+                    <PropertyColumn Title="Thiếu" Property="m => m.TotalMissingMonths" Width="65" Align="ColumnAlign.Center" />
+                </Table>
+            </ChildContent>
+        </TabPane>
+
+        <!-- TAB 3: Danh sách nhân viên thiếu KPI -->
+        <TabPane Key="3">
+            <TabTemplate>
+                <span>
+                    <Icon Type="warning" Theme="IconThemeType.Outline" Style="color: #ff4d4f;" /> 
+                    Danh sách thiếu KPI
+                    @if (allMissingData.Count > 0)
+                    {
+                        <span style="background: #ff4d4f; color: white; border-radius: 10px; padding: 1px 7px; font-size: 11px; margin-left: 6px; font-weight: 600;">
+                            @allMissingData.Count
+                        </span>
+                    }
+                </span>
+            </TabTemplate>
+            <ChildContent>
+                <!-- Dedicated Filter Bar for Tab 3 -->
+                <Card Size="CardSize.Small" Style="margin-bottom: 16px; border-radius: 6px;">
+                    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <span style="font-size: 13px; font-weight: 500; color: #555;">Năm:</span>
+                            <AntDesign.InputNumber TValue="int" Value="@missingFilterYear" Min="2020" Max="2035" Style="width: 90px;" OnChange="OnMissingYearChanged" />
+                        </div>
+                        <div style="width: 220px;">
+                            <Select TItem="DepartmentDto"
+                                    TItemValue="Guid?"
+                                    DataSource="@departments"
+                                    @bind-Value="@missingDepartmentId"
+                                    ItemValue="d => (Guid?)d.Id"
+                                    ItemLabel="d => d.Name"
+                                    AllowClear="true"
+                                    Placeholder="-- Tất cả phòng ban --"
+                                    OnSelectedItemChanged="_ => LoadMissingData()">
+                            </Select>
+                        </div>
+                        <div style="width: 200px;">
+                            <Select TItem="FilterOptionItem"
+                                    TItemValue="string"
+                                    DataSource="@missingMonthOptions"
+                                    @bind-Value="@missingMonthFilterStr"
+                                    ItemValue="m => m.Value"
+                                    ItemLabel="m => m.Label"
+                                    OnSelectedItemChanged="_ => OnMissingMonthFilterChanged()">
+                            </Select>
+                        </div>
+                        <div style="flex: 1; min-width: 220px;">
+                            <Input Placeholder="Tìm Mã NV, Họ tên, Chức vụ..." Value="@missingSearchKeyword" @oninput="MissingSearchInputChanged" AllowClear="true" />
+                        </div>
+                        <Button Type="ButtonType.Primary" Ghost="true" Icon="reload" OnClick="LoadMissingData" Loading="@isLoadingMissing">
+                            Tải lại
+                        </Button>
+                    </div>
+                </Card>
+
+                <!-- Summary KPI Cards with proper Icons -->
+                <AntDesign.Row Gutter="16" Style="margin-bottom: 16px;">
+                    <AntDesign.Col Span="6">
+                        <Card Size="CardSize.Small" Style="border-left: 4px solid #1890ff; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+                            <div style="font-size: 12px; color: #8c8c8c; margin-bottom: 4px;">Tổng nhân sự có KPI</div>
+                            <div style="font-size: 24px; font-weight: 600; color: #1890ff; display: flex; align-items: center; gap: 8px;">
+                                <Icon Type="team" Theme="IconThemeType.Outline" />
+                                <span>@missingTabTotalUsers</span>
+                            </div>
+                        </Card>
+                    </AntDesign.Col>
+                    <AntDesign.Col Span="6">
+                        <Card Size="CardSize.Small" Style="border-left: 4px solid #52c41a; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+                            <div style="font-size: 12px; color: #8c8c8c; margin-bottom: 4px;">Nộp đủ / Miễn KPI</div>
+                            <div style="font-size: 24px; font-weight: 600; color: #52c41a; display: flex; align-items: center; gap: 8px;">
+                                <Icon Type="check-circle" Theme="IconThemeType.Outline" />
+                                <span>@missingTabCompliantUsers</span>
+                            </div>
+                        </Card>
+                    </AntDesign.Col>
+                    <AntDesign.Col Span="6">
+                        <Card Size="CardSize.Small" Style="border-left: 4px solid #faad14; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+                            <div style="font-size: 12px; color: #8c8c8c; margin-bottom: 4px;">Đang có tháng chờ duyệt</div>
+                            <div style="font-size: 24px; font-weight: 600; color: #faad14; display: flex; align-items: center; gap: 8px;">
+                                <Icon Type="clock-circle" Theme="IconThemeType.Outline" />
+                                <span>@missingTabPendingUsers</span>
+                            </div>
+                        </Card>
+                    </AntDesign.Col>
+                    <AntDesign.Col Span="6">
+                        <Card Size="CardSize.Small" Style="border-left: 4px solid #ff4d4f; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+                            <div style="font-size: 12px; color: #8c8c8c; margin-bottom: 4px;">Đang bị thiếu KPI</div>
+                            <div style="font-size: 24px; font-weight: 600; color: #ff4d4f; display: flex; align-items: center; gap: 8px;">
+                                <Icon Type="close-circle" Theme="IconThemeType.Outline" />
+                                <span>@missingTabMissingUsers</span>
+                            </div>
+                        </Card>
+                    </AntDesign.Col>
+                </AntDesign.Row>
+
+                <!-- Missing KPI Table -->
+                <Card Size="CardSize.Small" Style="border-radius: 6px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h4 style="margin: 0; color: #ff4d4f; font-weight: 600;">
+                            <Icon Type="exclamation-circle" Style="margin-right: 6px;" />
+                            Danh sách nhân viên chưa nộp đủ KPI năm @missingFilterYear (@filteredMissingData.Count nhân viên)
+                        </h4>
+                    </div>
+
+                    <Table TItem="KPIComplianceMatrixDto"
+                           DataSource="@filteredMissingData"
+                           Loading="@isLoadingMissing"
+                           Bordered="true"
+                           Size="TableSize.Small"
+                           RowKey="m => m.UserId.ToString()">
+                        <PropertyColumn Title="Mã NV" Property="m => m.UserName" Width="100" />
+                        <PropertyColumn Title="Họ và tên" Property="m => m.UserFullName" Width="180" />
+                        <PropertyColumn Title="Phòng ban" Property="m => m.DepartmentName" Width="150" />
+                        <PropertyColumn Title="Chức vụ" Property="m => m.PositionName" Width="140" />
+                        <Column Title="Số tháng thiếu" TData="int" Width="120" Align="ColumnAlign.Center">
+                            <Tag Color="@("red")" Style="font-weight: 600; font-size: 12px; margin: 0;">
+                                @context.TotalMissingMonths tháng
+                            </Tag>
+                        </Column>
+                        <Column Title="Các tháng chưa nộp" TData="string">
+                            <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                                @foreach (var m in context.MissingMonthNumbers)
+                                {
+                                    <Tag Color="@("volcano")">Tháng @m</Tag>
+                                }
+                            </div>
+                        </Column>
+                        <ActionColumn Title="Thao tác" Width="140" Align="ColumnAlign.Center">
+                            <Button Size="ButtonSize.Small" Type="ButtonType.Primary" Ghost="true" Icon="plus" OnClick="() => OpenCreateModalForUser(context)">
+                                Thêm miễn KPI
+                            </Button>
+                        </ActionColumn>
+                    </Table>
+                </Card>
+            </ChildContent>
+        </TabPane>
+    </Tabs>
+</div>
+
+<!-- Modal Component -->
+<KPIScopeModal @ref="scopeModal" OnSaved="OnModalSaved" />

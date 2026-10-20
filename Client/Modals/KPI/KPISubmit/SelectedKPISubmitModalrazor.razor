@@ -19,7 +19,7 @@
             </Button>
         if (activeTabKey == "2")
         {
-                <Button Disabled="@HandleButtonClicked" OnClick="@SaveAsync" @key="@( "submit" )"
+                <Button Disabled="@(HandleButtonClicked || IsYearIneligible)" OnClick="@SaveAsync" @key="@( "submit" )"
                         Type="ButtonType.Primary">
                     Submit
                 </Button>
@@ -79,6 +79,10 @@
                     </TabPane>
 
                     <TabPane Key="2">
+                        @if (IsYearIneligible)
+                        {
+                            <Alert Type="@AlertType.Error" Message="Không thể nộp KPI Năm" Description="@YearIneligibleMessage" ShowIcon="true" Style="margin-bottom: 16px;" />
+                        }
                        @*  @if (!isCalculating)
                         { *@
                         <Collapse DefaultActiveKey="@(new[] { "1" })">
@@ -156,8 +160,25 @@
                                                 x.HalfYear == null)
                                             .OrderBy(x => x.Index)
                                             .ToList();
-                                        Title = $"{item.Title} - KpiScore:{item.KPIScore: 0.###} - KeyTaskScore:{item.KeyTaskScore: 0.###} - OMGScore:{item.OMGScore: 0.###} - TotaleScore:{item.TotaleScore: 0.###}";
-                                        <RenderKPISubmitComponent isCalculating="@isCalculating" HandleActual="details" Title="@Title"></RenderKPISubmitComponent>
+                                        Title = details.Any()
+                                            ? $"{item.Title} - KpiScore:{item.KPIScore: 0.###} - KeyTaskScore:{item.KeyTaskScore: 0.###} - OMGScore:{item.OMGScore: 0.###} - TotaleScore:{item.TotaleScore: 0.###}"
+                                            : $"{item.Title} - TotaleScore:{item.TotaleScore: 0.###}";
+                                        if (details.Any())
+                                        {
+                                            <RenderKPISubmitComponent isCalculating="@isCalculating" HandleActual="details" Title="@Title"></RenderKPISubmitComponent>
+                                        }
+                                        else
+                                        {
+                                            <Panel Header="@Title" Key="year_panel">
+                                                <div style="padding: 16px; background-color: #f6ffed; border: 1px solid #b7eb8f; border-radius: 6px; display: flex; align-items: center; gap: 10px;">
+                                                    <Icon Type="check-circle" Style="color: #52c41a; font-size: 20px;" />
+                                                    <div>
+                                                        <div style="font-weight: 600; font-size: 15px; color: #262626;">Điểm tổng kết Năm: @item.TotalActualScore.ToString("0.####")</div>
+                                                        <div style="color: #8c8c8c; font-size: 13px;">(Được tính theo phương thức trung bình cộng các tháng có điểm KPI thực tế do có tháng được miễn KPI)</div>
+                                                    </div>
+                                                </div>
+                                            </Panel>
+                                        }
                                     }
                                 }
                             }

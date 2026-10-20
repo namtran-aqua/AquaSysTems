@@ -175,38 +175,52 @@
                             x.Quarter == null &&
                             x.HalfYear == null
                             ).OrderBy(x => x.Index)
-                            .ToList();
-
-                              Title = $"{item.Title} - KpiScore:{item.KPIScore: 0.###} - KeyTaskScore:{item.KeyTaskScore: 0.###} - OMGScore:{item.OMGScore: 0.###} - TotaleScore:{item.TotaleScore: 0.###}";
+                            .ToList();                               Title = $"{item.Title} - KpiScore:{item.KPIScore: 0.###} - KeyTaskScore:{item.KeyTaskScore: 0.###} - OMGScore:{item.OMGScore: 0.###} - TotaleScore:{item.TotaleScore: 0.###}";
                         }
-                        <Table TItem="DetailScoreDto"
-                               Size="TableSize.Small"
-                               Style="width:40vh"
-                               Title="@Title"
-                               Class="customTable-score fix-table-header"
-                               Bordered
-                               HidePagination
-                               DataSource="@details">
+                        if (details.Any())
+                        {
+                            <Table TItem="DetailScoreDto"
+                                   Size="TableSize.Small"
+                                   Style="width:40vh"
+                                   Title="@Title"
+                                   Class="customTable-score fix-table-header"
+                                   Bordered
+                                   HidePagination
+                                   DataSource="@details">
 
-                            <ColumnDefinitions Context="rowTarget">
-                                <PropertyColumn Width="100px" Title="Index" Property="c => c.KPIIndexType"></PropertyColumn>
-                                <PropertyColumn Width="100px" Title="Category" Property="c => c.KPICategory"></PropertyColumn>
-                                <PropertyColumn Width="250px" Title="TaskName" Property="c => c.TaskName"></PropertyColumn>
-                                <PropertyColumn Width="300px" Title="Description" Property="c => c.Description"></PropertyColumn>
-                                <PropertyColumn Width="250px" Title="CalculateMethod" Property="c => c.CalculateMethod"></PropertyColumn>
-                                <PropertyColumn Width="150px" Title="Formula" Property="c => c.Formula"></PropertyColumn>
-                                <PropertyColumn Width="50px" Title="Unit" Property="c => c.Unit"></PropertyColumn>
-                                <PropertyColumn Width="90px" Title="DataSource" Property="c => c.DataSource"></PropertyColumn>
-                                <PropertyColumn Width="100" Title="PIC" Property="c => c.PIC"></PropertyColumn>
-                                <PropertyColumn Width="100px" Title="Weight" Property="c => c.WeightString"></PropertyColumn>
-                                <PropertyColumn Width="90px" Title="Max" Property="c => c.MaxString"></PropertyColumn>
-                                <PropertyColumn Width="90px" Title="Bottom" Property="c => c.BottomString"></PropertyColumn>
-                                <PropertyColumn Width="150px" Title="TargetValue" Property="c => c.TargetValue" Format="0.####"></PropertyColumn>
-                                <PropertyColumn Width="150px" Title="ActualValue" Property="c => c.ActualValue" Format="0.####"></PropertyColumn>
-                                <PropertyColumn Width="150px" Title="Achiement" Property="c => c.AchiementString" Format="0.####"></PropertyColumn>
-                                <PropertyColumn Width="150px" Title="Score" Property="c => c.Score" Format="0.####"></PropertyColumn>
-                            </ColumnDefinitions>
-                        </Table>
+                                <ColumnDefinitions Context="rowTarget">
+                                    <PropertyColumn Width="100px" Title="Index" Property="c => c.KPIIndexType"></PropertyColumn>
+                                    <PropertyColumn Width="100px" Title="Category" Property="c => c.KPICategory"></PropertyColumn>
+                                    <PropertyColumn Width="250px" Title="TaskName" Property="c => c.TaskName"></PropertyColumn>
+                                    <PropertyColumn Width="300px" Title="Description" Property="c => c.Description"></PropertyColumn>
+                                    <PropertyColumn Width="250px" Title="CalculateMethod" Property="c => c.CalculateMethod"></PropertyColumn>
+                                    <PropertyColumn Width="150px" Title="Formula" Property="c => c.Formula"></PropertyColumn>
+                                    <PropertyColumn Width="50px" Title="Unit" Property="c => c.Unit"></PropertyColumn>
+                                    <PropertyColumn Width="90px" Title="DataSource" Property="c => c.DataSource"></PropertyColumn>
+                                    <PropertyColumn Width="100" Title="PIC" Property="c => c.PIC"></PropertyColumn>
+                                    <PropertyColumn Width="100px" Title="Weight" Property="c => c.WeightString"></PropertyColumn>
+                                    <PropertyColumn Width="90px" Title="Max" Property="c => c.MaxString"></PropertyColumn>
+                                    <PropertyColumn Width="90px" Title="Bottom" Property="c => c.BottomString"></PropertyColumn>
+                                    <PropertyColumn Width="150px" Title="TargetValue" Property="c => c.TargetValue" Format="0.####"></PropertyColumn>
+                                    <PropertyColumn Width="150px" Title="ActualValue" Property="c => c.ActualValue" Format="0.####"></PropertyColumn>
+                                    <PropertyColumn Width="150px" Title="Achiement" Property="c => c.AchiementString" Format="0.####"></PropertyColumn>
+                                    <PropertyColumn Width="150px" Title="Score" Property="c => c.Score" Format="0.####"></PropertyColumn>
+                                </ColumnDefinitions>
+                            </Table>
+                        }
+                        else
+                        {
+                            <div class="ant-table-title" style="margin-top: 16px; margin-bottom: 8px; padding: 10px 16px; background-color: #fafafa; border: 1px solid #f0f0f0; border-radius: 4px; font-weight: 500; font-size: 14px; color: #262626;">
+                                @Title
+                            </div>
+                            <div style="margin: 8px 0 16px 0; padding: 16px; background-color: #f6ffed; border: 1px solid #b7eb8f; border-radius: 6px; display: flex; align-items: center; gap: 10px;">
+                                <Icon Type="check-circle" Style="color: #52c41a; font-size: 20px;" />
+                                <div>
+                                    <div style="font-weight: 600; font-size: 15px; color: #262626;">Điểm tổng kết Năm: @item.TotaleScore.ToString("0.####")</div>
+                                    <div style="color: #8c8c8c; font-size: 13px;">(Được tính theo phương thức trung bình cộng các tháng có điểm KPI thực tế do có thời gian được miễn KPI)</div>
+                                </div>
+                            </div>
+                        }
                     }
                 }
             </Panel>

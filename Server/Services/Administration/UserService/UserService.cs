@@ -82,7 +82,7 @@ public class UserService : IUserService
         try
         {
             var user = await _userRepo.FirstOrDefaultAsync(
-                u => u.WorkDayId == loginRequest.UserName && !u.IsDeleted && u.IsActive);
+                u => (u.WorkDayId == loginRequest.UserName || u.Email == loginRequest.UserName) && !u.IsDeleted && u.IsActive);
 
             if (user == null || !PasswordHelper.VerifyPassword(user.PasswordHash, loginRequest.Password))
                 return null;

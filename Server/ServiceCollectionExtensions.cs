@@ -100,6 +100,7 @@ namespace AquaSolution.Server
             services.AddScoped<IQuarterCalculatedService, QuarterCalculatedService>();
             services.AddScoped<IIndexWeightService, IndexWeightService>();
             services.AddScoped<ICeilingLevelService, CeilingLevelService>();
+            services.AddScoped<AquaSolution.Server.Services.KPI.KPIScope.IKPIScopeService, AquaSolution.Server.Services.KPI.KPIScope.KPIScopeService>();
             #endregion
             #region Common
             services.AddScoped<IUserConnectionManager, UserConnectionManager>();

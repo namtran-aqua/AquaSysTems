@@ -1,4 +1,4 @@
-﻿using AntDesign;
+using AntDesign;
 using AquaSolution.Client.Common;
 using AquaSolution.Client.Modals.KPI.KPISubmit;
 using AquaSolution.Client.Modals.KPI.Target;
@@ -85,6 +85,42 @@ namespace AquaSolution.Client.Pages.KPI.KPISubmit
                 CurrenUser = await currenUserClass.LoadCurrenUser();
             }
         }
+        private static double GetPeriodTimelineOrder(int year, int? month, int? quarter, int? halfYear)
+        {
+            double periodWeight;
+
+            if (month.HasValue)
+            {
+                periodWeight = month.Value;
+            }
+            else if (quarter.HasValue)
+            {
+                periodWeight = quarter.Value switch
+                {
+                    1 => 3.5,
+                    2 => 6.4,
+                    3 => 9.5,
+                    4 => 12.3,
+                    _ => 0
+                };
+            }
+            else if (halfYear.HasValue)
+            {
+                periodWeight = halfYear.Value switch
+                {
+                    1 => 6.7,
+                    2 => 12.6,
+                    _ => 0
+                };
+            }
+            else
+            {
+                periodWeight = 13.0;
+            }
+
+            return year * 100.0 + periodWeight;
+        }
+
         private async Task LoadData()
         {
             var result = await Http.GetFromJsonAsync<List<ViewKPITotalScoreDto>>
@@ -92,7 +128,10 @@ namespace AquaSolution.Client.Pages.KPI.KPISubmit
 
             if (result is not null)
             {
-                DataSource = result;
+                DataSource = result
+                    .OrderByDescending(x => GetPeriodTimelineOrder(x.Year, x.Month, x.Quarter, x.HalfYear))
+                    .ThenByDescending(x => x.CreatedDate)
+                    .ToList();
             }
             else
             {

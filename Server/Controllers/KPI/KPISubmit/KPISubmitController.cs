@@ -1,4 +1,4 @@
-﻿using AquaSolution.Server.Services.KPI.KPISubmit;
+using AquaSolution.Server.Services.KPI.KPISubmit;
 using AquaSolution.Server.SignalR;
 using AquaSolution.Shared.Enum;
 using AquaSolution.Shared.Enum.KPIType;
@@ -47,6 +47,37 @@ namespace AquaSolution.Server.Controllers.KPI.KPISubmit
         {
             var result = await _kPISubmitService.GetResultTotalByQuarter(userId, year, quarter);
             return Ok(result);
+        }
+        [HttpGet("check-year-eligibility/{userId}/{year}")]
+        public async Task<IActionResult> CheckYearEligibility(Guid userId, int year)
+        {
+            var result = await _kPISubmitService.CheckYearEligibilityAsync(userId, year);
+            return Ok(result);
+        }
+
+        [HttpGet("check-special-period-year-eligibility/{userId}/{year}")]
+        public async Task<IActionResult> CheckSpecialPeriodYearEligibility(Guid userId, int year)
+        {
+            var result = await _kPISubmitService.CheckSpecialPeriodYearEligibilityAsync(userId, year);
+            return Ok(result);
+        }
+
+        [HttpPost("submit-special-period-year")]
+        public async Task<IActionResult> SubmitSpecialPeriodYear([FromBody] SubmitSpecialPeriodYearDto dto)
+        {
+            try
+            {
+                var result = await _kPISubmitService.SubmitSpecialPeriodYearAsync(dto, Guid.Empty);
+                if (result)
+                {
+                    await _hubContext.Clients.All.SendAsync("ReloadKPIForUserApproval");
+                }
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
         #endregion
         [HttpGet("get-kpi-submit/{userId}/{year}/{month}")]

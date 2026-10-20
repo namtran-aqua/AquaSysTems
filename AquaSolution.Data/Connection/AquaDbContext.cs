@@ -89,7 +89,8 @@ namespace AquaSolution.Data.Connection
         public DbSet<QuarterCalculate> tbl_QuarterCalculates { get; set; }
 
         public DbSet<CeilingLevel> tbl_CeilingLevels { get; set; }
-
+        public DbSet<KPIEmployeeScope> tbl_KPIEmployeeScopes { get; set; }
+        public DbSet<KPIEmployeeExemptMonth> tbl_KPIEmployeeExemptMonths { get; set; }
 
         #endregion
         #region Scrap
@@ -174,6 +175,8 @@ namespace AquaSolution.Data.Connection
             modelBuilder.ApplyConfiguration(new RequestApprovalTaskConfiguration());
             modelBuilder.ApplyConfiguration(new QuarterCalculateConfiguration());
             modelBuilder.ApplyConfiguration(new CeilingLevelConfiguration());
+            modelBuilder.ApplyConfiguration(new KPIEmployeeScopeConfiguration());
+            modelBuilder.ApplyConfiguration(new KPIEmployeeExemptMonthConfiguration());
 
             #endregion
 

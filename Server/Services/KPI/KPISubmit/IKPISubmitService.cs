@@ -1,4 +1,4 @@
-﻿using AquaSolution.Shared.Enum;
+using AquaSolution.Shared.Enum;
 using AquaSolution.Shared.Enum.KPIType;
 using AquaSolution.Shared.KPI.IndexWeight;
 using AquaSolution.Shared.KPI.KPIActual;
@@ -28,6 +28,9 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
         Task<List<HandleActualDto>> GetResultDetail(Guid userId, int year, int month);
         Task<List<HandleActualDto>> GetResultDetailByQuarter(Guid userId, int year, int quater);
         Task<KPITotalScoreDto> GetResultTotalByQuarter(Guid userId, int year, int quater);
+        Task<YearPrecheckResultDto> CheckYearEligibilityAsync(Guid userId, int year);
+        Task<SpecialPeriodYearResultDto> CheckSpecialPeriodYearEligibilityAsync(Guid userId, int year);
+        Task<bool> SubmitSpecialPeriodYearAsync(SubmitSpecialPeriodYearDto dto, Guid currentUserId);
         #endregion
 
 

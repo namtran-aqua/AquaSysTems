@@ -1,4 +1,4 @@
-﻿using AquaSolution.Data.Connection;
+using AquaSolution.Data.Connection;
 using AquaSolution.Data.Data.Entities;
 using AquaSolution.Data.Data.Entities.Admin;
 using AquaSolution.Data.Data.Entities.KPI;
@@ -330,6 +330,10 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
                 await InsertMonthlyAsync(submitKPIDto, submitId, totalScores, month);
                 await InsertQuarterAsync(submitKPIDto, submitId, totalScores, quarter);
                 await InsertHalfYearAsync(submitKPIDto, submitId, totalScores, halfYear);
+                if (month == 12)
+                {
+                    await InsertYearAsync(submitKPIDto, submitId, totalScores, userId);
+                }
                 await InsertDetailAndActualAsync(submitKPIDto, totalScores, month, userId);
                 await CreatedRequest(submitId, totalScores);
 
@@ -449,6 +453,571 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
             totalScores.Add(score);
         }
 
+        private async Task InsertYearAsync(HandleKPISubmitDto dtos, Guid submitId, List<KPITotalScore> totalScores, Guid userId)
+        {
+            var first = dtos.HandleActual.FirstOrDefault();
+            if (first == null) return;
+            int year = first.Year;
+
+            // 1. Kiểm tra chống nộp trùng bản ghi Năm đang chờ duyệt hoặc đã duyệt
+            var activeYearScore = await _kpiTotalScoreRepo.FirstOrDefaultAsync(x =>
+                x.CreatedBy == userId &&
+                x.Year == year &&
+                x.Month == null && x.Quarter == null && x.HalfYear == null &&
+                x.kPITotalScoreType == KPITotalScoreType.Staff &&
+                (x.Status == StatusKPIRequestType.Approved || x.Status == StatusKPIRequestType.WaitingForApproval));
+
+            if (activeYearScore != null)
+            {
+                if (activeYearScore.Status == StatusKPIRequestType.Approved)
+                    throw new InvalidOperationException($"KPI Năm {year} đã được phê duyệt chính thức, không thể nộp lại.");
+                else
+                    throw new InvalidOperationException($"KPI Năm {year} đang trong quá trình phê duyệt (WaitingForApproval), không thể nộp trùng.");
+            }
+
+            // 2. Validate lại 11 tháng trước đó từ DB (Backend Single Source of Truth)
+            var precheck = await CheckYearEligibilityAsync(userId, year);
+            if (!precheck.IsEligible)
+            {
+                throw new InvalidOperationException($"Không thể nộp KPI Tháng 12 do thiếu điểm các tháng: [{string.Join(", ", precheck.InvalidMonths)}]. Vui lòng hoàn tất phê duyệt hoặc cấu hình miễn KPI trước khi nộp.");
+            }
+
+            // 3. Tính toán điểm Năm
+            var user = await _userRepo.FirstOrDefaultAsync(x => x.Id == userId);
+            bool isChangeTask = user?.IsChangeTask ?? false;
+
+            KPITotalScore yearScore;
+            if (precheck.IsFullYearScenario && !isChangeTask)
+            {
+                // Kịch bản 1: Đủ 12 tháng làm việc có điểm thực tế VÀ KHÔNG thay đổi nhiệm vụ
+                var dto = dtos.KPITotalScore.FirstOrDefault(x => x.Month == null && x.Quarter == null && x.HalfYear == null && x.Year == year);
+                yearScore = new KPITotalScore
+                {
+                    Id = Guid.NewGuid(),
+                    SubmitId = submitId,
+                    KPIScore = dto?.KPIScore ?? 0,
+                    KeyTaskScore = dto?.KeyTaskScore ?? 0,
+                    OMGScore = dto?.OMGScore ?? 0,
+                    TotaleScore = dto?.TotaleScore ?? 0,
+                    TotalActualScore = dto?.TotalActualScore ?? 0,
+                    Status = StatusKPIRequestType.WaitingForApproval,
+                    Month = null,
+                    Quarter = null,
+                    HalfYear = null,
+                    Year = year,
+                    CreatedBy = userId,
+                    CreatedDate = DateTime.Now,
+                    IsActive = true,
+                    Title = dto?.Title ?? (user != null ? $"EMC - {year} - {user.FullName}" : $"EMC - {year}"),
+                    kPITotalScoreType = KPITotalScoreType.Staff
+                };
+            }
+            else
+            {
+                // Kịch bản 2: Có tháng miễn KPI thực tế HOẶC isChangeTask = true -> Trung bình cộng các tháng có điểm thực tế (T1..T11 đã duyệt + T12 đang nộp)
+                var month12Score = totalScores.FirstOrDefault(x => x.Month == 12);
+                var approvedPoints = new List<decimal>();
+
+                var previousApprovedScores = await _context.tbl_KPITotalScores
+                    .AsNoTracking()
+                    .Where(s => s.CreatedBy == userId
+                             && s.Year == year
+                             && s.Month.HasValue && s.Month.Value >= 1 && s.Month.Value <= 11
+                             && s.Quarter == null && s.HalfYear == null
+                             && s.kPITotalScoreType == KPITotalScoreType.Staff
+                             && s.Status == StatusKPIRequestType.Approved
+                             && s.IsActive)
+                    .ToListAsync();
+
+                var uniqueScores = previousApprovedScores
+                    .GroupBy(s => s.Month.Value)
+                    .Select(g =>
+                    {
+                        var top = g.OrderByDescending(x => x.CreatedDate).First();
+                        return (top.TotalActualScore.HasValue && top.TotalActualScore.Value > 0)
+                            ? top.TotalActualScore.Value
+                            : (top.TotaleScore ?? 0);
+                    })
+                    .ToList();
+
+                approvedPoints.AddRange(uniqueScores);
+
+                if (month12Score != null)
+                {
+                    var m12Val = (month12Score.TotalActualScore.HasValue && month12Score.TotalActualScore.Value > 0)
+                        ? month12Score.TotalActualScore.Value
+                        : (month12Score.TotaleScore ?? 0);
+                    approvedPoints.Add(m12Val);
+                }
+
+                decimal avgScore = approvedPoints.Any()
+                    ? Math.Round(approvedPoints.Average(), 4, MidpointRounding.AwayFromZero)
+                    : 0;
+
+                decimal ceilingValue = 0;
+                if (user != null && user.FactoryId.HasValue)
+                {
+                    var ceilingLevel = await _context.tbl_CeilingLevels
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(x => x.FactoryId == user.FactoryId.Value && x.IsActive);
+                    if (ceilingLevel != null && ceilingLevel.CeilingLevelValue > 0)
+                    {
+                        ceilingValue = ceilingLevel.CeilingLevelValue;
+                    }
+                }
+
+                decimal finalScore = (ceilingValue > 0 && avgScore > ceilingValue) ? ceilingValue : avgScore;
+
+                yearScore = new KPITotalScore
+                {
+                    Id = Guid.NewGuid(),
+                    SubmitId = submitId,
+                    KPIScore = 0,
+                    KeyTaskScore = 0,
+                    OMGScore = 0,
+                    TotaleScore = avgScore,
+                    TotalActualScore = finalScore,
+                    Status = StatusKPIRequestType.WaitingForApproval,
+                    Month = null,
+                    Quarter = null,
+                    HalfYear = null,
+                    Year = year,
+                    CreatedBy = userId,
+                    CreatedDate = DateTime.Now,
+                    IsActive = true,
+                    Title = user != null
+                        ? $"EMC - {year} - {user.FullName}"
+                        : $"EMC - {year}",
+                    kPITotalScoreType = KPITotalScoreType.Staff
+                };
+            }
+
+            await _kpiTotalScoreRepo.InsertAsync(yearScore);
+            totalScores.Add(yearScore);
+        }
+
+        public async Task<YearPrecheckResultDto> CheckYearEligibilityAsync(Guid userId, int year)
+        {
+            var result = new YearPrecheckResultDto
+            {
+                UserId = userId,
+                Year = year
+            };
+
+            // 1. Lấy điểm các tháng 1..11 đã duyệt của nhân viên
+            var monthlyScores = await _context.tbl_KPITotalScores
+                .AsNoTracking()
+                .Where(s => s.CreatedBy == userId
+                         && s.Year == year
+                         && s.Month.HasValue && s.Month.Value >= 1 && s.Month.Value <= 11
+                         && s.Quarter == null && s.HalfYear == null
+                         && s.kPITotalScoreType == KPITotalScoreType.Staff
+                         && s.Status == StatusKPIRequestType.Approved
+                         && s.IsActive)
+                .ToListAsync();
+
+            // 2. Khử trùng lặp: Nhóm theo Month và chỉ lấy 1 bản ghi mới nhất theo CreatedDate
+            var validMonthlyScoreMap = monthlyScores
+                .GroupBy(s => s.Month.Value)
+                .ToDictionary(g => g.Key, g => g.OrderByDescending(x => x.CreatedDate).First());
+
+            result.ApprovedMonths = validMonthlyScoreMap.Keys.OrderBy(m => m).ToList();
+
+            // 3. Lấy cấu hình miễn KPI có hiệu lực
+            var configuredExemptMonths = await _context.tbl_KPIEmployeeExemptMonths
+                .AsNoTracking()
+                .Where(m => m.UserId == userId && m.Year == year && m.Month >= 1 && m.Month <= 11)
+                .Select(m => m.Month)
+                .Distinct()
+                .ToListAsync();
+
+            // 4. Xác định tháng miễn thực tế (loại bỏ tháng đã có điểm thực tế)
+            result.EffectiveExemptMonths = configuredExemptMonths
+                .Except(result.ApprovedMonths)
+                .OrderBy(m => m)
+                .ToList();
+
+            // 5. Xác định các tháng không hợp lệ (chưa duyệt và không được miễn)
+            result.InvalidMonths = Enumerable.Range(1, 11)
+                .Where(m => !result.ApprovedMonths.Contains(m) && !result.EffectiveExemptMonths.Contains(m))
+                .OrderBy(m => m)
+                .ToList();
+
+            result.IsEligible = !result.InvalidMonths.Any();
+            result.IsFullYearScenario = result.IsEligible && (result.EffectiveExemptMonths.Count == 0);
+
+            return result;
+        }
+
+        public async Task<SpecialPeriodYearResultDto> CheckSpecialPeriodYearEligibilityAsync(Guid userId, int year)
+        {
+            var user = await _userRepo.FirstOrDefaultAsync(x => x.Id == userId);
+            if (user == null) throw new Exception("Không tìm thấy thông tin nhân viên.");
+
+            string deptName = string.Empty;
+            if (user.DepartmentId.HasValue)
+            {
+                var dept = await _context.tbl_Departments.AsNoTracking().FirstOrDefaultAsync(d => d.Id == user.DepartmentId.Value);
+                deptName = dept?.Name ?? string.Empty;
+            }
+
+            var result = new SpecialPeriodYearResultDto
+            {
+                UserId = userId,
+                UserName = user.WorkDayId ?? string.Empty,
+                UserFullName = user.FullName ?? string.Empty,
+                DepartmentName = deptName,
+                Year = year
+            };
+
+            // 1. Lấy điểm tất cả các tháng 1..12 đã duyệt của nhân viên trong năm
+            var monthlyScores = await _context.tbl_KPITotalScores
+                .AsNoTracking()
+                .Where(s => s.CreatedBy == userId
+                         && s.Year == year
+                         && s.Month.HasValue && s.Month.Value >= 1 && s.Month.Value <= 12
+                         && s.Quarter == null && s.HalfYear == null
+                         && s.kPITotalScoreType == KPITotalScoreType.Staff
+                         && s.Status == StatusKPIRequestType.Approved
+                         && s.IsActive)
+                .ToListAsync();
+
+            // Khử trùng: lấy bản ghi mới nhất theo tháng
+            var approvedMonthMap = monthlyScores
+                .GroupBy(s => s.Month!.Value)
+                .ToDictionary(g => g.Key, g => g.OrderByDescending(x => x.CreatedDate).First());
+
+            result.ApprovedMonths = approvedMonthMap.Keys.OrderBy(m => m).ToList();
+
+            // 2. Lấy danh sách tháng miễn được cấu hình trong năm
+            var configuredExemptMonths = await _context.tbl_KPIEmployeeExemptMonths
+                .AsNoTracking()
+                .Where(m => m.UserId == userId && m.Year == year && m.Month >= 1 && m.Month <= 12)
+                .Select(m => m.Month)
+                .Distinct()
+                .ToListAsync();
+
+            // Tháng miễn thực tế = tháng được miễn nhưng chưa có điểm duyệt
+            result.EffectiveExemptMonths = configuredExemptMonths
+                .Except(result.ApprovedMonths)
+                .OrderBy(m => m)
+                .ToList();
+
+            // Tháng thiếu (chưa duyệt và không miễn)
+            result.InvalidMonths = Enumerable.Range(1, 12)
+                .Where(m => !result.ApprovedMonths.Contains(m) && !result.EffectiveExemptMonths.Contains(m))
+                .OrderBy(m => m)
+                .ToList();
+
+            // 3. Xây dựng bảng tóm tắt 12 tháng
+            for (int m = 1; m <= 12; m++)
+            {
+                var item = new MonthScoreSummaryItem { Month = m };
+                if (approvedMonthMap.TryGetValue(m, out var scoreRec))
+                {
+                    item.IsApproved = true;
+                    item.StatusName = "Đã duyệt";
+                    item.Score = scoreRec.TotalActualScore ?? scoreRec.TotaleScore ?? 0;
+                }
+                else if (result.EffectiveExemptMonths.Contains(m))
+                {
+                    item.IsExempt = true;
+                    item.StatusName = "Được miễn";
+                    item.Note = "Miễn KPI";
+                }
+                else
+                {
+                    item.StatusName = "Chưa có điểm";
+                    item.Note = "Thiếu đánh giá";
+                }
+                result.MonthSummaries.Add(item);
+            }
+
+            // 4. Lấy CeilingLevel
+            decimal ceilingValue = 0;
+            if (user.FactoryId.HasValue)
+            {
+                var ceilingLevel = await _context.tbl_CeilingLevels
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.FactoryId == user.FactoryId.Value && x.IsActive);
+                if (ceilingLevel != null && ceilingLevel.CeilingLevelValue > 0)
+                {
+                    ceilingValue = ceilingLevel.CeilingLevelValue;
+                }
+            }
+
+            // 5. Kiểm tra tính hợp lệ chung
+            result.IsEligible = result.InvalidMonths.Count == 0 && result.ApprovedMonths.Count > 0;
+            if (result.InvalidMonths.Count > 0)
+            {
+                result.ErrorMessage = $"Các tháng chưa có điểm hoặc chưa được miễn: [{string.Join(", ", result.InvalidMonths.Select(m => "Tháng " + m))}]. Vui lòng hoàn tất hoặc cấu hình miễn trước.";
+            }
+            else if (result.ApprovedMonths.Count == 0)
+            {
+                result.ErrorMessage = "Nhân viên chưa có tháng nào có điểm đánh giá thực tế trong năm.";
+            }
+            else if (!result.EffectiveExemptMonths.Contains(12))
+            {
+                result.IsEligible = false;
+                result.ErrorMessage = "Chức năng này chỉ áp dụng cho nhân viên được miễn KPI Tháng 12 (nghỉ thai sản, hoãn KPI đến năm sau). Trường hợp Tháng 12 không được miễn, vui lòng nộp KPI Tháng 12 theo quy trình thông thường.";
+            }
+
+            // Kiểm tra xem năm đã tồn tại phiếu chưa
+            var existingYear = await _context.tbl_KPITotalScores
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.CreatedBy == userId
+                                       && x.Year == year
+                                       && x.Month == null && x.Quarter == null && x.HalfYear == null
+                                       && x.kPITotalScoreType == KPITotalScoreType.Staff
+                                       && (x.Status == StatusKPIRequestType.Approved || x.Status == StatusKPIRequestType.WaitingForApproval)
+                                       && x.IsActive);
+
+            if (existingYear != null)
+            {
+                result.IsEligible = false;
+                result.ErrorMessage = existingYear.Status == StatusKPIRequestType.Approved
+                    ? $"KPI Năm {year} đã được phê duyệt chính thức."
+                    : $"KPI Năm {year} đang trong quá trình phê duyệt (WaitingForApproval).";
+            }
+
+            // 6. TIÊU CHÍ QUÝ 4 (Q4: Tháng 10, 11, 12 - Phương án A: Cần >= 2 tháng có điểm thực tế)
+            var existingQ4 = await _context.tbl_KPITotalScores
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.CreatedBy == userId && x.Year == year && x.Quarter == 4 && (x.Status == StatusKPIRequestType.Approved || x.Status == StatusKPIRequestType.WaitingForApproval) && x.IsActive);
+
+            var q4Months = new[] { 10, 11, 12 }.Where(m => approvedMonthMap.ContainsKey(m)).ToList();
+            if (existingQ4 != null)
+            {
+                result.CanCalculateQ4 = false;
+                result.Q4Reason = $"Quý 4 đã được tạo hoặc đang chờ phê duyệt ({existingQ4.Status}).";
+            }
+            else if (q4Months.Count >= 2)
+            {
+                result.CanCalculateQ4 = true;
+                decimal q4Avg = q4Months.Average(m => approvedMonthMap[m].TotalActualScore ?? approvedMonthMap[m].TotaleScore ?? 0);
+                q4Avg = Math.Round(q4Avg, 4, MidpointRounding.AwayFromZero);
+                decimal q4Final = (ceilingValue > 0 && q4Avg > ceilingValue) ? ceilingValue : q4Avg;
+
+                result.Q4Score = new KPITotalScoreDto
+                {
+                    Title = $"EMC - Q4 - {year} - {user.FullName} - (TB {q4Months.Count} tháng có KPI)",
+                    Year = year,
+                    Quarter = 4,
+                    TotaleScore = q4Avg,
+                    TotalActualScore = q4Final,
+                    CreatedBy = userId
+                };
+                result.Q4Reason = $"Đủ điều kiện: Có {q4Months.Count}/3 tháng có điểm thực tế trong Quý 4 (đạt yêu cầu >= 2 tháng).";
+            }
+            else
+            {
+                result.CanCalculateQ4 = false;
+                result.Q4Reason = $"Chỉ có {q4Months.Count}/3 tháng có điểm thực tế trong Quý 4, không đủ điều kiện tính điểm Quý (yêu cầu tối thiểu 2 tháng).";
+            }
+
+            // 7. TIÊU CHÍ BÁN NIÊN 2 (H2: Phương án A - Cần cả Quý 3 VÀ Quý 4)
+            var existingH2 = await _context.tbl_KPITotalScores
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.CreatedBy == userId && x.Year == year && x.HalfYear == 2 && (x.Status == StatusKPIRequestType.Approved || x.Status == StatusKPIRequestType.WaitingForApproval) && x.IsActive);
+
+            var q3ScoreRec = await _context.tbl_KPITotalScores
+                .AsNoTracking()
+                .Where(x => x.CreatedBy == userId && x.Year == year && x.Quarter == 3 && x.Status == StatusKPIRequestType.Approved && x.IsActive)
+                .OrderByDescending(x => x.CreatedDate)
+                .FirstOrDefaultAsync();
+
+            if (existingH2 != null)
+            {
+                result.CanCalculateH2 = false;
+                result.H2Reason = $"Bán niên 2 đã được tạo hoặc đang chờ phê duyệt ({existingH2.Status}).";
+            }
+            else if (result.CanCalculateQ4 && q3ScoreRec != null && result.Q4Score != null)
+            {
+                result.CanCalculateH2 = true;
+                decimal q3Score = q3ScoreRec.TotalActualScore ?? q3ScoreRec.TotaleScore ?? 0;
+                decimal q4Score = result.Q4Score.TotalActualScore;
+                decimal h2Avg = Math.Round((q3Score + q4Score) / 2, 4, MidpointRounding.AwayFromZero);
+                decimal h2Final = (ceilingValue > 0 && h2Avg > ceilingValue) ? ceilingValue : h2Avg;
+
+                result.H2Score = new KPITotalScoreDto
+                {
+                    Title = $"EMC - H2 - {year} - {user.FullName} - (Tổng hợp Q3 & Q4)",
+                    Year = year,
+                    HalfYear = 2,
+                    TotaleScore = h2Avg,
+                    TotalActualScore = h2Final,
+                    CreatedBy = userId
+                };
+                result.H2Reason = "Đủ điều kiện: Đã có điểm Quý 3 và Quý 4 đạt chuẩn.";
+            }
+            else if (!result.CanCalculateQ4)
+            {
+                result.CanCalculateH2 = false;
+                result.H2Reason = "Quý 4 không đủ điều kiện tính nên không tính Bán niên 2 (theo quy định hệ thống HalfYear cần cả 2 Quý).";
+            }
+            else
+            {
+                result.CanCalculateH2 = false;
+                result.H2Reason = "Không tìm thấy điểm Quý 3 đã được phê duyệt trong hệ thống.";
+            }
+
+            // 8. TIÊU CHÍ NĂM (YEAR)
+            if (result.IsEligible)
+            {
+                result.CanCalculateYear = true;
+                decimal yearAvg = approvedMonthMap.Values.Average(s => s.TotalActualScore ?? s.TotaleScore ?? 0);
+                yearAvg = Math.Round(yearAvg, 4, MidpointRounding.AwayFromZero);
+                decimal yearFinal = (ceilingValue > 0 && yearAvg > ceilingValue) ? ceilingValue : yearAvg;
+
+                result.YearScore = new KPITotalScoreDto
+                {
+                    Title = $"EMC - {year} - {user.FullName} (Automatic calculation)",
+                    Year = year,
+                    TotaleScore = yearAvg,
+                    TotalActualScore = yearFinal,
+                    CreatedBy = userId
+                };
+                result.YearReason = $"Kịch bản miễn giảm: Tính trung bình cộng của {approvedMonthMap.Count} tháng có điểm thực tế ({string.Join(", ", approvedMonthMap.Keys.OrderBy(m => m).Select(m => "T" + m))}).";
+            }
+            else
+            {
+                result.CanCalculateYear = false;
+                result.YearReason = result.ErrorMessage ?? "Không đủ điều kiện tính điểm năm.";
+            }
+
+            return result;
+        }
+
+        public async Task<bool> SubmitSpecialPeriodYearAsync(SubmitSpecialPeriodYearDto dto, Guid currentUserId)
+        {
+            var user = await _userRepo.FirstOrDefaultAsync(x => x.Id == dto.UserId);
+            if (user == null) throw new Exception("Không tìm thấy thông tin nhân viên.");
+
+            var precheck = await CheckSpecialPeriodYearEligibilityAsync(dto.UserId, dto.Year);
+            if (!precheck.IsEligible)
+            {
+                throw new InvalidOperationException(precheck.ErrorMessage ?? "Không đủ điều kiện chốt kỳ.");
+            }
+
+            var submitId = Guid.NewGuid();
+            var totalScores = new List<KPITotalScore>();
+            var periodsIncluded = new List<string>();
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                // 1. Quý 4 nếu được chọn và hợp lệ
+                if (dto.IncludeQ4 && precheck.CanCalculateQ4 && precheck.Q4Score != null)
+                {
+                    var q4Score = new KPITotalScore
+                    {
+                        Id = Guid.NewGuid(),
+                        SubmitId = submitId,
+                        KPIScore = 0,
+                        KeyTaskScore = 0,
+                        OMGScore = 0,
+                        TotaleScore = precheck.Q4Score.TotaleScore,
+                        TotalActualScore = precheck.Q4Score.TotalActualScore,
+                        Status = StatusKPIRequestType.WaitingForApproval,
+                        Quarter = 4,
+                        Year = dto.Year,
+                        CreatedBy = dto.UserId,
+                        CreatedDate = DateTime.Now,
+                        IsActive = true,
+                        Title = precheck.Q4Score.Title,
+                        kPITotalScoreType = KPITotalScoreType.Staff
+                    };
+                    await _kpiTotalScoreRepo.InsertAsync(q4Score);
+                    totalScores.Add(q4Score);
+                    periodsIncluded.Add("Q4");
+                }
+
+                // 2. Bán niên 2 nếu được chọn và hợp lệ
+                if (dto.IncludeH2 && precheck.CanCalculateH2 && precheck.H2Score != null)
+                {
+                    var h2Score = new KPITotalScore
+                    {
+                        Id = Guid.NewGuid(),
+                        SubmitId = submitId,
+                        KPIScore = 0,
+                        KeyTaskScore = 0,
+                        OMGScore = 0,
+                        TotaleScore = precheck.H2Score.TotaleScore,
+                        TotalActualScore = precheck.H2Score.TotalActualScore,
+                        Status = StatusKPIRequestType.WaitingForApproval,
+                        HalfYear = 2,
+                        Year = dto.Year,
+                        CreatedBy = dto.UserId,
+                        CreatedDate = DateTime.Now,
+                        IsActive = true,
+                        Title = precheck.H2Score.Title,
+                        kPITotalScoreType = KPITotalScoreType.Staff
+                    };
+                    await _kpiTotalScoreRepo.InsertAsync(h2Score);
+                    totalScores.Add(h2Score);
+                    periodsIncluded.Add("H2");
+                }
+
+                // 3. Năm (bắt buộc)
+                if (precheck.CanCalculateYear && precheck.YearScore != null)
+                {
+                    var yearScore = new KPITotalScore
+                    {
+                        Id = Guid.NewGuid(),
+                        SubmitId = submitId,
+                        KPIScore = 0,
+                        KeyTaskScore = 0,
+                        OMGScore = 0,
+                        TotaleScore = precheck.YearScore.TotaleScore,
+                        TotalActualScore = precheck.YearScore.TotalActualScore,
+                        Status = StatusKPIRequestType.WaitingForApproval,
+                        Month = null,
+                        Quarter = null,
+                        HalfYear = null,
+                        Year = dto.Year,
+                        CreatedBy = dto.UserId,
+                        CreatedDate = DateTime.Now,
+                        IsActive = true,
+                        Title = precheck.YearScore.Title,
+                        kPITotalScoreType = KPITotalScoreType.Staff
+                    };
+                    await _kpiTotalScoreRepo.InsertAsync(yearScore);
+                    totalScores.Add(yearScore);
+                    periodsIncluded.Add("Year");
+                }
+
+                if (!totalScores.Any())
+                {
+                    throw new InvalidOperationException("Không có kỳ nào được tạo.");
+                }
+
+                // 4. Tạo KPIRequest
+                var request = new KPIRequest
+                {
+                    Id = Guid.NewGuid(),
+                    SubmitId = submitId,
+                    Title = $"EMC - Chốt kỳ ({string.Join(", ", periodsIncluded)}) - {dto.Year} - {user.FullName}",
+                    RequestStatus = StatusKPIRequestType.WaitingForApproval,
+                    CreatedBy = dto.UserId,
+                    CreatedDate = DateTime.Now
+                };
+                await _kpiRequestRepo.InsertAsync(request);
+
+                // 5. Tạo flow phê duyệt tới Quản lý
+                await CreatedRequest(submitId, totalScores);
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return true;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
         private async Task InsertDetailAndActualAsync(HandleKPISubmitDto dtos, List<KPITotalScore> totalScores, int submitMonth, Guid userId)
         {
             var allTaskIds = dtos.HandleActual.Select(x => x.TaskId).Distinct().ToList();
@@ -474,7 +1043,9 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
                     (
                         (item.Month != null && x.Month == item.Month) ||
                         (item.Quarter != null && x.Quarter == item.Quarter) ||
-                        (item.HalfYear != null && x.HalfYear == item.HalfYear)
+                        (item.HalfYear != null && x.HalfYear == item.HalfYear) ||
+                        (item.Month == null && item.Quarter == null && item.HalfYear == null
+                         && x.Month == null && x.Quarter == null && x.HalfYear == null)
                     ));
 
                 if (totalScore == null) continue;
@@ -521,7 +1092,7 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
 
         private async Task CreatedRequest(Guid submitId, List<KPITotalScore> totalScores)
         {
-            var kpi = totalScores.FirstOrDefault(x => x.Month != null);
+            var kpi = totalScores.FirstOrDefault(x => x.Month != null) ?? totalScores.FirstOrDefault();
             if (kpi == null) throw new Exception("Không tìm thấy KPI");
 
             var user = await _userRepo.FirstOrDefaultAsync(x => x.Id == kpi.CreatedBy);
@@ -601,6 +1172,46 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
         }
 
         #endregion
+        public static double GetPeriodTimelineOrder(int year, int? month, int? quarter, int? halfYear)
+        {
+            double periodWeight;
+
+            if (month.HasValue)
+            {
+                // Month 1..12
+                periodWeight = month.Value;
+            }
+            else if (quarter.HasValue)
+            {
+                // Q1 after T3 (3.5), Q2 after T6 (6.4), Q3 after T9 (9.5), Q4 after T12 (12.3)
+                periodWeight = quarter.Value switch
+                {
+                    1 => 3.5,
+                    2 => 6.4,
+                    3 => 9.5,
+                    4 => 12.3,
+                    _ => 0
+                };
+            }
+            else if (halfYear.HasValue)
+            {
+                // H1 after Q2 (6.7), H2 after Q4 (12.6)
+                periodWeight = halfYear.Value switch
+                {
+                    1 => 6.7,
+                    2 => 12.6,
+                    _ => 0
+                };
+            }
+            else
+            {
+                // Year (Cả năm) comes at the end of the year (13.0)
+                periodWeight = 13.0;
+            }
+
+            return year * 100.0 + periodWeight;
+        }
+
         public async Task<List<ViewKPITotalScoreDto>> GetKPITotalScoreByUserId(Guid userId)
         {
             var query = from totalScore in await _kpiTotalScoreRepo.GetQueryableAsync()
@@ -610,7 +1221,6 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
                         on user.ManagerId equals manager.Id into mgr
                         from manager in mgr.DefaultIfEmpty()
                         where totalScore.CreatedBy == userId
-                        orderby totalScore.CreatedDate descending
                         select new ViewKPITotalScoreDto
                         {
                             Id = totalScore.Id,
@@ -632,7 +1242,11 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
                             Title = totalScore.Title,
                             UserName = user.FullName
                         };
-            return await query.ToListAsync();
+            var list = await query.ToListAsync();
+            return list
+                .OrderByDescending(x => GetPeriodTimelineOrder(x.Year, x.Month, x.Quarter, x.HalfYear))
+                .ThenByDescending(x => x.CreatedDate)
+                .ToList();
         }
         public async Task<List<ViewKPIForApprovalDto>> GetKPIForApproval()
         {
@@ -1286,6 +1900,7 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
                             CreatedDate = totalScore.CreatedDate,
                             Status = request.RequestStatus,
                             TotaleScore = totalScore.TotaleScore ?? 0,
+                            TotalActualScore = totalScore.TotalActualScore ?? totalScore.TotaleScore ?? 0,
                             IsActive = totalScore.IsActive,
                             Title = totalScore.Title
                         };
