@@ -1,0 +1,146 @@
+@using AntDesign
+@using AquaSolution.Shared.Enum.KPIType
+@using AquaSolution.Shared.KPI.Scope
+@using AquaSolution.Shared.UserManagements
+@using AquaSolution.Shared.Departments
+@inject IMessageService Message
+
+@{
+    RenderFragment footer = @<Template>
+        <Button OnClick="@SaveAsync" @key="@("submit")" Type="ButtonType.Primary" Loading="@isSaving">
+            Lưu
+        </Button>
+        <Button Style="color:#808080" OnClick="@Close" @key="@("back")">Đóng</Button>
+    </Template>;
+}
+
+<Modal Title="@modalTitle" @bind-Visible="IsModalVisible" Style="z-index: 9999; width: 850px; top: 30px;" Draggable="true" Footer="@footer">
+    <Form @ref="@formRef"
+          Model="@model"
+          Layout="FormLayout.Vertical"
+          ValidateMode="FormValidateMode.Complex">
+
+        <AntDesign.Row Gutter="16">
+            <AntDesign.Col Span="12">
+                <FormItem Label="Nhân viên" Required="true">
+                    @if (isEdit)
+                    {
+                        <Input Value="@selectedUserDisplayName" Disabled="true" />
+                    }
+                    else
+                    {
+                        <Select TItem="UserDto"
+                                TItemValue="Guid"
+                                DataSource="@users"
+                                @bind-Value="@model.UserId"
+                                ItemValue="u => u.Id"
+                                ItemLabel="@(u => $"{u.WorkDayId} - {u.FullName}")"
+                                EnableSearch="true"
+                                Placeholder="-- Chọn nhân viên --"
+                                OnSelectedItemChanged="OnUserSelected">
+                        </Select>
+                    }
+                </FormItem>
+            </AntDesign.Col>
+
+            <AntDesign.Col Span="12">
+                <FormItem Label="Loại phạm vi" Required="true">
+                    <Select TItem="KPIScopeType"
+                            TItemValue="KPIScopeType"
+                            DataSource="@scopeTypes"
+                            @bind-Value="@model.ScopeType"
+                            ItemValue="t => t"
+                            ItemLabel="@(t => GetScopeTypeName(t))"
+                            OnSelectedItemChanged="OnScopeTypeChanged">
+                    </Select>
+                </FormItem>
+            </AntDesign.Col>
+        </AntDesign.Row>
+
+        @if (model.ScopeType == KPIScopeType.NewEmployee)
+        {
+            <AntDesign.Row Gutter="16">
+                <AntDesign.Col Span="12">
+                    <FormItem Label="Ngày bắt đầu vào làm (Effective Date)" Required="true">
+                        <DatePicker TValue="DateTime?" @bind-Value="@model.EffectiveDate" Format="dd/MM/yyyy" Style="width:100%" />
+                    </FormItem>
+                </AntDesign.Col>
+                <AntDesign.Col Span="12">
+                    <div style="padding-top: 30px; font-size: 12px; color: #666;">
+                        <em>* Quy tắc: Nhân viên mới được miễn KPI từ Tháng 1 đến hết Tháng vào làm. Bắt đầu đánh giá từ tháng kế tiếp.</em>
+                    </div>
+                </AntDesign.Col>
+            </AntDesign.Row>
+        }
+        else
+        {
+            <AntDesign.Row Gutter="16">
+                <AntDesign.Col Span="12">
+                    <FormItem Label="Từ ngày" Required="true">
+                        <DatePicker TValue="DateTime?" @bind-Value="@model.StartDate" Format="dd/MM/yyyy" Style="width:100%" />
+                    </FormItem>
+                </AntDesign.Col>
+                <AntDesign.Col Span="12">
+                    <FormItem Label="Đến ngày" Required="true">
+                        <DatePicker TValue="DateTime?" @bind-Value="@model.EndDate" Format="dd/MM/yyyy" Style="width:100%" />
+                    </FormItem>
+                </AntDesign.Col>
+            </AntDesign.Row>
+        }
+
+        <AntDesign.Row Gutter="16">
+            <AntDesign.Col Span="24">
+                <FormItem Label="Lý do / Căn cứ quyết định">
+                    <TextArea Rows="2" @bind-Value="@model.Reason" Placeholder="Ghi chú quyết định, phê duyệt thực tế..." />
+                </FormItem>
+            </AntDesign.Col>
+        </AntDesign.Row>
+
+        <Divider Text="Danh sách các tháng được miễn KPI" />
+
+        <div style="margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+            <div>
+                <span style="font-weight: 500; margin-right: 8px;">Năm áp dụng:</span>
+                <AntDesign.InputNumber @bind-Value="@selectedYear" Min="2020" Max="2035" Style="width: 100px;" />
+                <Button Type="ButtonType.Dashed" Size="ButtonSize.Small" Style="margin-left: 8px;" OnClick="AutoGenerateExemptMonths">
+                    Tự động gợi ý tháng
+                </Button>
+            </div>
+            <div style="font-size: 12px; color: #1890ff;">
+                Đã chọn: <strong>@checkedMonths.Count(m => m.IsChecked)</strong> tháng miễn
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px;">
+            @for (int i = 0; i < checkedMonths.Count; i++)
+            {
+                var monthItem = checkedMonths[i];
+                <div style="border: 1px solid @(monthItem.IsChecked ? "#1890ff" : "#e8e8e8"); background: @(monthItem.IsChecked ? "#e6f7ff" : "#fafafa"); border-radius: 6px; padding: 8px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <Checkbox @bind-Checked="@monthItem.IsChecked">
+                            <strong>Tháng @monthItem.Month/@selectedYear</strong>
+                        </Checkbox>
+                    </div>
+                    @if (monthItem.IsChecked)
+                    {
+                        <div style="margin-top: 6px;">
+                            <Input Size="InputSize.Small" @bind-Value="@monthItem.Note" Placeholder="Lý do miễn..." />
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        @if (isEdit)
+        {
+            <AntDesign.Row Gutter="16">
+                <AntDesign.Col Span="12">
+                    <FormItem Label="Trạng thái hiệu lực">
+                        <Switch @bind-Checked="@model.IsActive" CheckedChildren="Đang hiệu lực" UnCheckedChildren="Vô hiệu hóa" />
+                    </FormItem>
+                </AntDesign.Col>
+            </AntDesign.Row>
+        }
+
+    </Form>
+</Modal>

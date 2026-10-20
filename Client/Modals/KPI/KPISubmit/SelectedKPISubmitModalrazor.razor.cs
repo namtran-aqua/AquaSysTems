@@ -42,6 +42,9 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
         private int QuarterValue { get; set; }
         private int MonthValue { get; set; }
         private CeilingLevelDto CeilingLevel = new();
+        private YearPrecheckResultDto YearPrecheckResult = new();
+        private bool IsYearIneligible { get; set; } = false;
+        private string YearIneligibleMessage { get; set; } = string.Empty;
         #endregion
 
         #region INIT
@@ -58,6 +61,9 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
             IsInputActual = false;
             activeTabKey = "1";
             TitleButton = "Next ⟶";
+            YearPrecheckResult = new();
+            IsYearIneligible = false;
+            YearIneligibleMessage = string.Empty;
 
             await GetDeadline();
             await GetIndexWeight();
@@ -153,6 +159,11 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
                 if ((month == 6 || month == 12) && quarterCreated)
                 {
                     await LoadAndCalculateHalfYearAsync(HandleKPISubmitDto, month);
+                }
+
+                if (month == 12)
+                {
+                    await LoadAndCalculateYearAsync(HandleKPISubmitDto, month.Value);
                 }
                 isCalculating = false;
             }
@@ -635,6 +646,226 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
             await Task.CompletedTask;
         }
 
+        #endregion
+
+        #region YEAR CALCULATION
+        private async Task LoadAndCalculateYearAsync(HandleKPISubmitDto handleKPISubmit, int month)
+        {
+            var firstItem = handleKPISubmit.HandleActual.FirstOrDefault();
+            if (firstItem == null) return;
+            int year = firstItem.Year;
+
+            // 1. Precheck điều kiện từ Server
+            var precheck = await SafeGetFromJsonAsync<YearPrecheckResultDto>(
+                $"api/kpisubmit/check-year-eligibility/{CurrenUser.Id}/{year}");
+
+            if (precheck == null || !precheck.IsEligible)
+            {
+                IsYearIneligible = true;
+                YearPrecheckResult = precheck ?? new();
+                var missingList = precheck?.InvalidMonths ?? new List<int>();
+                YearIneligibleMessage = $"Không thể nộp KPI Tháng 12 do thiếu điểm các tháng: {string.Join(", ", missingList.Select(m => "Tháng " + m))}. Vui lòng hoàn tất phê duyệt hoặc cấu hình miễn KPI trước khi nộp.";
+                await Message.Error(YearIneligibleMessage);
+                return;
+            }
+
+            IsYearIneligible = false;
+            YearIneligibleMessage = string.Empty;
+            YearPrecheckResult = precheck;
+
+            if (precheck.IsFullYearScenario && !CurrenUser.IsChangeTask)
+            {
+                // KỊCH BẢN 1: Đủ 12 tháng làm việc VÀ KHÔNG thay đổi nhiệm vụ (IsChangeTask = false)
+                var allYearActuals = new List<HandleActualDto>();
+                for (int m = 1; m <= 11; m++)
+                {
+                    var details = await SafeGetFromJsonAsync<List<HandleActualDto>>(
+                        $"api/kpiSubmit/get-result-detail-by-momth/{CurrenUser.Id}/{year}/{m}");
+                    if (details != null && details.Any())
+                    {
+                        allYearActuals.AddRange(details);
+                    }
+                }
+                var month12Details = handleKPISubmit.HandleActual.Where(x => x.Month == 12).ToList();
+                allYearActuals.AddRange(month12Details);
+
+                await CalculateYearFromActuals(handleKPISubmit, allYearActuals, year);
+            }
+            else
+            {
+                // KỊCH BẢN 2: Có tháng miễn KPI thực tế HOẶC IsChangeTask = true -> Trung bình cộng các tháng có điểm thực tế
+                var approvedPoints = new List<decimal>();
+                var monthsToFetch = precheck.ApprovedMonths.Any()
+                    ? precheck.ApprovedMonths
+                    : Enumerable.Range(1, 11).ToList();
+
+                foreach (var m in monthsToFetch)
+                {
+                    var totals = await SafeGetFromJsonAsync<List<KPITotalScoreDto>>(
+                        $"api/kpiSubmit/get-result-total-score-by-month/{CurrenUser.Id}/{year}/{m}");
+                    var item = totals?.FirstOrDefault();
+                    if (item != null)
+                    {
+                        var pt = item.TotalActualScore > 0 ? item.TotalActualScore : item.TotaleScore;
+                        approvedPoints.Add(pt);
+                    }
+                }
+
+                var m12 = handleKPISubmit.KPITotalScore.FirstOrDefault(x => x.Month == 12);
+                if (m12 != null)
+                {
+                    var pt12 = m12.TotalActualScore > 0 ? m12.TotalActualScore : m12.TotaleScore;
+                    approvedPoints.Add(pt12);
+                }
+
+                decimal avgScore = approvedPoints.Any()
+                    ? Math.Round(approvedPoints.Average(), 4, MidpointRounding.AwayFromZero)
+                    : 0;
+
+                decimal finalScore = (CeilingLevel.CeilingLevelValue > 0 && avgScore > CeilingLevel.CeilingLevelValue)
+                    ? CeilingLevel.CeilingLevelValue
+                    : avgScore;
+
+                var yearTotal = new KPITotalScoreDto
+                {
+                    Title = $"EMC - {year} - {CurrenUser.FullName}",
+                    Year = year,
+                    Month = null,
+                    Quarter = null,
+                    HalfYear = null,
+                    KPIScore = 0,
+                    KeyTaskScore = 0,
+                    OMGScore = 0,
+                    TotaleScore = avgScore,
+                    TotalActualScore = finalScore,
+                    CreatedBy = CurrenUser.Id
+                };
+
+                handleKPISubmit.KPITotalScore.Add(yearTotal);
+            }
+        }
+
+        private async Task CalculateYearFromActuals(
+            HandleKPISubmitDto handleKPISubmit,
+            List<HandleActualDto> allYearActuals,
+            int year)
+        {
+            var newHandleActualList = new List<HandleActualDto>();
+
+            foreach (var group in allYearActuals.GroupBy(x => x.TaskId))
+            {
+                var first = group.First();
+                decimal? actual = null;
+                decimal? target = null;
+
+                switch (first.QuarterCalculateType)
+                {
+                    case QuarterCalculateType.CAL1:
+                        actual = group.Sum(x => x.ActualValue ?? 0);
+                        target = group.Sum(x => x.TargetValue ?? 0);
+                        break;
+
+                    case QuarterCalculateType.CAL2:
+                        actual = group.Where(x => x.ActualValue.HasValue).Average(x => x.ActualValue);
+                        target = group.Where(x => x.TargetValue.HasValue).Average(x => x.TargetValue);
+                        break;
+
+                    case QuarterCalculateType.CAL3:
+                        var last = group.OrderByDescending(x => x.Month ?? 0).First();
+                        actual = last.ActualValue;
+                        target = last.TargetValue;
+                        break;
+                }
+
+                decimal achivement = await HelperCalculated(first.KPIFormulaType, actual ?? 0, target ?? 0, first.Max ?? 0);
+
+                if (first.Bottom.HasValue && achivement < first.Bottom)
+                    achivement = 0;
+
+                if (first.Max.HasValue && achivement > first.Max)
+                    achivement = first.Max.Value;
+
+                var newItem = new HandleActualDto
+                {
+                    TaskId = first.TaskId,
+                    Year = year,
+                    Quarter = null,
+                    Month = null,
+                    HalfYear = null,
+
+                    TaskName = first.TaskName,
+                    KPIIndexType = first.KPIIndexType,
+                    KPICategory = first.KPICategory,
+
+                    QuarterCalculateType = first.QuarterCalculateType,
+                    KPIFormulaType = first.KPIFormulaType,
+                    Max = first.Max,
+                    Bottom = first.Bottom,
+                    Weight = first.Weight,
+                    IndexWeight = first.IndexWeight,
+                    calculated = first.calculated,
+                    Description = first.Description,
+                    CalculateMethod = first.CalculateMethod,
+                    Formula = first.Formula,
+                    Unit = first.Unit,
+                    DataSource = first.DataSource,
+                    PIC = first.PIC,
+
+                    ActualValue = actual,
+                    TargetValue = target,
+                    Achiement = achivement,
+
+                    Score = achivement != 0 && first.Weight.HasValue
+                        ? Math.Round(achivement * first.Weight.Value, 4, MidpointRounding.AwayFromZero)
+                        : null
+                };
+
+                newHandleActualList.Add(newItem);
+            }
+
+            handleKPISubmit.HandleActual.AddRange(newHandleActualList);
+
+            var indexWeights = IndexWeight?.Where(x => x.PeriodType == PeriodType.Quarter).ToList()
+                                ?? new List<IndexWeightDto>();
+            decimal omgWeight = indexWeights.FirstOrDefault(x => x.KPIIndexType == KPIIndexType.OMG)?.Weight ?? 0;
+            decimal kpiWeight = indexWeights.FirstOrDefault(x => x.KPIIndexType == KPIIndexType.KPI)?.Weight ?? 0;
+            decimal keyTaskWeight = indexWeights.FirstOrDefault(x => x.KPIIndexType == KPIIndexType.KeyTask)?.Weight ?? 0;
+
+            var yearActuals = handleKPISubmit.HandleActual
+                .Where(x => x.Year == year && x.Month == null && x.Quarter == null && x.HalfYear == null)
+                .ToList();
+
+            decimal sumOMG = yearActuals.Where(x => x.KPIIndexType == KPIIndexType.OMG).Sum(x => x.Score ?? 0);
+            decimal sumKPI = yearActuals.Where(x => x.KPIIndexType == KPIIndexType.KPI).Sum(x => x.Score ?? 0);
+            decimal sumKeyTask = yearActuals.Where(x => x.KPIIndexType == KPIIndexType.KeyTask).Sum(x => x.Score ?? 0);
+
+            decimal omgscore = sumOMG * omgWeight;
+            decimal kpiScore = sumKPI * kpiWeight;
+            decimal keytaskscore = sumKeyTask * keyTaskWeight;
+
+            decimal totalScore = ConvertNumberCommon.ConvertNumber(kpiScore + keytaskscore + omgscore);
+            decimal totalActualScore = totalScore;
+            if (CeilingLevel.CeilingLevelValue > 0 && totalScore > CeilingLevel.CeilingLevelValue)
+            {
+                totalActualScore = CeilingLevel.CeilingLevelValue;
+            }
+
+            var yearTotal = new KPITotalScoreDto
+            {
+                Title = $"EMC - {year} - {CurrenUser.FullName}",
+                Year = year,
+                Month = null,
+                Quarter = null,
+                HalfYear = null,
+                KPIScore = ConvertNumberCommon.ConvertNumber(kpiScore),
+                KeyTaskScore = ConvertNumberCommon.ConvertNumber(keytaskscore),
+                OMGScore = ConvertNumberCommon.ConvertNumber(omgscore),
+                TotaleScore = totalScore,
+                TotalActualScore = totalActualScore,
+                CreatedBy = CurrenUser.Id
+            };
+            handleKPISubmit.KPITotalScore.Add(yearTotal);
+        }
         #endregion
 
         #region HELPER

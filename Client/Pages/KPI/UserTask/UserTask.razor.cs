@@ -31,6 +31,7 @@ namespace AquaSolution.Client.Pages.KPI.UserTask
         private List<UserDto> userFilter = new();
         private UserTaskModal _userTaskModal = new();
         private TargetModal targetModal = new();
+        private PeriodYearCalculateModal _periodYearCalculateModal = new();
         private int Month { get; set; }
         private int Year { get; set; }
         private Guid PageId { get; set; }
@@ -171,6 +172,12 @@ namespace AquaSolution.Client.Pages.KPI.UserTask
         private async Task EditTask(UserDto user)
         {
             await _userTaskModal.ShowModal(user);
+        }
+
+        private async Task CalculatePeriodYear(UserDto user)
+        {
+            if (user == null) return;
+            await _periodYearCalculateModal.ShowModalAsync(user, Year);
         }
 
         #endregion

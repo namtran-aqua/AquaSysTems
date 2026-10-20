@@ -1,0 +1,173 @@
+@using AntDesign
+@using AquaSolution.Shared.KPI.KPISubmit
+@using AquaSolution.Shared.UserManagements
+
+@{
+    RenderFragment footer = @<Template>
+        <Button Style="color:#808080" OnClick="@Close">Đóng</Button>
+        @if (dataResult != null && dataResult.IsEligible)
+        {
+            <Button Type="@ButtonType.Primary" 
+                    Loading="@isSubmitting" 
+                    OnClick="@SubmitAsync">
+                <Icon Type="send" /> Gửi phê duyệt
+            </Button>
+        }
+    </Template>;
+}
+
+<Modal Title="@($"Chốt điểm Kỳ & Năm KPI - {targetUser?.FullName} ({targetUser?.WorkDayId})")" 
+       @bind-Visible="IsModalVisible" 
+       Style="width: 900px; top: 20px;" 
+       Draggable="true" 
+       Footer="@footer">
+
+    <div style="padding: 10px 0;">
+        <!-- Thanh chọn Năm & Nút tải lại -->
+        <div style="display: flex; align-items: center; justify-content: space-between; background: #f5f5f5; padding: 10px 16px; border-radius: 6px; margin-bottom: 16px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-weight: 600;">Năm đánh giá:</span>
+                <AntDesign.InputNumber @bind-Value="@selectedYear" Min="2020" Max="2035" Style="width: 100px;" />
+                <Button Type="@ButtonType.Dashed" Size="@ButtonSize.Small" OnClick="@LoadDataAsync" Loading="@isLoading">
+                    <Icon Type="reload" /> Kiểm tra lại
+                </Button>
+            </div>
+            <div>
+                <span style="color: #666; font-size: 13px;">Phòng ban: <strong>@(dataResult?.DepartmentName ?? targetUser?.DepartmentName ?? "N/A")</strong></span>
+            </div>
+        </div>
+
+        @if (isLoading)
+        {
+            <div style="text-align: center; padding: 40px 0;">
+                <Spin Tip="Đang kiểm tra dữ liệu và tính toán..." />
+            </div>
+        }
+        else if (dataResult != null)
+        {
+            <!-- Thông báo lỗi nếu không đủ điều kiện chung -->
+            @if (!dataResult.IsEligible)
+            {
+                <Alert Type="@AlertType.Error" 
+                       Message="Chưa đủ điều kiện chốt kỳ" 
+                       Description="@dataResult.ErrorMessage" 
+                       ShowIcon="true" 
+                       Style="margin-bottom: 16px;" />
+            }
+            else
+            {
+                <Alert Type="@AlertType.Success" 
+                       Message="Đủ điều kiện chốt kỳ đặc biệt" 
+                       Description="Tất cả 12 tháng đều đã được phê duyệt hoặc cấu hình miễn KPI hợp lệ." 
+                       ShowIcon="true" 
+                       Style="margin-bottom: 16px;" />
+            }
+
+            <!-- 1. BẢNG TRẠNG THÁI 12 THÁNG -->
+            <div style="margin-bottom: 16px;">
+                <h6 style="font-weight: 600; margin-bottom: 8px; color: #1890ff;">
+                    <Icon Type="calendar" /> Trạng thái 12 tháng trong năm @selectedYear:
+                </h6>
+                <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;">
+                    @foreach (var m in dataResult.MonthSummaries)
+                    {
+                        var borderCol = m.IsApproved ? "#b7eb8f" : (m.IsExempt ? "#91d5ff" : "#ffa39e");
+                        var bgCol = m.IsApproved ? "#f6ffed" : (m.IsExempt ? "#e6f7ff" : "#fff1f0");
+                        var textCol = m.IsApproved ? "#52c41a" : (m.IsExempt ? "#1890ff" : "#f5222d");
+
+                        <div style="border: 1px solid @borderCol; background: @bgCol; border-radius: 4px; padding: 6px 8px; text-align: center;">
+                            <div style="font-weight: 600; font-size: 13px;">Tháng @m.Month</div>
+                            <div style="font-size: 11px; color: @textCol; margin-top: 2px;">
+                                @if (m.IsApproved)
+                                {
+                                    <span>@(m.Score.HasValue ? $"{m.Score.Value:0.####}" : "Đã duyệt")</span>
+                                }
+                                else if (m.IsExempt)
+                                {
+                                    <span>Miễn KPI</span>
+                                }
+                                else
+                                {
+                                    <span>Chưa có</span>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- 2. KẾT QUẢ DỰ KIẾN (GIỐNG NỘP KPI BÌNH THƯỜNG) -->
+            <div style="margin-top: 20px;">
+                <h6 style="font-weight: 600; margin-bottom: 12px; color: #1890ff;">
+                    <Icon Type="calculator" /> Dự kiến kết quả các Kỳ đánh giá:
+                </h6>
+
+                @if (!dataResult.CanCalculateQ4 || !dataResult.CanCalculateH2)
+                {
+                    <div style="margin-bottom: 12px;">
+                        @if (!dataResult.CanCalculateQ4)
+                        {
+                            <Alert Type="@AlertType.Info" 
+                                   ShowIcon="true" 
+                                   Message="Quý 4 (Q4): Không tính" 
+                                   Description="@dataResult.Q4Reason" 
+                                   Style="margin-bottom: 8px;" />
+                        }
+                        @if (!dataResult.CanCalculateH2)
+                        {
+                            <Alert Type="@AlertType.Info" 
+                                   ShowIcon="true" 
+                                   Message="Bán niên 2 (H2): Không tính" 
+                                   Description="@dataResult.H2Reason" 
+                                   Style="margin-bottom: 8px;" />
+                        }
+                    </div>
+                }
+
+                <Collapse DefaultActiveKey="@(new[] { "year_panel", "h2_panel", "q4_panel" })">
+                    @if (dataResult.CanCalculateYear && dataResult.YearScore != null)
+                    {
+                        var yearTitle = $"{dataResult.YearScore.Title} - TotaleScore:{dataResult.YearScore.TotaleScore: 0.###}";
+                        <Panel Header="@yearTitle" Key="year_panel">
+                            <div style="padding: 16px; background-color: #f6ffed; border: 1px solid #b7eb8f; border-radius: 6px; display: flex; align-items: center; gap: 10px;">
+                                <Icon Type="check-circle" Style="color: #52c41a; font-size: 20px;" />
+                                <div>
+                                    <div style="font-weight: 600; font-size: 15px; color: #262626;">Điểm tổng kết Năm: @dataResult.YearScore.TotalActualScore.ToString("0.####")</div>
+                                    <div style="color: #8c8c8c; font-size: 13px;">@dataResult.YearReason</div>
+                                </div>
+                            </div>
+                        </Panel>
+                    }
+
+                    @if (dataResult.CanCalculateH2 && dataResult.H2Score != null)
+                    {
+                        var h2Title = $"{dataResult.H2Score.Title} - TotaleScore:{dataResult.H2Score.TotaleScore: 0.###}";
+                        <Panel Header="@h2Title" Key="h2_panel">
+                            <div style="padding: 16px; background-color: #f6ffed; border: 1px solid #b7eb8f; border-radius: 6px; display: flex; align-items: center; gap: 10px;">
+                                <Icon Type="check-circle" Style="color: #52c41a; font-size: 20px;" />
+                                <div>
+                                    <div style="font-weight: 600; font-size: 15px; color: #262626;">Điểm tổng kết Bán niên 2: @dataResult.H2Score.TotalActualScore.ToString("0.####")</div>
+                                    <div style="color: #8c8c8c; font-size: 13px;">@dataResult.H2Reason</div>
+                                </div>
+                            </div>
+                        </Panel>
+                    }
+
+                    @if (dataResult.CanCalculateQ4 && dataResult.Q4Score != null)
+                    {
+                        var q4Title = $"{dataResult.Q4Score.Title} - TotaleScore:{dataResult.Q4Score.TotaleScore: 0.###}";
+                        <Panel Header="@q4Title" Key="q4_panel">
+                            <div style="padding: 16px; background-color: #f6ffed; border: 1px solid #b7eb8f; border-radius: 6px; display: flex; align-items: center; gap: 10px;">
+                                <Icon Type="check-circle" Style="color: #52c41a; font-size: 20px;" />
+                                <div>
+                                    <div style="font-weight: 600; font-size: 15px; color: #262626;">Điểm tổng kết Quý 4: @dataResult.Q4Score.TotalActualScore.ToString("0.####")</div>
+                                    <div style="color: #8c8c8c; font-size: 13px;">@dataResult.Q4Reason</div>
+                                </div>
+                            </div>
+                        </Panel>
+                    }
+                </Collapse>
+            </div>
+        }
+    </div>
+</Modal>

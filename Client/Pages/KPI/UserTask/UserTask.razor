@@ -123,6 +123,10 @@
                                             <Button Type="ButtonType.Text" OnClick="@(async () => await ViewTarget(row))" Style="text-align: left;">
                                                 <Icon Type="plus" /> View Target
                                             </Button>
+
+                                            <Button Type="ButtonType.Text" OnClick="@(async () => await CalculatePeriodYear(row))" Style="text-align: left; color: #1890ff;">
+                                                <Icon Type="calculator" /> Chốt KPI Kỳ & Năm
+                                            </Button>
                                         }
                                     </div>
                                 </ContentTemplate>
@@ -157,6 +161,10 @@
                                             <Button Type="ButtonType.Text" OnClick="@(async () => await ViewTarget(row))" Style="text-align: left;">
                                                 <Icon Type="plus" /> View Target
                                             </Button>
+
+                                            <Button Type="ButtonType.Text" OnClick="@(async () => await CalculatePeriodYear(row))" Style="text-align: left; color: #1890ff;">
+                                                <Icon Type="calculator" /> Chốt KPI Kỳ & Năm
+                                            </Button>
                                         }
 
                                     </div>
@@ -175,3 +183,4 @@
 @*------------------------------------- TEST -------------------------------*@
 <UserTaskModal CurrenUser="CurrenUser" @ref="_userTaskModal"></UserTaskModal>
 <TargetModal @ref="targetModal"></TargetModal>
+<PeriodYearCalculateModal @ref="_periodYearCalculateModal" OnSubmitted="@(async () => await LoadData())"></PeriodYearCalculateModal>
