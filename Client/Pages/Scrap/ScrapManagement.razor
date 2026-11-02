@@ -91,10 +91,25 @@
                 </Template>
             </Column>
             <PropertyColumn Width="300px" Title="Title" Property="c => c.Title"></PropertyColumn>
+            <PropertyColumn Width="180px" Title="Trách nhiệm" Property="c => c.Responsibility"></PropertyColumn>
             <PropertyColumn Width="300px" Title="Description" Property="c => c.Description"></PropertyColumn>
-            <PropertyColumn Width="100" Title="Status" Property="c => c.Status" >
-                <Tag Color="@GetTagColor.GetTagColorCss(row.Status.ToString())">@row.Status</Tag>
-            </PropertyColumn>
+            <Column TData="string" Width="180px" Title="Status">
+                <Template>
+                    @{
+                        var (color, text) = row.Status switch
+                        {
+                            StatusScrap.WaitingForApproval     => ("#1677ff", "Waiting for Approval"),
+                            StatusScrap.WaitingForConfirmation => ("#fa8c16", "Waiting for Confirmation"),
+                            StatusScrap.Approved               => ("#52c41a", "Approved"),
+                            StatusScrap.Rejected               => ("#ff4d4f", "Rejected"),
+                            StatusScrap.InterView              => ("#1677ff", "Waiting for Approval"),
+                            StatusScrap.Done                   => ("#722ed1", "Done"),
+                            _                                  => ("#faad14", "Pending")
+                        };
+                    }
+                    <Tag Color="@color">@text</Tag>
+                </Template>
+            </Column>
             <PropertyColumn Width="130px" Title="Department" Property="c => c.DepartmentName"></PropertyColumn>
             <PropertyColumn Width="100px" Title="Factory" Property="c => c.FactoryName"></PropertyColumn>
             <PropertyColumn Width="200px" Title="FinalReviewer" Property="c => c.LastActionByName"></PropertyColumn>

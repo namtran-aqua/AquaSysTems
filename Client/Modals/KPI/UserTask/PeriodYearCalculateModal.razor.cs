@@ -27,6 +27,11 @@ namespace AquaSolution.Client.Modals.KPI.UserTask
 
         public async Task ShowModalAsync(UserDto user, int? year = null)
         {
+            if (user != null && !user.HaveKPI)
+            {
+                await Message.Warning($"Nhân viên {user.FullName} không thuộc đối tượng áp dụng đánh giá KPI (HaveKPI = false).");
+                return;
+            }
             targetUser = user;
             selectedYear = year ?? DateTime.Now.Year;
             IsModalVisible = true;

@@ -177,6 +177,11 @@ namespace AquaSolution.Client.Pages.KPI.UserTask
         private async Task CalculatePeriodYear(UserDto user)
         {
             if (user == null) return;
+            if (!user.HaveKPI)
+            {
+                await Message.Warning($"Nhân viên {user.FullName} không thuộc đối tượng áp dụng đánh giá KPI (HaveKPI = false).");
+                return;
+            }
             await _periodYearCalculateModal.ShowModalAsync(user, Year);
         }
 

@@ -51,8 +51,10 @@ namespace AquaSolution.Server.Services.KPI.KPIScope
             var userIds = scopes.Select(s => s.UserId).Distinct().ToList();
             var users = await _context.tbl_Users
                 .AsNoTracking()
-                .Where(u => userIds.Contains(u.Id))
+                .Where(u => userIds.Contains(u.Id) && u.HaveKPI)
                 .ToDictionaryAsync(u => u.Id);
+
+            scopes = scopes.Where(s => users.ContainsKey(s.UserId)).ToList();
 
             var deptIds = users.Values.Where(u => u.DepartmentId.HasValue).Select(u => u.DepartmentId.Value).Distinct().ToList();
             var depts = await _context.tbl_Departments
@@ -154,6 +156,16 @@ namespace AquaSolution.Server.Services.KPI.KPIScope
 
         public async Task<KPIScopeDto> CreateScopeAsync(KPIScopeCreateOrUpdateDto dto, Guid currentUserId)
         {
+            var targetUser = await _context.tbl_Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == dto.UserId);
+            if (targetUser == null)
+            {
+                throw new InvalidOperationException("Không tìm thấy thông tin nhân viên.");
+            }
+            if (!targetUser.HaveKPI)
+            {
+                throw new InvalidOperationException("Nhân viên không thuộc đối tượng áp dụng đánh giá KPI (HaveKPI = false).");
+            }
+
             using var trans = await _context.Database.BeginTransactionAsync();
             try
             {
@@ -214,6 +226,16 @@ namespace AquaSolution.Server.Services.KPI.KPIScope
         public async Task<KPIScopeDto> UpdateScopeAsync(KPIScopeCreateOrUpdateDto dto, Guid currentUserId)
         {
             if (!dto.Id.HasValue) throw new ArgumentException("Id is required for update.");
+
+            var targetUser = await _context.tbl_Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == dto.UserId);
+            if (targetUser == null)
+            {
+                throw new InvalidOperationException("Không tìm thấy thông tin nhân viên.");
+            }
+            if (!targetUser.HaveKPI)
+            {
+                throw new InvalidOperationException("Nhân viên không thuộc đối tượng áp dụng đánh giá KPI (HaveKPI = false).");
+            }
 
             using var trans = await _context.Database.BeginTransactionAsync();
             try
@@ -362,10 +384,10 @@ namespace AquaSolution.Server.Services.KPI.KPIScope
 
         public async Task<List<KPIComplianceMatrixDto>> GetMonthlyComplianceMatrixAsync(int year, Guid? departmentId)
         {
-            // 1. Get active users that have a position (only employees with positions participate in KPI)
+            // 1. Get active users that have a position and HaveKPI = true (only employees with positions and HaveKPI participate in KPI)
             var userQuery = _context.tbl_Users
                 .AsNoTracking()
-                .Where(u => !u.IsDeleted && u.IsActive && u.PositionId.HasValue && u.PositionId.Value != Guid.Empty);
+                .Where(u => !u.IsDeleted && u.IsActive && u.HaveKPI && u.PositionId.HasValue && u.PositionId.Value != Guid.Empty);
 
             if (departmentId.HasValue)
             {
@@ -526,6 +548,12 @@ namespace AquaSolution.Server.Services.KPI.KPIScope
 
         public async Task<List<KPIExemptMonthDto>> GetUserExemptMonthsAsync(Guid userId, int year)
         {
+            var targetUser = await _context.tbl_Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
+            if (targetUser != null && !targetUser.HaveKPI)
+            {
+                return new List<KPIExemptMonthDto>();
+            }
+
             var months = await _context.tbl_KPIEmployeeExemptMonths
                 .AsNoTracking()
                 .Where(m => m.UserId == userId && m.Year == year)

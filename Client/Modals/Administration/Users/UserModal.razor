@@ -131,6 +131,11 @@
                     </FormItem>
                 </AntDesign.Col>
             }
+            <AntDesign.Col Span="3">
+                <FormItem Label="HaveKPI">
+                    <Switch @bind-Value="@CreatedUserDto.HaveKPI" />
+                </FormItem>
+            </AntDesign.Col>
             <AntDesign.Col Span="4">
                 <FormItem Label="IsChangeTask">
                     <Switch Value="@CreatedUserDto.IsChangeTask" OnChange="OnChangeTaskToggle" />

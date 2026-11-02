@@ -1,6 +1,7 @@
-﻿using AntDesign;
+using AntDesign;
 using AquaSolution.Shared.AuthModels;
 using AquaSolution.Shared.CommonDto;
+using AquaSolution.Shared.PasswordHelpers;
 using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
@@ -14,16 +15,19 @@ namespace AquaSolution.Client.Modals.Administration.Users
         private bool _visible;
         private ResetPassword _model = new();
         private Form<ResetPassword> formRef;
-        private string Title { get;set; }
+        private string Title { get; set; }
         [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
         private UserDto User { get; set; }
+
         public async Task ShowModal(UserDto user)
         {
             User = user;
             Title = $"Reset Password for {User.FullName}";
+            _model = new ResetPassword();
             _visible = true;
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged);
         }
+
         private void HandleCancel() => _visible = false;
 
         private async Task SaveAsync()
@@ -33,6 +37,31 @@ namespace AquaSolution.Client.Modals.Administration.Users
             {
                 return;
             }
+
+            UserPersonalInfo? personalInfo = null;
+            if (User != null)
+            {
+                personalInfo = new UserPersonalInfo
+                {
+                    WorkDayId = User.WorkDayId,
+                    FullName = User.FullName,
+                    Email = User.Email,
+                    PhoneNumber = User.PhoneNumber
+                };
+            }
+
+            var valResult = PasswordValidator.Validate(
+                _model.NewPassword,
+                _model.ConfirmPassword,
+                null,
+                personalInfo);
+
+            if (!valResult.IsValid)
+            {
+                await Message.Error(valResult.ErrorMessage);
+                return;
+            }
+
             _model.UserId = User.Id;
             var response = await Http.PostAsJsonAsync("api/auth/reset-password", _model);
             if (response.IsSuccessStatusCode)
@@ -46,8 +75,6 @@ namespace AquaSolution.Client.Modals.Administration.Users
                 var error = await response.Content.ReadFromJsonAsync<ApiResponse>();
                 await Message.Error(error?.message);
             }
-        
         }
-      
     }
 }

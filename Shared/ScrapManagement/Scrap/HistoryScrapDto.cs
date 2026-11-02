@@ -32,6 +32,7 @@ namespace AquaSolution.Shared.ScrapManagement.Scrap
         public Guid? ConfirmerId { get; set; }
         public string? ConfirmerName { get; set; }
         public DateTime? ConfirmedDate { get; set; }
+        public string? Responsibility { get; set; }
         public List<HistoryDetailScrapDto> HistoryDetails { get; set; } = new List<HistoryDetailScrapDto>();
         public List<RequestApprovalDto> Approvals { get; set; } = new List<RequestApprovalDto>();
     }

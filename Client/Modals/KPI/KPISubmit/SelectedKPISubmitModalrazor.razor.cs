@@ -52,6 +52,10 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
         public async Task ShowModal(UserDto currenUser)
         {
             CurrenUser = currenUser;
+            if (!CurrenUser.HaveKPI)
+            {
+                await Message.Warning("Nhân viên không thuộc đối tượng áp dụng đánh giá KPI (HaveKPI = false).");
+            }
             HandleKPISubmitDto = new HandleKPISubmitDto();
             HandleActualDto = new List<HandleActualDto>();
             DealineManagement = new List<DealineManagementDto>();
@@ -178,6 +182,12 @@ namespace AquaSolution.Client.Modals.KPI.KPISubmit
 
         private async Task SaveAsync()
         {
+            if (CurrenUser != null && !CurrenUser.HaveKPI)
+            {
+                await Message.Error("Nhân viên không thuộc đối tượng áp dụng đánh giá KPI (HaveKPI = false).");
+                return;
+            }
+
             HandleButtonClicked = true;
 
             var confirm = await MessageBox.Confirm(Modal, "Are you sure you want to submit?");

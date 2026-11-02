@@ -46,6 +46,7 @@ namespace AquaSolution.Shared.UserManagements
         public int FlowApproval { get; set; }
         public bool IsChangeTask { get; set; }
         public int? ChangeTaskMonth { get; set; }
+        public bool HaveKPI { get; set; } = true;
         
         // Helper property for searching and displaying in dropdowns
         public string SearchLabel => $"{WorkDayId} - {FullName} ({DepartmentName})";

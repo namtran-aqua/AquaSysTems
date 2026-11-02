@@ -21,6 +21,7 @@ namespace AquaSolution.Shared.ScrapManagement.Scrap
         public decimal? ConfirmAmount { get; set; }        
         public ConfirmationStatusType ConfirmationStatusType { get; set; } 
         public string? Notes { get; set; }              
+        public string? Responsibility { get; set; }
         public List<HistoryDetailScrapDto>? HistoryDetails { get; set; }
         public List<RequestApprovalDto>? Approvals { get; set; }
     }

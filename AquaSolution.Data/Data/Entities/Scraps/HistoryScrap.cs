@@ -21,6 +21,7 @@ namespace AquaSolution.Data.Data.Entities.Scraps
         public ConfirmationStatusType ConfirmationStatusType { get; set;  }
         public decimal? ConfirmAmount { get; set; } = 0;
         public decimal? TotalAmount { get; set; } = 0;
+        public string? Responsibility { get; set; }
 
     }
 }

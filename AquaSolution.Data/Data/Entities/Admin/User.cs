@@ -26,6 +26,7 @@ namespace AquaSolution.Data.Data.Entities.Admin
         public int FlowApproval { get; set; }
         public bool IsChangeTask { get; set; }
         public int? ChangeTaskMonth { get; set; }
+        public bool HaveKPI { get; set; } = true;
         public ICollection<UserSection> UserSections { get; set; }
     }
 }

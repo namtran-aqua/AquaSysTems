@@ -126,6 +126,7 @@ namespace AquaSolution.Client.Pages.Scrap
                 .Where(x =>
                     (string.IsNullOrEmpty(_filterFactory) || x.FactoryName == _filterFactory) &&
                     (string.IsNullOrEmpty(_filterDepartment) || x.DepartmentName == _filterDepartment))
+                .OrderByDescending(x => x.CreatedDate)
                 .ToList();
             BuildGroups();
             StateHasChanged();
@@ -139,11 +140,22 @@ namespace AquaSolution.Client.Pages.Scrap
         private void BuildGroups()
         {
             GroupedScraps = ListFiltered
-                .GroupBy(x => x.Status switch
+                .GroupBy(x =>
                 {
-                    StatusScrap.Approved => "PendingConfirm",
-                    StatusScrap.Done => "Done",
-                    _ => "Other"
+                    var rcvStep = x.Approvals?.FirstOrDefault(a => a.Title == "Người nhận hàng");
+                    if (rcvStep != null)
+                    {
+                        if (rcvStep.Status == StatusScrap.InterView) return "PendingConfirm";
+                        if (rcvStep.Status == StatusScrap.Approved) return "Done";
+                    }
+
+                    if (x.Status == StatusScrap.WaitingForConfirmation || x.Status == StatusScrap.Approved)
+                        return "PendingConfirm";
+
+                    if (x.Status == StatusScrap.Done || x.Status == StatusScrap.WaitingForApproval)
+                        return "Done";
+
+                    return "Other";
                 })
                 .OrderBy(g => g.Key switch
                 {
@@ -151,7 +163,7 @@ namespace AquaSolution.Client.Pages.Scrap
                     "Done" => 1,
                     _ => 2
                 })
-                .ToDictionary(g => g.Key, g => g.ToList());
+                .ToDictionary(g => g.Key, g => g.OrderByDescending(x => x.CreatedDate).ToList());
         }
 
         private void ToggleGroup(string key)
@@ -185,6 +197,7 @@ namespace AquaSolution.Client.Pages.Scrap
                 ConfirmAmount = row.ConfirmAmount,
                 ConfirmationStatusType = row.ConfirmationStatusType,
                 Notes = row.Notes,
+                Responsibility = row.Responsibility,
                 HistoryDetails = row.HistoryDetails,
                 Approvals = row.Approvals
             };

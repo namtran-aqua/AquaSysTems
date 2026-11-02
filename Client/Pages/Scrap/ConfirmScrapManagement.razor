@@ -111,6 +111,7 @@
                             </Column>
 
                             <PropertyColumn Width="220px" Title="Title"      Property="c => c.Title" />
+                            <PropertyColumn Width="160px" Title="Trách nhiệm" Property="c => c.Responsibility" />
                             <PropertyColumn Width="120px" Title="Factory"    Property="c => c.FactoryName" />
                             <PropertyColumn Width="140px" Title="Department" Property="c => c.DepartmentName" />
 
@@ -119,9 +120,12 @@
                                     @{
                                         var (color, text) = row.Status switch
                                         {
-                                            StatusScrap.Approved  => ("#faad14", "Pending Confirm"),
-                                            StatusScrap.Done      => ("#52c41a", "Done"),
-                                            _                     => ("#d9d9d9", row.Status.ToString())
+                                            StatusScrap.WaitingForConfirmation => ("#fa8c16", "Waiting for Confirmation"),
+                                            StatusScrap.WaitingForApproval     => ("#1677ff", "Waiting for Approval"),
+                                            StatusScrap.Approved               => ("#52c41a", "Approved"),
+                                            StatusScrap.Done                   => ("#722ed1", "Done"),
+                                            StatusScrap.Rejected               => ("#ff4d4f", "Rejected"),
+                                            _                                  => ("#faad14", "Pending")
                                         };
                                     }
                                     <Tag Color="@color">@text</Tag>

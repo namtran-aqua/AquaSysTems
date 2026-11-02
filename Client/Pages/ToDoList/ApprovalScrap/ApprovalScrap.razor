@@ -157,6 +157,7 @@
                             </Column>
 
                             <PropertyColumn Width="200px" Title="Title" Property="c => c.Title" />
+                            <PropertyColumn Width="160px" Title="Trách nhiệm" Property="c => c.Responsibility" />
                             <PropertyColumn Width="120px" Title="Factory" Property="c => c.FactoryName" />
                             <PropertyColumn Width="130px" Title="Department" Property="c => c.DepartmentName" />
 
@@ -165,11 +166,13 @@
                                     @{
                                         var (color, text) = row.Status switch
                                         {
-                                            StatusScrap.Approved  => ("#52c41a", "Approved"),
-                                            StatusScrap.Rejected  => ("#ff4d4f", "Rejected"),
-                                            StatusScrap.InterView => ("#1677ff", "In Review"),
-                                            StatusScrap.Done      => ("#722ed1", "Done"),
-                                            _                     => ("#faad14", "Pending")
+                                            StatusScrap.WaitingForApproval     => ("#1677ff", "Waiting for Approval"),
+                                            StatusScrap.WaitingForConfirmation => ("#fa8c16", "Waiting for Confirmation"),
+                                            StatusScrap.Approved               => ("#52c41a", "Approved"),
+                                            StatusScrap.Rejected               => ("#ff4d4f", "Rejected"),
+                                            StatusScrap.InterView              => ("#1677ff", "Waiting for Approval"),
+                                            StatusScrap.Done                   => ("#722ed1", "Done"),
+                                            _                                  => ("#faad14", "Pending")
                                         };
                                     }
                                     <Tag Color="@color">@text</Tag>
@@ -256,23 +259,23 @@
 @{
     RenderFragment rejectFooter =
         @<div style="display:flex; gap:8px; justify-content:flex-end">
-            <Button OnClick="CloseRejectModal">Cancel</Button>
-            <Button Danger OnClick="ConfirmRejectRow">Confirm Reject</Button>
+            <Button OnClick="CloseRejectModal">Hủy</Button>
+            <Button Danger OnClick="ConfirmRejectRow">Xác nhận từ chối</Button>
         </div>;
 }
 
-<Modal Title="Reject Reason"
+<Modal Title="Lý do từ chối"
        Visible="IsRejectModalVisible"
        OnCancel="CloseRejectModal"
-       Footer="@rejectFooter">
+       Footer="@rejectFooter"
+       Width="520">
     <p style="font-size:13px; color:#555; margin-bottom:8px;">
-        Ticket: <strong>@RowToReject?.Title</strong>
+        Phiếu: <strong>@RowToReject?.Title</strong>
     </p>
-    <TextArea class="ant-input"
+    <textarea class="ant-input"
               rows="4"
-              placeholder="Enter reject reason..."
-              value="@RejectComment"
-              @oninput="@((e) => RejectComment = e.Value?.ToString())"
-              style="width:100%; padding:8px; border-radius:4px;">
-    </TextArea>
+              placeholder="Nhập lý do từ chối..."
+              @bind="RejectComment"
+              style="width:100%; resize:vertical; padding:8px; border-radius:4px; font-size:13px;">
+    </textarea>
 </Modal>

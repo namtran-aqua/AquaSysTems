@@ -1,4 +1,4 @@
-﻿using AntDesign;
+using AntDesign;
 using AquaSolution.Client.Modals.Administration.Users;
 using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Components;
@@ -36,7 +36,7 @@ namespace AquaSolution.Client.Modals
         }
         private void  ChangePassWord()
         {
-            changePassModal.ShowModal(userDto.Id);
+            changePassModal.ShowModal(userDto.Id, userDto);
         }
         #region Notify
         private bool isDropdownVisible { get; set; } = false;

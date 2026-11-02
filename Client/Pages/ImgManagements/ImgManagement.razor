@@ -135,7 +135,7 @@
                                 }
                                 <Template Style="gap:5px">
                                     <ActionColumn>
-                                        <a href="/api/Img/thumbnail/@row.FileId" target="_blank" style="width:500px;height:500px;">
+                                        <a href="@($"{Navigation.BaseUri}api/Img/thumbnail/{row.FileId}")" target="_blank" style="width:500px;height:500px;">
                                             👁View
                                         </a>
                                     </ActionColumn>
@@ -146,7 +146,7 @@
                             <!-- Ảnh -->
                             <Column Align="ColumnAlign.Center" TData="GoogleDriveImageDto" Width="170px" Title="Image">
                                 <Template>
-                                    <img src="@(string.IsNullOrEmpty(row.ThumbnailLink) ? $"/api/Img/thumbnail/{row.FileId}" : row.ThumbnailLink)"
+                                    <img src="@(string.IsNullOrEmpty(row.ThumbnailLink) ? $"{Navigation.BaseUri}api/Img/thumbnail/{row.FileId}" : row.ThumbnailLink)"
                                          style="width:100px;height:100px;object-fit:cover;border-radius:4px;"
                                          loading="lazy" />
                                 </Template>

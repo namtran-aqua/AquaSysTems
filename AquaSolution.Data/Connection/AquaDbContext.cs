@@ -100,7 +100,9 @@ namespace AquaSolution.Data.Connection
         public DbSet<Material> tbl_Materials { get; set; }
         public DbSet<Weight> tbl_Weights { get; set; }
         public DbSet<FlowApprovalScrap> tbl_FlowApprovalScraps { get; set; }
-
+        public DbSet<WasteItem> tbl_WasteItems { get; set; }
+        public DbSet<ScrapReceiver> tbl_ScrapReceivers { get; set; }
+        public DbSet<ScrapFinalApprover> tbl_ScrapFinalApprovers { get; set; }
 
         #endregion
         #region Imgs
@@ -187,6 +189,9 @@ namespace AquaSolution.Data.Connection
             modelBuilder.ApplyConfiguration(new RequestApprovalConfiguration());
             modelBuilder.ApplyConfiguration(new WeightConfiguration());
             modelBuilder.ApplyConfiguration(new FlowApprovalScrapConfiguration());
+            modelBuilder.ApplyConfiguration(new WasteItemConfiguration());
+            modelBuilder.ApplyConfiguration(new ScrapReceiverConfiguration());
+            modelBuilder.ApplyConfiguration(new ScrapFinalApproverConfiguration());
             
             #endregion
 

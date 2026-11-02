@@ -39,6 +39,35 @@ namespace AquaSolution.Server.Controllers.Administration.Common
             return Ok(url);
         }
 
+        [HttpPost("scrap-image")]
+        public async Task<IActionResult> UploadScrapImage(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest("File is empty.");
+
+            var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp" };
+            if (!allowedExtensions.Contains(ext))
+                return BadRequest("Chỉ chấp nhận các tệp định dạng hình ảnh (.jpg, .jpeg, .png, .gif, .webp, .bmp).");
+
+            var fileName = $"{Guid.NewGuid()}{ext}";
+            var uploadDir = Path.Combine(_env.WebRootPath ?? "wwwroot", "uploads", "scraps");
+            if (!Directory.Exists(uploadDir))
+            {
+                Directory.CreateDirectory(uploadDir);
+            }
+
+            var filePath = Path.Combine(uploadDir, fileName);
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            var baseUrl = $"{Request.Scheme}://{Request.Host}{Request.PathBase}";
+            var url = $"{baseUrl}/uploads/scraps/{fileName}";
+            return Ok(url);
+        }
+
         [HttpDelete("delete-avatar")]
         public IActionResult DeleteAvatar([FromQuery] string avatarUrl)
         {
