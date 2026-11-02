@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -33,7 +34,11 @@ namespace AquaService.Shared.AuthModels
     public class ResetPasswordRequest
     {
         public string ResetToken { get; set; } = "";
+
+        [Required(ErrorMessage = "Vui lòng nhập mật khẩu mới")]
         public string NewPassword { get; set; } = "";
+
+        [Required(ErrorMessage = "Vui lòng xác nhận lại mật khẩu")]
         public string ConfirmPassword { get; set; } = "";
     }
 }

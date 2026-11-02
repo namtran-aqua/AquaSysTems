@@ -125,5 +125,94 @@ namespace AquaSolution.Server.Controllers.ScrapManagement
                 return BadRequest(ex.Message);
             }
         }
+
+        [HttpGet("get-all-waste-items")]
+        public async Task<IActionResult> GetAllWasteItems()
+        {
+            try
+            {
+                var result = await _scrapService.GetAllWasteItemsAsync();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Lỗi hệ thống: {ex.Message}" });
+            }
+        }
+
+        [HttpGet("preview-flow")]
+        public async Task<IActionResult> PreviewFlow(
+            [FromQuery] Guid factoryId,
+            [FromQuery] Guid departmentId,
+            [FromQuery] Guid? sectionId,
+            [FromQuery] Guid creatorId)
+        {
+            try
+            {
+                var result = await _scrapService.PreviewApprovalFlow(factoryId, departmentId, sectionId, creatorId);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("resubmit-scrap")]
+        public async Task<IActionResult> ResubmitScrap([FromBody] HandleScrapDto resubmitDto)
+        {
+            try
+            {
+                await _scrapService.ResubmitScrap(resubmitDto);
+                await _hubContext.Clients.All.SendAsync("LoadScrap");
+                return Ok(new { message = "Cập nhật và nộp lại thành công" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("get-receivers")]
+        public async Task<IActionResult> GetReceivers()
+        {
+            try
+            {
+                var result = await _scrapService.GetScrapReceivers();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("save-receiver")]
+        public async Task<IActionResult> SaveReceiver([FromBody] AquaSolution.Shared.ScrapManagement.Receivers.SaveScrapReceiverDto dto)
+        {
+            try
+            {
+                await _scrapService.SaveScrapReceiver(dto);
+                return Ok(new { message = "Lưu cấu hình người nhận hàng thành công" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpDelete("delete-receiver/{id}")]
+        public async Task<IActionResult> DeleteReceiver(Guid id)
+        {
+            try
+            {
+                await _scrapService.DeleteScrapReceiver(id);
+                return Ok(new { message = "Xóa cấu hình thành công" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

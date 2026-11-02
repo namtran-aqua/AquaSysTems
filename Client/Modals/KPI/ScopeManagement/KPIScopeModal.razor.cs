@@ -129,7 +129,7 @@ namespace AquaSolution.Client.Modals.KPI.ScopeManagement
                     var result = await Http.GetFromJsonAsync<List<UserDto>>("api/user/get-all");
                     if (result != null)
                     {
-                        users = result.Where(u => u.IsActive && u.PositionId.HasValue && u.PositionId.Value != Guid.Empty).OrderBy(u => u.FullName).ToList();
+                        users = result.Where(u => u.IsActive && u.HaveKPI && u.PositionId.HasValue && u.PositionId.Value != Guid.Empty).OrderBy(u => u.FullName).ToList();
                     }
                 }
                 catch (Exception ex)

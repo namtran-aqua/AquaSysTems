@@ -148,11 +148,18 @@ namespace AquaSolution.Client.Pages.KPI.KPISubmit
         }
         private async Task SelectedKpi()
         {
-            if(CurrenUser.PositionId == null)
+            if (CurrenUser == null) return;
+            if (!CurrenUser.HaveKPI)
             {
-                Message.Error("Chưa có position. Vui lòng liên hệ IT hỗ trợ");
+                await Message.Warning("Tài khoản của bạn không thuộc đối tượng áp dụng đánh giá KPI (HaveKPI = false).");
+                return;
+            }
+            if (CurrenUser.PositionId == null)
+            {
+                await Message.Error("Chưa có position. Vui lòng liên hệ IT hỗ trợ");
+                return;
             }    
-          await  _selectedKpiSubmitModalrazor.ShowModal(CurrenUser!);
+            await _selectedKpiSubmitModalrazor.ShowModal(CurrenUser!);
         }
         private async Task ViewAsync(ViewKPITotalScoreDto kPiTotalScoreDto )
         {

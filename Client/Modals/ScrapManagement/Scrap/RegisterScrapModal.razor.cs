@@ -30,6 +30,20 @@ namespace AquaSolution.Client.Modals.ScrapManagement.Scrap
 
         private List<MaterialDto> _materials = new();
         private List<HistoryDetailScrapDto> _details = new();
+        private List<WasteItemDto> _wasteItems = new();
+        private List<string> _wasteCategories = new();
+        private List<RequestApprovalDto> _previewApprovals = new();
+
+        private string? SelectedResponsibilityOption { get; set; }
+        private string? CustomResponsibility { get; set; }
+        private string? _previewImageUrl;
+        private static readonly string[] StandardResponsibilities = new[]
+        {
+            "Lỗi nhà cung cấp",
+            "Thay đổi kỹ thuật",
+            "Lỗi sản xuất",
+            "Thiếu hụt"
+        };
 
 
 
@@ -60,10 +74,29 @@ namespace AquaSolution.Client.Modals.ScrapManagement.Scrap
                 HandleScrap = handleScrap;
                 _details = HandleScrap.HistoryDetails ?? new();
 
-
+                if (!string.IsNullOrWhiteSpace(HandleScrap.Responsibility))
+                {
+                    if (StandardResponsibilities.Contains(HandleScrap.Responsibility))
+                    {
+                        SelectedResponsibilityOption = HandleScrap.Responsibility;
+                        CustomResponsibility = string.Empty;
+                    }
+                    else
+                    {
+                        SelectedResponsibilityOption = "Khác";
+                        CustomResponsibility = HandleScrap.Responsibility;
+                    }
+                }
+                else
+                {
+                    SelectedResponsibilityOption = null;
+                    CustomResponsibility = string.Empty;
+                }
             }
             else
             {
+                SelectedResponsibilityOption = null;
+                CustomResponsibility = string.Empty;
                 var defaultSectionId = user.Sections?.FirstOrDefault()?.Id;
                 var sectionPart = user.Sections?.FirstOrDefault()?.Name;
                 var titleParts = new[] { "SCRAP", user.FactoryName, user.DepartmentName, sectionPart, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") }
@@ -82,8 +115,38 @@ namespace AquaSolution.Client.Modals.ScrapManagement.Scrap
             }
 
             await LoadMaterials();
+            if (Mode == ScrapModalMode.Create)
+            {
+                await LoadPreviewFlow();
+            }
+            if (Mode == ScrapModalMode.Confirm || isConfirm)
+            {
+                await LoadWasteItems();
+            }
             IsModalVisible = true;
             StateHasChanged();
+        }
+
+        private async Task LoadPreviewFlow()
+        {
+            if (CurrenUser == null || CurrenUser.FactoryId == null || CurrenUser.DepartmentId == null) return;
+            try
+            {
+                var factoryId = HandleScrap?.FactoryId ?? CurrenUser.FactoryId.Value;
+                var deptId = HandleScrap?.DepartmentId ?? CurrenUser.DepartmentId.Value;
+                var secId = HandleScrap?.SectionId;
+                var creatorId = CurrenUser.Id;
+
+                var url = $"api/scrap/preview-flow?factoryId={factoryId}&departmentId={deptId}&creatorId={creatorId}";
+                if (secId.HasValue) url += $"&sectionId={secId.Value}";
+
+                var res = await Http.GetFromJsonAsync<List<RequestApprovalDto>>(url);
+                _previewApprovals = res ?? new();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading preview flow: {ex.Message}");
+            }
         }
 
         private async Task LoadMaterials()
@@ -101,6 +164,27 @@ namespace AquaSolution.Client.Modals.ScrapManagement.Scrap
             finally
             {
                 _loading = false;
+            }
+        }
+
+        private async Task LoadWasteItems()
+        {
+            try
+            {
+                if (!_wasteItems.Any())
+                {
+                    var result = await Http.GetFromJsonAsync<List<WasteItemDto>>("api/scrap/get-all-waste-items");
+                    _wasteItems = result ?? new();
+                    _wasteCategories = _wasteItems
+                        .Select(x => x.Category)
+                        .Where(x => !string.IsNullOrEmpty(x))
+                        .Distinct()
+                        .ToList();
+                }
+            }
+            catch
+            {
+                await Message.Error("Không thể tải danh mục phế liệu & chất thải!");
             }
         }
         #endregion
@@ -137,7 +221,23 @@ namespace AquaSolution.Client.Modals.ScrapManagement.Scrap
             StateHasChanged();
         }
 
-        private void OnSectionChanged(AquaSolution.Shared.Administration.Sections.SectionDto section)
+        private void OnWasteTypeChanged(HistoryDetailScrapDto row, string? type)
+        {
+            row.WasteType = type;
+            row.WasteCode = null;
+            row.WasteName = null;
+            StateHasChanged();
+        }
+
+        private void OnWasteCodeChanged(HistoryDetailScrapDto row, string? code)
+        {
+            row.WasteCode = code;
+            var item = _wasteItems.FirstOrDefault(x => string.Equals(x.Code, code, StringComparison.OrdinalIgnoreCase));
+            row.WasteName = item?.Name;
+            StateHasChanged();
+        }
+
+        private async Task OnSectionChanged(AquaSolution.Shared.Administration.Sections.SectionDto section)
         {
             if (Mode == ScrapModalMode.Create && HandleScrap != null && CurrenUser != null)
             {
@@ -145,6 +245,75 @@ namespace AquaSolution.Client.Modals.ScrapManagement.Scrap
                 var parts = new[] { "SCRAP", CurrenUser.FactoryName, CurrenUser.DepartmentName, sectionName, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") }
                     .Where(p => !string.IsNullOrWhiteSpace(p));
                 HandleScrap.Title = string.Join(" - ", parts).ToUpper();
+                HandleScrap.SectionId = section?.Id;
+                await LoadPreviewFlow();
+                StateHasChanged();
+            }
+        }
+
+        private void OnResponsibilityChanged(string val)
+        {
+            SelectedResponsibilityOption = val;
+            if (val == "Khác")
+            {
+                HandleScrap!.Responsibility = CustomResponsibility;
+            }
+            else
+            {
+                HandleScrap!.Responsibility = val;
+            }
+            StateHasChanged();
+        }
+
+        private void PreviewImage(string? url)
+        {
+            _previewImageUrl = url;
+            StateHasChanged();
+        }
+
+        private async Task HandleImageUpload(HistoryDetailScrapDto row, Microsoft.AspNetCore.Components.Forms.InputFileChangeEventArgs e)
+        {
+            var file = e.File;
+            if (file == null) return;
+
+            if (!file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+            {
+                await Message.Warning("Vui lòng chọn tệp hình ảnh (.jpg, .png, .webp, ...)");
+                return;
+            }
+
+            if (file.Size > 15 * 1024 * 1024)
+            {
+                await Message.Warning("Dung lượng ảnh tối đa 15MB!");
+                return;
+            }
+
+            try
+            {
+                using var content = new MultipartFormDataContent();
+                using var stream = file.OpenReadStream(15 * 1024 * 1024);
+                using var streamContent = new StreamContent(stream);
+                streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
+                content.Add(streamContent, "file", file.Name);
+
+                var response = await Http.PostAsync("api/upload/scrap-image", content);
+                if (response.IsSuccessStatusCode)
+                {
+                    var url = await response.Content.ReadAsStringAsync();
+                    url = url.Trim('"', ' ');
+                    row.ImageUrl = url;
+                    await Message.Success("Tải ảnh lên thành công!");
+                    StateHasChanged();
+                }
+                else
+                {
+                    var err = await response.Content.ReadAsStringAsync();
+                    await Message.Error($"Tải ảnh thất bại: {err}");
+                }
+            }
+            catch (Exception ex)
+            {
+                await Message.Error($"Lỗi khi tải ảnh: {ex.Message}");
             }
         }
         #endregion
@@ -172,7 +341,22 @@ namespace AquaSolution.Client.Modals.ScrapManagement.Scrap
                 return;
             }
 
-            HandleScrap!.HistoryDetails = _details;
+            if (SelectedResponsibilityOption == "Khác")
+            {
+                HandleScrap!.Responsibility = CustomResponsibility?.Trim();
+            }
+            else
+            {
+                HandleScrap!.Responsibility = SelectedResponsibilityOption?.Trim();
+            }
+
+            if (string.IsNullOrWhiteSpace(HandleScrap!.Responsibility))
+            {
+                await Message.Warning("Vui lòng chọn hoặc nhập phần Trách nhiệm!");
+                return;
+            }
+
+            HandleScrap.HistoryDetails = _details;
 
             try
             {
@@ -181,6 +365,75 @@ namespace AquaSolution.Client.Modals.ScrapManagement.Scrap
                 if (response.IsSuccessStatusCode)
                 {
                     await Message.Success("Tạo phiếu scrap thành công!");
+                    await OnActionCompleted.InvokeAsync();
+                    Close();
+                }
+                else
+                {
+                    await Message.Error($"Thất bại: {await response.Content.ReadAsStringAsync()}");
+                }
+            }
+            catch (Exception ex)
+            {
+                await Message.Error($"Lỗi: {ex.Message}");
+            }
+            finally
+            {
+                _submitting = false;
+            }
+        }
+
+        private async Task ResubmitAsync()
+        {
+            if (HandleScrap == null) return;
+
+            if (string.IsNullOrWhiteSpace(SelectedResponsibilityOption))
+            {
+                await Message.Warning("Vui lòng chọn hoặc nhập phần Trách nhiệm!");
+                return;
+            }
+
+            if (SelectedResponsibilityOption == "Khác")
+            {
+                HandleScrap.Responsibility = CustomResponsibility?.Trim();
+            }
+            else
+            {
+                HandleScrap.Responsibility = SelectedResponsibilityOption?.Trim();
+            }
+
+            if (string.IsNullOrWhiteSpace(HandleScrap.Responsibility))
+            {
+                await Message.Warning("Vui lòng chọn hoặc nhập phần Trách nhiệm!");
+                return;
+            }
+
+            if (_details == null || !_details.Any())
+            {
+                await Message.Warning("Vui lòng thêm ít nhất một dòng vật tư!");
+                return;
+            }
+
+            if (_details.Any(d => d.MaterialId == Guid.Empty))
+            {
+                await Message.Warning("Có dòng chưa chọn vật tư!");
+                return;
+            }
+
+            if (_details.Any(d => d.Quantity <= 0))
+            {
+                await Message.Warning("Số lượng phải lớn hơn 0!");
+                return;
+            }
+
+            try
+            {
+                _submitting = true;
+                HandleScrap.HistoryDetails = _details;
+                var response = await Http.PostAsJsonAsync("api/scrap/resubmit-scrap", HandleScrap);
+                if (response.IsSuccessStatusCode)
+                {
+                    await Message.Success("Cập nhật và nộp lại thành công!");
                     await OnActionCompleted.InvokeAsync();
                     Close();
                 }
@@ -288,6 +541,18 @@ namespace AquaSolution.Client.Modals.ScrapManagement.Scrap
 
         private async Task ConfirmAction()
         {
+            if (_details.Any(d => string.IsNullOrWhiteSpace(d.WasteType)))
+            {
+                await Message.Warning("Vui lòng chọn Loại (Phế liệu / Chất thải) cho tất cả các dòng!");
+                return;
+            }
+
+            if (_details.Any(d => string.IsNullOrWhiteSpace(d.WasteCode)))
+            {
+                await Message.Warning("Vui lòng chọn Mã phế liệu / Chất thải cho tất cả các dòng!");
+                return;
+            }
+
             if (_details.Any(d => (d.ConfirmAmount ?? 0) <= 0))
             {
                 await Message.Warning("Vui lòng nhập thực nhận lớn hơn 0 cho tất cả chi tiết!");
@@ -296,7 +561,7 @@ namespace AquaSolution.Client.Modals.ScrapManagement.Scrap
 
             if (_details.Any(d => d.ConfirmUnitType == ConfirmUnitType.Unit && (d.ConfirmAmount ?? 0) % 1 != 0))
             {
-                await Message.Warning("Vui lòng nhập số nguyên cho các chi tiết nhận theo cái!");
+                await Message.Warning("Vui lòng nhập số nguyên cho các chi tiết nhận theo PCS!");
                 return;
             }
 
@@ -312,7 +577,10 @@ namespace AquaSolution.Client.Modals.ScrapManagement.Scrap
                         HistoryDetailId = d.Id,
                         ConfirmAmount = d.ConfirmAmount ?? 0,
                         ConfirmUnitType = d.ConfirmUnitType,
-                        ConfirmNote = d.ConfirmNote
+                        ConfirmNote = d.ConfirmNote,
+                        WasteType = d.WasteType,
+                        WasteCode = d.WasteCode,
+                        WasteName = d.WasteName
                     }).ToList()
                 };
 
@@ -338,10 +606,66 @@ namespace AquaSolution.Client.Modals.ScrapManagement.Scrap
             }
         }
 
+        private (string StatusText, string Color, string CardBorder, string CardBg) GetStepStatusDisplay(RequestApprovalDto step, ScrapModalMode mode)
+        {
+            var title = step.Title?.Trim() ?? string.Empty;
+            bool isCreator = step.Step == 1 || title.Equals("Người tạo", StringComparison.OrdinalIgnoreCase);
+            bool isReceiver = title.Equals("Người nhận hàng", StringComparison.OrdinalIgnoreCase);
+            bool isFinalApprover = title.Equals("Người xác nhận cuối", StringComparison.OrdinalIgnoreCase);
+            bool isApprover = !isCreator && !isReceiver && !isFinalApprover;
+
+            // 1. Khi đang tạo mới phiếu (chưa bấm tạo phiếu)
+            if (mode == ScrapModalMode.Create)
+            {
+                if (isCreator)
+                {
+                    // Người tạo đang xử lý -> Màu xanh dương, status Pending
+                    return ("Pending", "#1677ff", "1.5px solid #1677ff", "#ffffff");
+                }
+                else
+                {
+                    // Các bước sau chưa tới lượt -> Màu xám, status Pending
+                    return ("Pending", "#bfbfbf", "0.5px solid #e8e8e8", "#fafafa");
+                }
+            }
+
+            // 2. Nếu bước bị Rejected
+            if (step.Status == StatusScrap.Rejected)
+            {
+                return ("Từ chối", "#ff4d4f", "1px solid #ff4d4f", "#fff1f0");
+            }
+
+            // 3. Nếu bước đã hoàn thành (Approved)
+            if (step.Status == StatusScrap.Approved)
+            {
+                string text = "Approved";
+                if (isCreator) text = "Created";
+                else if (isReceiver) text = "Received";
+                else if (isFinalApprover || isApprover) text = "Approved";
+
+                return (text, "#52c41a", "1px solid #52c41a", "#ffffff");
+            }
+
+            // 4. Nếu bước đang xử lý (InterView - đang ở bước này)
+            if (step.Status == StatusScrap.InterView)
+            {
+                string text = "Waiting for Approval";
+                if (isCreator) text = "Pending";
+                else if (isReceiver) text = "Pending";
+                else if (isFinalApprover || isApprover) text = "Waiting for Approval";
+
+                return (text, "#1677ff", "1.5px solid #1677ff", "#ffffff");
+            }
+
+            // 5. Mặc định chưa tới lượt (Pending)
+            return ("Pending", "#bfbfbf", "0.5px solid #e8e8e8", "#fafafa");
+        }
+
         private void Close()
         {
             IsModalVisible = false;
             IsRejectModalVisible = false;
+            _previewImageUrl = null;
             _details = new();
             StateHasChanged();
         }

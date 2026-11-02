@@ -141,6 +141,7 @@
                     <PropertyColumn Width="90px" Title="Position" Property="c => c.PositionName" Filters="_positionFilter"></PropertyColumn>
                     <PropertyColumn Title="Email" Property="c => c.Email"></PropertyColumn>
                     <PropertyColumn Sortable Title="IsActive" Property="c => c.IsActive"></PropertyColumn>
+                    <PropertyColumn Sortable Title="HaveKPI" Property="c => c.HaveKPI"></PropertyColumn>
                     <Column Fixed="ColumnFixPlacement.Right" TData="UserDto" Width="50px" Context="row">
                         <Template>
                             <Popover Title="Actions" Trigger="new Trigger[] { Trigger.Click }" Placement="Placement.Bottom">

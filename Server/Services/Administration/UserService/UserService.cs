@@ -590,9 +590,25 @@ public class UserService : IUserService
         if (!isOldPasswordCorrect)
             throw new Exception("Old password is incorrect.");
 
-        // ✅ Step 3: Validate confirm password
-        if (changePassRequest.NewPassword != changePassRequest.ConfirmPassword)
-            throw new Exception("Confirm password does not match the new password.");
+        // Step 3: Validate password security policy and personal information
+        var personalInfo = new UserPersonalInfo
+        {
+            WorkDayId = user.WorkDayId,
+            FullName = user.FullName,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Email = user.Email,
+            PhoneNumber = user.PhoneNumber
+        };
+
+        var valResult = PasswordValidator.Validate(
+            changePassRequest.NewPassword,
+            changePassRequest.ConfirmPassword,
+            changePassRequest.OldPassword,
+            personalInfo);
+
+        if (!valResult.IsValid)
+            throw new Exception(valResult.ErrorMessage);
 
         // Step 4: Hash the new password
         var newHashedPassword = PasswordHelper.HashPassword(changePassRequest.NewPassword);
@@ -610,9 +626,25 @@ public class UserService : IUserService
         if (user == null || user.IsDeleted || !user.IsActive)
             throw new Exception("User does not exist or has been deactivated.");
 
-        // Step 2: Check confirm password
-        if (request.NewPassword != request.ConfirmPassword)
-            throw new Exception("Confirm password does not match the new password.");
+        // Step 2: Validate password security policy and personal information
+        var personalInfo = new UserPersonalInfo
+        {
+            WorkDayId = user.WorkDayId,
+            FullName = user.FullName,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Email = user.Email,
+            PhoneNumber = user.PhoneNumber
+        };
+
+        var valResult = PasswordValidator.Validate(
+            request.NewPassword,
+            request.ConfirmPassword,
+            null,
+            personalInfo);
+
+        if (!valResult.IsValid)
+            throw new Exception(valResult.ErrorMessage);
 
         // Step 3: Hash new password
         var newHashedPassword = PasswordHelper.HashPassword(request.NewPassword);
@@ -836,6 +868,24 @@ public class UserService : IUserService
             if (user == null || user.IsDeleted || !user.IsActive)
                 throw new Exception("User does not exist or has been deactivated.");
 
+            var personalInfo = new UserPersonalInfo
+            {
+                WorkDayId = user.WorkDayId,
+                FullName = user.FullName,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber
+            };
+
+            var valResult = PasswordValidator.Validate(
+                request.NewPassword,
+                request.ConfirmPassword,
+                null,
+                personalInfo);
+
+            if (!valResult.IsValid)
+                throw new Exception(valResult.ErrorMessage);
             var newHashedPassword = PasswordHelper.HashPassword(request.NewPassword);
             user.PasswordHash = newHashedPassword;
 

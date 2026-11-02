@@ -108,6 +108,7 @@ namespace AquaSolution.Client.Pages.Administration
                 FactoryId = user.FactoryId,
                 PositionId = user.PositionId,
                 IsActive = user.IsActive,
+                HaveKPI = user.HaveKPI,
                 FlowApproval = user.FlowApproval,
                 IsChangeTask = user.IsChangeTask,
                 ChangeTaskMonth = user.ChangeTaskMonth,

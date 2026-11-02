@@ -157,7 +157,7 @@ namespace AquaSolution.Client.Pages.ImgManagements
             {
                 foreach (var img in selected)
                 {
-                    var url = $"/api/Img/thumbnail/{img.FileId}";
+                    var url = $"{Navigation.BaseUri}api/Img/thumbnail/{img.FileId}";
                     await JSRuntime.InvokeVoidAsync("downloadFile", url, img.FileName);
                     // Add a tiny delay to not overwhelm the browser's download queue
                     await Task.Delay(100);

@@ -1,8 +1,9 @@
-﻿@using System.ComponentModel.DataAnnotations
+@using System.ComponentModel.DataAnnotations
 @using AntDesign 
 
 @inject IMessageService Message
 @using AquaSolution.Shared.AuthModels
+@using AquaSolution.Shared.PasswordHelpers
 @inject NavigationManager Nav
 @{
     RenderFragment footer = @<Template>
@@ -16,10 +17,21 @@
 
     </Template>;
 }
-<Modal @bind-Visible="_visible" Title="ChangePassword" Width="600" Footer="@footer">
-    <EditForm  Model="_model" OnValidSubmit="SaveAsync">
+<Modal @bind-Visible="_visible" Title="Change Password" Width="650" Footer="@footer">
+    <Alert Type="@AlertType.Info" ShowIcon="true" Style="margin-bottom: 16px;">
+        <MessageTemplate>
+            <strong>Yêu cầu bảo mật mật khẩu:</strong>
+            <ul style="margin-bottom: 0; padding-left: 20px; font-size: 13px;">
+                <li>Độ dài tối thiểu 10 ký tự.</li>
+                <li>Chứa ít nhất 3 trong 4 nhóm: chữ hoa (A-Z), chữ thường (a-z), chữ số (0-9) và ký tự đặc biệt (!@@#$%^&*...).</li>
+                <li>Không chứa ký tự liên tiếp (123, abc, qwe...), ký tự lặp lại (aaa, 111...) hoặc thông tin cá nhân.</li>
+            </ul>
+        </MessageTemplate>
+    </Alert>
+
+    <EditForm Model="_model" OnValidSubmit="SaveAsync">
         <DataAnnotationsValidator />
-        <Form @ref="@formRef"  TModel="ChangePassRequest" Model="_model" Layout="FormLayout.Horizontal"
+        <Form @ref="@formRef" TModel="ChangePassRequest" Model="_model" Layout="FormLayout.Horizontal"
               LabelColSpan="6" WrapperColSpan="18">
             <ChildContent Context="formCtx">
                 <FormItem Required="true" Label="Old Password">

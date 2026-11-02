@@ -84,6 +84,12 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
                 return new List<HandleActualDto>();
             }
 
+            var targetUser = await _userRepo.GetByIdAsync(userId);
+            if (targetUser != null && !targetUser.HaveKPI)
+            {
+                return new List<HandleActualDto>();
+            }
+
             try
             {
                 var userTasks = await _userTaskepo.GetListAsync(ut => ut.UserId == userId && ut.IsActive);
@@ -319,7 +325,19 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
             int halfYear = month <= 6 ? 1 : 2;
 
             var submitId = Guid.NewGuid();
-            var userId = submitKPIDto.KPITotalScore.FirstOrDefault()?.CreatedBy ?? Guid.Empty;
+            var userId = submitKPIDto.KPITotalScore.FirstOrDefault()?.CreatedBy 
+                ?? submitKPIDto.HandleActual.FirstOrDefault()?.CreatedBy 
+                ?? Guid.Empty;
+
+            if (userId != Guid.Empty)
+            {
+                var user = await _userRepo.GetByIdAsync(userId);
+                if (user != null && !user.HaveKPI)
+                {
+                    throw new InvalidOperationException("Nhân viên không thuộc đối tượng áp dụng đánh giá KPI (HaveKPI = false).");
+                }
+            }
+
             var totalScores = new List<KPITotalScore>();
 
             using var transaction = await _context.Database.BeginTransactionAsync();
@@ -598,11 +616,19 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
 
         public async Task<YearPrecheckResultDto> CheckYearEligibilityAsync(Guid userId, int year)
         {
+            var user = await _userRepo.GetByIdAsync(userId);
             var result = new YearPrecheckResultDto
             {
                 UserId = userId,
                 Year = year
             };
+
+            if (user != null && !user.HaveKPI)
+            {
+                result.IsEligible = false;
+                result.InvalidMonths = Enumerable.Range(1, 11).ToList();
+                return result;
+            }
 
             // 1. Lấy điểm các tháng 1..11 đã duyệt của nhân viên
             var monthlyScores = await _context.tbl_KPITotalScores
@@ -659,6 +685,20 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
             {
                 var dept = await _context.tbl_Departments.AsNoTracking().FirstOrDefaultAsync(d => d.Id == user.DepartmentId.Value);
                 deptName = dept?.Name ?? string.Empty;
+            }
+
+            if (!user.HaveKPI)
+            {
+                return new SpecialPeriodYearResultDto
+                {
+                    UserId = userId,
+                    UserName = user.WorkDayId ?? string.Empty,
+                    UserFullName = user.FullName ?? string.Empty,
+                    DepartmentName = deptName,
+                    Year = year,
+                    IsEligible = false,
+                    ErrorMessage = "Nhân viên không thuộc đối tượng áp dụng đánh giá KPI (HaveKPI = false)."
+                };
             }
 
             var result = new SpecialPeriodYearResultDto
@@ -1676,6 +1716,17 @@ namespace AquaSolution.Server.Services.KPI.KPISubmit
         #region CALCULATE POINT
         public async Task<bool> CalculateQuarterPoint(HandleKPISubmitDto handleKPISubmit)
         {
+            var userId = handleKPISubmit.KPITotalScore.FirstOrDefault()?.CreatedBy
+                ?? handleKPISubmit.HandleActual.FirstOrDefault()?.CreatedBy;
+            if (userId.HasValue && userId.Value != Guid.Empty)
+            {
+                var user = await _userRepo.GetByIdAsync(userId.Value);
+                if (user != null && !user.HaveKPI)
+                {
+                    throw new InvalidOperationException("Nhân viên không thuộc đối tượng áp dụng đánh giá KPI (HaveKPI = false).");
+                }
+            }
+
             var totalScoresInserted = new List<KPITotalScore>();
             var submitId = Guid.NewGuid();
 

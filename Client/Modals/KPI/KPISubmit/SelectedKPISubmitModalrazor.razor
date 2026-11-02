@@ -19,7 +19,7 @@
             </Button>
         if (activeTabKey == "2")
         {
-                <Button Disabled="@(HandleButtonClicked || IsYearIneligible)" OnClick="@SaveAsync" @key="@( "submit" )"
+                <Button Disabled="@(HandleButtonClicked || IsYearIneligible || (CurrenUser != null && !CurrenUser.HaveKPI))" OnClick="@SaveAsync" @key="@( "submit" )"
                         Type="ButtonType.Primary">
                     Submit
                 </Button>
@@ -79,6 +79,10 @@
                     </TabPane>
 
                     <TabPane Key="2">
+                        @if (CurrenUser != null && !CurrenUser.HaveKPI)
+                        {
+                            <Alert Type="@AlertType.Warning" Message="Nhân viên không thuộc đối tượng áp dụng đánh giá KPI" Description="Tài khoản này có HaveKPI = false nên không được phép tính điểm và nộp KPI." ShowIcon="true" Style="margin-bottom: 16px;" />
+                        }
                         @if (IsYearIneligible)
                         {
                             <Alert Type="@AlertType.Error" Message="Không thể nộp KPI Năm" Description="@YearIneligibleMessage" ShowIcon="true" Style="margin-bottom: 16px;" />

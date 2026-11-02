@@ -1,4 +1,5 @@
 using AquaService.Shared.AuthModels;
+using AquaSolution.Shared.PasswordHelpers;
 using Blazored.SessionStorage;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -209,15 +210,16 @@ public partial class Login
 
     private async Task ResetPassword()
     {
-        if (string.IsNullOrWhiteSpace(newPassword) || string.IsNullOrWhiteSpace(confirmPassword))
+        var personalInfo = new UserPersonalInfo
         {
-            await Message.Error("Passwords cannot be blank");
-            return;
-        }
+            WorkDayId = username,
+            Email = resetEmail
+        };
 
-        if (newPassword != confirmPassword)
+        var valResult = PasswordValidator.Validate(newPassword, confirmPassword, null, personalInfo);
+        if (!valResult.IsValid)
         {
-            await Message.Error("Confirm password does not match the new password.");
+            await Message.Error(valResult.ErrorMessage);
             return;
         }
 

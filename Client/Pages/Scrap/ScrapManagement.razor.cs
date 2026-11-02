@@ -67,12 +67,11 @@ namespace AquaSolution.Client.Pages.Scrap
                 {
                     if (CurrenUser.Roles.Any(x => x.Name == "Admin"))
                     {
-
-                        ListHistory = result;
+                        ListHistory = result.OrderByDescending(x => x.CreatedDate).ToList();
                     }
                     else
                     {
-                        ListHistory = result.Where(x => x.CreatedById == CurrenUser.Id).ToList();
+                        ListHistory = result.Where(x => x.CreatedById == CurrenUser.Id).OrderByDescending(x => x.CreatedDate).ToList();
                     }
                 }
             }
@@ -107,6 +106,7 @@ namespace AquaSolution.Client.Pages.Scrap
                 DepartmentName = historyScrap.DepartmentName,
                 SectionId = historyScrap.SectionId,
                 SectionName = historyScrap.SectionName,
+                Responsibility = historyScrap.Responsibility,
                 HistoryDetails = historyScrap.HistoryDetails,
                 Approvals = historyScrap.Approvals
             };

@@ -13,6 +13,8 @@ namespace AquaSolution.Shared.Enum.Scrap
         InterView,
         Approved,
         Rejected,
-        Done
+        Done,
+        WaitingForApproval,
+        WaitingForConfirmation
     }
 }

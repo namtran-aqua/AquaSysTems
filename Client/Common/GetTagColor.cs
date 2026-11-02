@@ -1,4 +1,4 @@
-﻿namespace AquaSolution.Client.Common
+namespace AquaSolution.Client.Common
 {
     public static class GetTagColor
     {
@@ -15,7 +15,8 @@
                 "Approved" => "#389e0d",
                 "Done" => "#2f54eb",       
                 "Rejected" => "#F44336",
-                "WaitingForApproval" => "#FFC107",
+                "WaitingForApproval" => "#1677ff",
+                "WaitingForConfirmation" => "#fa8c16",
                 "InReview" => "#2196F3",
                 "Pending" => "#9E9E9E",
                 _ => "#bfbfbf",

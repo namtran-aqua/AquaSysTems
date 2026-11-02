@@ -135,6 +135,7 @@ namespace AquaSolution.Client.Pages.ToDoList.ApprovalScrap
                 .Where(x =>
                     (string.IsNullOrEmpty(_filterFactory)    || x.FactoryName    == _filterFactory) &&
                     (string.IsNullOrEmpty(_filterDepartment) || x.DepartmentName == _filterDepartment))
+                .OrderByDescending(x => x.CreatedDate)
                 .ToList();
             BuildGroups();
             StateHasChanged();
@@ -168,7 +169,7 @@ namespace AquaSolution.Client.Pages.ToDoList.ApprovalScrap
                     "Rejected"  => 2,
                     _           => 3
                 })
-                .ToDictionary(g => g.Key, g => g.ToList());
+                .ToDictionary(g => g.Key, g => g.OrderByDescending(x => x.CreatedDate).ToList());
         }
 
         private void ToggleGroup(string key)
@@ -202,6 +203,7 @@ namespace AquaSolution.Client.Pages.ToDoList.ApprovalScrap
                 ConfirmAmount = row.ConfirmAmount,
                 ConfirmationStatusType = row.ConfirmationStatusType,
                 Notes = row.Notes,
+                Responsibility = row.Responsibility,
                 HistoryDetails = row.HistoryDetails,
                 Approvals = row.Approvals
             };
