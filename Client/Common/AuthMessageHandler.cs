@@ -1,22 +1,34 @@
-﻿using Blazored.SessionStorage;
+using Blazored.LocalStorage;
+using Blazored.SessionStorage;
 using Microsoft.AspNetCore.Components;
 using System.Net;
 using System.Net.Http.Headers;
+
 namespace AquaSolution.Client.Common;
+
 public class AuthMessageHandler : DelegatingHandler
 {
     private readonly ISessionStorageService _sessionStorage;
+    private readonly ILocalStorageService _localStorage;
     private readonly NavigationManager _navigation;
 
-    public AuthMessageHandler(ISessionStorageService sessionStorage, NavigationManager navigation)
+    public AuthMessageHandler(
+        ISessionStorageService sessionStorage,
+        ILocalStorageService localStorage,
+        NavigationManager navigation)
     {
         _sessionStorage = sessionStorage;
+        _localStorage = localStorage;
         _navigation = navigation;
     }
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        var token = await _sessionStorage.GetItemAsync<string>("authToken");
+        var token = await _localStorage.GetItemAsync<string>("authToken");
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            token = await _sessionStorage.GetItemAsync<string>("authToken");
+        }
 
         if (!string.IsNullOrWhiteSpace(token))
         {
@@ -28,6 +40,7 @@ public class AuthMessageHandler : DelegatingHandler
         // Nếu bị 401 thì chuyển hướng logout
         if (response.StatusCode == HttpStatusCode.Unauthorized)
         {
+            await _localStorage.RemoveItemAsync("authToken");
             await _sessionStorage.RemoveItemAsync("authToken");
             _navigation.NavigateTo("/logout", forceLoad: true); // Redirect để xóa token và chuyển về login
         }

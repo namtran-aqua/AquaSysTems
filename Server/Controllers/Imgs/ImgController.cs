@@ -38,6 +38,7 @@ namespace AquaSolution.Server.Controllers.Imgs
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"[ImgController] GetAllImg Error: {ex}");
                 return BadRequest(ex.Message);
             }
         }
@@ -59,11 +60,14 @@ namespace AquaSolution.Server.Controllers.Imgs
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"[ImgController] GetAllImg Error: {ex}");
                 return BadRequest(ex.Message);
             }
         }
 
         [HttpGet("thumbnail/{fileId}")]
+        [HttpGet("view/{fileId}")]
+        [ResponseCache(Duration = 86400, Location = ResponseCacheLocation.Any)]
         public async Task<IActionResult> GetThumbnail(string fileId)
         {
             if (string.IsNullOrWhiteSpace(fileId))
@@ -72,10 +76,42 @@ namespace AquaSolution.Server.Controllers.Imgs
             try
             {
                 var bytes = await _driveService.GetFileBytesAsync(fileId);
-                return File(bytes, "image/jpeg");
+                if (bytes == null || bytes.Length == 0)
+                    return NotFound("Image not found or empty");
+                var meta = await _driveService.GetFileMetadataAsync(fileId);
+                Response.Headers["Cache-Control"] = "public, max-age=86400";
+                var mimeType = !string.IsNullOrWhiteSpace(meta?.MimeType) ? meta.Value.MimeType : "image/jpeg";
+                return File(bytes, mimeType);
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"[ImgController] GetAllImg Error: {ex}");
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("download/{fileId}")]
+        public async Task<IActionResult> DownloadImage(string fileId)
+        {
+            if (string.IsNullOrWhiteSpace(fileId))
+                return BadRequest("Missing fileId");
+
+            try
+            {
+                var meta = await _driveService.GetFileMetadataAsync(fileId);
+                var bytes = await _driveService.GetFileBytesAsync(fileId);
+                if (bytes == null || bytes.Length == 0)
+                    return NotFound("Image not found or empty");
+
+                var fileName = !string.IsNullOrWhiteSpace(meta?.Name) ? meta.Value.Name : $"{fileId}.jpg";
+                var mimeType = !string.IsNullOrWhiteSpace(meta?.MimeType) ? meta.Value.MimeType : "application/octet-stream";
+
+                return File(bytes, mimeType, fileName);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ImgController] GetAllImg Error: {ex}");
+                Console.WriteLine($"[ImgController] GetAllImg Error: {ex}");
                 return BadRequest(ex.Message);
             }
         }
@@ -90,6 +126,7 @@ namespace AquaSolution.Server.Controllers.Imgs
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"[ImgController] GetAllImg Error: {ex}");
                 return BadRequest(ex.Message);
             }
         }

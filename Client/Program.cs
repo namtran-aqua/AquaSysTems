@@ -1,7 +1,8 @@
-﻿using AquaSolution.Client;
+using AquaSolution.Client;
 using AquaSolution.Client.Common;
 using AquaSolution.Client.Common.GetInitial_helpers;
 using Blazored.SessionStorage;
+using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
@@ -23,6 +24,7 @@ builder.Services.AddScoped(sp =>
 
 // ================= AUTH =================
 builder.Services.AddBlazoredSessionStorage();
+builder.Services.AddBlazoredLocalStorage();
 
 builder.Services.AddAuthorizationCore();
 

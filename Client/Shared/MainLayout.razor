@@ -6,6 +6,7 @@
 @using AquaSolution.Shared.Permissions
 @using AquaSolution.Shared.UserManagements
 @using Blazored.SessionStorage
+@using Blazored.LocalStorage
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Routing
 @using Microsoft.AspNetCore.SignalR.Client
@@ -15,6 +16,7 @@
 @inject HttpClient httpClient
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject ISessionStorageService _sessionStorage
+@inject ILocalStorageService _localStorage
 
 <CascadingAuthenticationState>
     <style>
@@ -147,6 +149,7 @@
 @using AquaSolution.Shared.Permissions
 @using AquaSolution.Shared.UserManagements
 @using Blazored.SessionStorage
+@using Blazored.LocalStorage
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Routing
 @using Microsoft.AspNetCore.SignalR.Client
@@ -156,6 +159,7 @@
 @inject HttpClient httpClient
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject ISessionStorageService _sessionStorage
+@inject ILocalStorageService _localStorage
 
 <CascadingAuthenticationState>
     <style>
