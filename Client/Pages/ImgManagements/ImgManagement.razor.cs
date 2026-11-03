@@ -11,7 +11,6 @@ namespace AquaSolution.Client.Pages.ImgManagements
 {
     public partial class ImgManagement
     {
-
         #region Declaration
         private UserDto? CurrenUser { get; set; }
         private List<GroupImg> images = new();
@@ -19,13 +18,129 @@ namespace AquaSolution.Client.Pages.ImgManagements
         private bool Loading { get; set; }
         [Inject] private HttpClient? Http { get; set; }
         #endregion
+
+        #region Image Preview State
+        private bool isPreviewOpen = false;
+        private GoogleDriveImageDto? previewImage = null;
+        private List<GoogleDriveImageDto> currentFolderImages = new();
+        private int previewIndex = 0;
+        private double zoomLevel = 1.0;
+        private int rotationAngle = 0;
+        private bool isEnhanced = false;
+
+        private void OpenPreview(GoogleDriveImageDto img, List<GoogleDriveImageDto> folderImages)
+        {
+            previewImage = img;
+            currentFolderImages = folderImages;
+            previewIndex = folderImages.IndexOf(img);
+            if (previewIndex < 0) previewIndex = 0;
+            zoomLevel = 1.0;
+            rotationAngle = 0;
+            isEnhanced = false;
+            isPreviewOpen = true;
+        }
+
+        private void ClosePreview()
+        {
+            isPreviewOpen = false;
+            previewImage = null;
+        }
+
+        private void ZoomIn()
+        {
+            if (zoomLevel < 3.0)
+                zoomLevel = Math.Round(zoomLevel + 0.25, 2);
+        }
+
+        private void ZoomOut()
+        {
+            if (zoomLevel > 0.5)
+                zoomLevel = Math.Round(zoomLevel - 0.25, 2);
+        }
+
+        private void ResetZoom()
+        {
+            zoomLevel = 1.0;
+            rotationAngle = 0;
+        }
+
+        private void Rotate()
+        {
+            rotationAngle = (rotationAngle + 90) % 360;
+        }
+
+        private void ToggleEnhance()
+        {
+            isEnhanced = !isEnhanced;
+        }
+
+        private void NextImage()
+        {
+            if (currentFolderImages == null || !currentFolderImages.Any()) return;
+            previewIndex = (previewIndex + 1) % currentFolderImages.Count;
+            previewImage = currentFolderImages[previewIndex];
+            zoomLevel = 1.0;
+            rotationAngle = 0;
+        }
+
+        private void PrevImage()
+        {
+            if (currentFolderImages == null || !currentFolderImages.Any()) return;
+            previewIndex = (previewIndex - 1 + currentFolderImages.Count) % currentFolderImages.Count;
+            previewImage = currentFolderImages[previewIndex];
+            zoomLevel = 1.0;
+            rotationAngle = 0;
+        }
+        #endregion
+
         #region Innit
         protected override async Task OnInitializedAsync()
         {
             await GetCurrentUser();
             await GetIMG();
-
         }
+
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            if (firstRender)
+            {
+                await JSRuntime.InvokeVoidAsync("eval", @"
+                    window.downloadImgFile = async (url, fileName) => {
+                        try {
+                            const res = await fetch(url);
+                            if (!res.ok) {
+                                alert('Không thể tải hình ảnh (Mã lỗi: ' + res.status + '). Vui lòng thử lại!');
+                                return;
+                            }
+                            const blob = await res.blob();
+                            const blobUrl = URL.createObjectURL(blob);
+                            const link = document.createElement('a');
+                            link.href = blobUrl;
+                            link.download = fileName;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+                        } catch (err) {
+                            alert('Lỗi khi tải hình ảnh: ' + err.message);
+                        }
+                    };
+                    window.downloadFile = window.downloadImgFile;
+                ");
+            }
+        }
+
+        public string GetApiUrl(string path)
+        {
+            var baseUri = Navigation.BaseUri.TrimEnd('/');
+            if (Navigation.Uri.IndexOf("/ITSM", StringComparison.OrdinalIgnoreCase) >= 0 &&
+                baseUri.IndexOf("/ITSM", StringComparison.OrdinalIgnoreCase) < 0)
+            {
+                baseUri = $"{baseUri}/ITSM";
+            }
+            return $"{baseUri}/{path.TrimStart('/')}";
+        }
+
         private async Task GetCurrentUser()
         {
             if (Http != null)
@@ -68,7 +183,6 @@ namespace AquaSolution.Client.Pages.ImgManagements
                     }
                 }
 
-
                 Contributors = query.ToList();
             }
             catch (HttpRequestException ex)
@@ -76,8 +190,8 @@ namespace AquaSolution.Client.Pages.ImgManagements
                 Contributors = new List<UserContributerDto>();
                 Console.WriteLine(ex.Message);
             }
-
         }
+
         private async Task GetIMG()
         {
             Loading = true;
@@ -106,6 +220,12 @@ namespace AquaSolution.Client.Pages.ImgManagements
                     })
                     .ToList();
             }
+            catch (Exception ex)
+            {
+                images = new List<GroupImg>();
+                Console.WriteLine($"Error GetIMG: {ex.Message}");
+                await Message.Error($"Lỗi kết nối Google Drive: {ex.Message}");
+            }
             finally
             {
                 Loading = false;
@@ -122,8 +242,8 @@ namespace AquaSolution.Client.Pages.ImgManagements
             }
         }
 
-        private Dictionary<string, IEnumerable<GoogleDriveImageDto>> SelectedMap
-            = new();
+        private Dictionary<string, IEnumerable<GoogleDriveImageDto>> SelectedMap = new();
+
         private async Task DeleteAllImg(string folderName)
         {
             var confirm = await JSRuntime.InvokeAsync<bool>("confirm", "Bạn có chắc chắn muốn xóa không?");
@@ -157,16 +277,23 @@ namespace AquaSolution.Client.Pages.ImgManagements
             {
                 foreach (var img in selected)
                 {
-                    var url = $"{Navigation.BaseUri}api/Img/thumbnail/{img.FileId}";
-                    await JSRuntime.InvokeVoidAsync("downloadFile", url, img.FileName);
+                    var url = GetApiUrl($"api/Img/download/{img.FileId}");
+                    await JSRuntime.InvokeVoidAsync("downloadImgFile", url, img.FileName);
                     // Add a tiny delay to not overwhelm the browser's download queue
-                    await Task.Delay(100);
+                    await Task.Delay(200);
                 }
             }
             else
             {
                 await Message.Warning("Vui lòng chọn ít nhất 1 hình ảnh để tải xuống!");
             }
+        }
+
+        private async Task DownloadSingleImg(GoogleDriveImageDto img)
+        {
+            if (img == null) return;
+            var url = GetApiUrl($"api/Img/download/{img.FileId}");
+            await JSRuntime.InvokeVoidAsync("downloadImgFile", url, img.FileName);
         }
 
         private async Task DeleteInternal(GoogleDriveImageDto row)
@@ -176,8 +303,8 @@ namespace AquaSolution.Client.Pages.ImgManagements
             try
             {
                 var fileId = Uri.EscapeDataString(row.FileId);
-
-                var res = await Http.DeleteAsync($"api/Img/delete?fileId={fileId}");
+                var deleteUrl = GetApiUrl($"api/Img/delete?fileId={fileId}");
+                var res = await Http.DeleteAsync(deleteUrl);
 
                 if (!res.IsSuccessStatusCode)
                 {
@@ -205,7 +332,8 @@ namespace AquaSolution.Client.Pages.ImgManagements
                 Console.WriteLine(ex.Message);
             }
         }
-       private async Task Delete(GoogleDriveImageDto row)
+
+        private async Task Delete(GoogleDriveImageDto row)
         {
             var confirm = await JSRuntime.InvokeAsync<bool>("confirm", "Bạn có chắc chắn muốn xóa không?");
             if (!confirm)

@@ -81,6 +81,7 @@ namespace AquaSolution.Client.Modals.Administration.Users
         private async Task Logout()
         {
             await Http.PostAsync("api/auth/logout", null);
+            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "authToken");
             await JSRuntime.InvokeVoidAsync("sessionStorage.removeItem", "authToken");
             var baseUri = Nav.BaseUri.TrimEnd('/');
             Nav.NavigateTo($"{baseUri}/login", true);

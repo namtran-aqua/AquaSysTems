@@ -13,74 +13,321 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @inject AuthenticationStateProvider AuthStateProvider
 @inject PermissionService permissionService
-<PageTitle>Users</PageTitle>
-<div class="mb-3">
-    <style>
-            .custom-button-type {
-                height: 30px;
-                font-size: 12px;
-            }
+<PageTitle>Image Management</PageTitle>
 
-            .fix-table-header table {
-                border-collapse: collapse;
-            }
+<style>
+    .custom-button-type {
+        height: 30px;
+        font-size: 12px;
+    }
 
-                .fix-table-header table thead th {
-                    position: sticky !important;
-                    z-index: 8 !important;
-                    top: 0;
-                    background-color: #fff;
-                }
+    /* Khung chứa mở rộng toàn màn hình và có thanh cuộn dọc */
+    .img-mgmt-container {
+        width: 100%;
+        height: calc(100vh - 58px);
+        max-height: calc(100vh - 58px);
+        overflow-y: auto !important;
+        overflow-x: hidden;
+        background: #fff;
+        border-radius: 6px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+        display: flex;
+        flex-direction: column;
+    }
 
-            .ant-table-content {
-                min-height: 65vh !important;
-            }
+    .img-mgmt-container::-webkit-scrollbar {
+        width: 8px;
+    }
 
-            .ant-table-pagination {
-                position: fixed;
-                bottom: 0;
-                width: 100%;
-                z-index: 999;
-                background: white;
-                padding: 8px;
-                text-align: center;
-                box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.1);
-                background: transparent !important;
-            }
+    .img-mgmt-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
 
+    .img-mgmt-container::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 4px;
+    }
 
+    .img-mgmt-container::-webkit-scrollbar-thumb:hover {
+        background: #999;
+    }
 
-            .custom-label {
-                background-color: #007bff;
-                color: white;
-                padding: 8px 15px;
-                border-radius: 5px;
-                cursor: pointer;
-                display: inline-block;
-            }
+    .img-mgmt-container .ant-collapse {
+        border: none;
+        background: transparent;
+    }
 
-                .custom-label:hover {
-                    background-color: #0056b3;
-                }
-    </style>
-    <div style="display: flex;  align-items: center; margin-bottom: 10px;">
-    </div>
-</div>
-<script>
-    window.downloadFile = async (url, fileName) => {
-        const res = await fetch(url);
-        const blob = await res.blob();
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    };
-</script>
-<div style="width:100%;overflow-x:scroll ;max-height:70vh; ">
+    .img-mgmt-container .ant-collapse > .ant-collapse-item {
+        border-bottom: 1px solid #e8e8e8;
+    }
 
-    
+    /* 1. GHIM TIÊU ĐỀ FOLDER LÊN ĐẦU (Sticky top = 0) */
+    .img-mgmt-container .ant-collapse > .ant-collapse-item > .ant-collapse-header {
+        position: sticky !important;
+        top: 0;
+        z-index: 30 !important;
+        background: #f0f2f5 !important;
+        border-bottom: 1px solid #d9d9d9 !important;
+        font-weight: 600;
+        font-size: 14px;
+        padding: 12px 16px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        cursor: pointer;
+    }
+
+    /* 2. GHIM THANH CÔNG CỤ (Download Selected / Delete All) (Sticky top = 46px) */
+    .panel-toolbar {
+        position: sticky !important;
+        top: 46px;
+        z-index: 25 !important;
+        background: #fff !important;
+        padding: 10px 16px;
+        border-bottom: 1px solid #e8e8e8;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+    }
+
+    /* 3. GHIM TIÊU ĐỀ BẢNG (Action, Image, File Name, Size, Uploaded At) (Sticky top = 96px) */
+    .fix-table-header table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    .fix-table-header table thead th {
+        position: sticky !important;
+        top: 96px !important;
+        z-index: 20 !important;
+        background-color: #fafafa !important;
+        border-bottom: 1px solid #e8e8e8 !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Mở rộng nội dung bảng không bị cắt xén hay bóp chiều cao */
+    .ant-collapse-content,
+    .ant-collapse-content-box {
+        overflow: visible !important;
+        padding: 0 !important;
+    }
+
+    .ant-table-content {
+        min-height: unset !important;
+        overflow: visible !important;
+    }
+
+    .table-img-card {
+        position: relative;
+        width: 140px;
+        height: 110px;
+        margin: 0 auto;
+        cursor: pointer;
+        border-radius: 6px;
+        overflow: hidden;
+        border: 1px solid #d9d9d9;
+        background: #fafafa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .table-img-card:hover {
+        border-color: #1890ff;
+        box-shadow: 0 2px 8px rgba(24, 144, 255, 0.25);
+    }
+
+    .table-img-card img {
+        max-width: 140px;
+        max-height: 110px;
+        object-fit: contain;
+        image-rendering: -webkit-optimize-contrast;
+    }
+
+    .table-img-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.38);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 11px;
+        gap: 3px;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+
+    .table-img-card:hover .table-img-overlay {
+        opacity: 1;
+    }
+
+    /* Lightbox Modal */
+    .image-preview-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        background: rgba(10, 10, 12, 0.94);
+        display: flex;
+        flex-direction: column;
+        user-select: none;
+        backdrop-filter: blur(4px);
+    }
+
+    .image-preview-toolbar {
+        height: 52px;
+        background: rgba(25, 25, 28, 0.95);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 16px;
+        color: #fff;
+        z-index: 2;
+    }
+
+    .preview-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        overflow: hidden;
+    }
+
+    .preview-filename {
+        font-weight: 500;
+        font-size: 14px;
+        max-width: 320px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .preview-counter, .preview-size {
+        font-size: 12px;
+        color: #aaa;
+    }
+
+    .preview-controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .preview-btn {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: #fff;
+        border-radius: 4px;
+        padding: 5px 11px;
+        font-size: 13px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        transition: background 0.2s, border-color 0.2s;
+        text-decoration: none;
+    }
+
+    .preview-btn:hover {
+        background: rgba(255, 255, 255, 0.22);
+        color: #fff;
+    }
+
+    .preview-btn.active-enhance {
+        background: #1890ff;
+        border-color: #1890ff;
+        color: #fff;
+        font-weight: 600;
+    }
+
+    .preview-btn-download {
+        background: #52c41a;
+        border-color: #52c41a;
+    }
+    .preview-btn-download:hover {
+        background: #73d13d;
+    }
+
+    .preview-btn-close {
+        background: #ff4d4f;
+        border-color: #ff4d4f;
+    }
+    .preview-btn-close:hover {
+        background: #ff7875;
+    }
+
+    .preview-zoom-label {
+        font-size: 13px;
+        color: #ddd;
+        min-width: 48px;
+        text-align: center;
+        cursor: pointer;
+    }
+
+    .image-preview-body {
+        flex: 1;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    .image-preview-stage {
+        max-width: 90vw;
+        max-height: calc(100vh - 80px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    .preview-main-img {
+        max-width: 90vw;
+        max-height: calc(100vh - 80px);
+        object-fit: contain;
+        transition: transform 0.2s ease, filter 0.2s ease;
+        image-rendering: -webkit-optimize-contrast;
+        border-radius: 4px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.7);
+    }
+
+    .preview-nav-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(0, 0, 0, 0.5);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        width: 48px;
+        height: 64px;
+        border-radius: 6px;
+        font-size: 22px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+        z-index: 10;
+    }
+
+    .preview-nav-btn:hover {
+        background: rgba(0, 0, 0, 0.85);
+    }
+
+    .nav-prev {
+        left: 20px;
+    }
+
+    .nav-next {
+        right: 20px;
+    }
+</style>
+
+<div class="img-mgmt-container">
+
     @if (Loading)
     {
         <div class="loading-overlay">
@@ -90,19 +337,22 @@
     else
     {
         <Collapse Accordion="true">
-     
             @foreach (var group in images)
             {
                 <Panel Header="@($"{group.FolderName} ({group.GoogleDriveImageDtos.Count})")">
-                    @if (CurrenUser.Roles.Any(x => x.Name == "Admin"))
-                    {
-                        <Button OnClick="@(async () => await DeleteAllImg(group.FolderName))">
-                            <Icon Type="delete" /> Delete All
+                    <!-- Thanh công cụ hành động ghim trên đầu -->
+                    <div class="panel-toolbar">
+                        @if (CurrenUser.Roles.Any(x => x.Name == "Admin"))
+                        {
+                            <Button Danger OnClick="@(async () => await DeleteAllImg(group.FolderName))">
+                                <Icon Type="delete" /> Delete All
+                            </Button>
+                        }
+                        <Button Type="ButtonType.Primary" OnClick="@(async () => await DownloadSelectedImg(group.FolderName))" Style="margin-left: 8px;">
+                            <Icon Type="download" /> Download Selected
                         </Button>
-                    }
-                    <Button OnClick="@(async () => await DownloadSelectedImg(group.FolderName))" Style="margin-left: 8px;">
-                        <Icon Type="download" /> Download Selected
-                    </Button>
+                    </div>
+
                     @if (!SelectedMap.ContainsKey(group.FolderName))
                     {
                         SelectedMap[group.FolderName] = new List<GoogleDriveImageDto>();
@@ -118,40 +368,46 @@
                            HidePagination
                            Loading="@Loading"
                            Class="customTable fix-table-header">
-                       
+
                         <ColumnDefinitions Context="row">
                             <Selection></Selection>
                             <!-- Action -->
-                            <Column Align="ColumnAlign.Center" TData="GoogleDriveImageDto" Width="50px" Title="Action">
-                                @if (CurrenUser.Roles.Any(x => x.Name == "Admin"))
-                                {
-                                    <Template Style="gap:5px">
-                                        <ActionColumn>
-                                            <Button Type="ButtonType.Text" OnClick="@(async () => await Delete(row))" Style="text-align: left;">
-                                                <Icon Type="delete" /> Delete
-                                            </Button>
-                                        </ActionColumn>
-                                    </Template>
-                                }
+                            <Column Align="ColumnAlign.Center" TData="GoogleDriveImageDto" Width="95px" Title="Action">
                                 <Template Style="gap:5px">
                                     <ActionColumn>
-                                        <a href="@($"{Navigation.BaseUri}api/Img/thumbnail/{row.FileId}")" target="_blank" style="width:500px;height:500px;">
-                                            👁View
-                                        </a>
+                                        <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-start;">
+                                            <a href="javascript:void(0)" @onclick="@(() => OpenPreview(row, group.GoogleDriveImageDtos))" style="color: #1890ff; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                                                <Icon Type="eye" /> Xem ảnh
+                                            </a>
+                                            <a href="javascript:void(0)" @onclick="@(async () => await DownloadSingleImg(row))" style="color: #52c41a; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                                                <Icon Type="download" /> Tải về
+                                            </a>
+                                            @if (CurrenUser.Roles.Any(x => x.Name == "Admin"))
+                                            {
+                                                <a href="javascript:void(0)" @onclick="@(async () => await Delete(row))" style="color: #ff4d4f; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                                                    <Icon Type="delete" /> Xóa
+                                                </a>
+                                            }
+                                        </div>
                                     </ActionColumn>
-              
                                 </Template>
-                               
                             </Column>
                             <!-- Ảnh -->
-                            <Column Align="ColumnAlign.Center" TData="GoogleDriveImageDto" Width="170px" Title="Image">
+                            <Column Align="ColumnAlign.Center" TData="GoogleDriveImageDto" Width="160px" Title="Image">
                                 <Template>
-                                    <img src="@(string.IsNullOrEmpty(row.ThumbnailLink) ? $"{Navigation.BaseUri}api/Img/thumbnail/{row.FileId}" : row.ThumbnailLink)"
-                                         style="width:100px;height:100px;object-fit:cover;border-radius:4px;"
-                                         loading="lazy" />
+                                    <div class="table-img-card"
+                                         @onclick="@(() => OpenPreview(row, group.GoogleDriveImageDtos))"
+                                         title="Bấm để xem ảnh phóng to, xoay và tăng độ nét">
+                                        <img src="@($"{GetApiUrl($"api/Img/thumbnail/{row.FileId}")}?v={row.CreatedTime?.Ticks}")"
+                                             loading="lazy"
+                                             alt="@row.FileName" />
+                                        <div class="table-img-overlay">
+                                            <Icon Type="zoom-in" Style="font-size: 20px;" />
+                                            <span>Phóng to</span>
+                                        </div>
+                                    </div>
                                 </Template>
                             </Column>
-
 
                             <PropertyColumn Align="ColumnAlign.Center" Width="200px"
                                             Title="File Name"
@@ -177,6 +433,71 @@
             }
         </Collapse>
     }
-
-    
 </div>
+
+@* Lightbox Modal Xem Ảnh Sắc Nét *@
+@if (isPreviewOpen && previewImage != null)
+{
+    <div class="image-preview-backdrop" @onclick="ClosePreview">
+        <!-- Toolbar -->
+        <div class="image-preview-toolbar" @onclick:stopPropagation>
+            <div class="preview-info">
+                <span class="preview-filename">@previewImage.FileName</span>
+                <span class="preview-counter">(@(previewIndex + 1) / @currentFolderImages.Count)</span>
+                @if (previewImage.FileSize.HasValue)
+                {
+                    <span class="preview-size">@(Math.Round((double)previewImage.FileSize.Value / 1024, 1)) KB</span>
+                }
+            </div>
+
+            <div class="preview-controls">
+                <button type="button" class="preview-btn" @onclick="ZoomOut" title="Thu nhỏ (-)">
+                    <Icon Type="zoom-out" />
+                </button>
+                <span class="preview-zoom-label" @onclick="ResetZoom" title="Đặt lại 100%">@(Math.Round(zoomLevel * 100))%</span>
+                <button type="button" class="preview-btn" @onclick="ZoomIn" title="Phóng to (+)">
+                    <Icon Type="zoom-in" />
+                </button>
+                <button type="button" class="preview-btn" @onclick="Rotate" title="Xoay ảnh 90°">
+                    <Icon Type="redo" /> Xoay
+                </button>
+                <button type="button" class="preview-btn @(isEnhanced ? "active-enhance" : "")" @onclick="ToggleEnhance" title="Tăng độ nét & tương phản">
+                    <Icon Type="bulb" /> @(isEnhanced ? "Độ nét: Bật" : "Độ nét: Chuẩn")
+                </button>
+                <button type="button" class="preview-btn preview-btn-download" @onclick="@(async () => await DownloadSingleImg(previewImage))" title="Tải ảnh gốc">
+                    <Icon Type="download" /> Tải về
+                </button>
+                <a href="@GetApiUrl($"api/Img/thumbnail/{previewImage.FileId}")" target="_blank" class="preview-btn" title="Mở trong tab mới">
+                    <Icon Type="export" />
+                </a>
+                <button type="button" class="preview-btn preview-btn-close" @onclick="ClosePreview" title="Đóng (Esc)">
+                    <Icon Type="close" />
+                </button>
+            </div>
+        </div>
+
+        <!-- Image Content Area -->
+        <div class="image-preview-body" @onclick:stopPropagation>
+            @if (currentFolderImages.Count > 1)
+            {
+                <button type="button" class="preview-nav-btn nav-prev" @onclick="PrevImage" title="Ảnh trước">
+                    <Icon Type="left" />
+                </button>
+            }
+
+            <div class="image-preview-stage">
+                <img src="@($"{GetApiUrl($"api/Img/thumbnail/{previewImage.FileId}")}?v={previewImage.CreatedTime?.Ticks}")"
+                     class="preview-main-img"
+                     style="transform: scale(@zoomLevel) rotate(@(rotationAngle)deg); filter: @(isEnhanced ? "contrast(1.35) brightness(1.03) saturate(1.15)" : "none");"
+                     alt="@previewImage.FileName" />
+            </div>
+
+            @if (currentFolderImages.Count > 1)
+            {
+                <button type="button" class="preview-nav-btn nav-next" @onclick="NextImage" title="Ảnh sau">
+                    <Icon Type="right" />
+                </button>
+            }
+        </div>
+    </div>
+}

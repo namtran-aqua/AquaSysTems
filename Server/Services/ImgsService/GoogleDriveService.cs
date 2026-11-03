@@ -218,6 +218,9 @@ namespace AquaSolution.Server.Services.ImgsService
                         {
                             if (file.MimeType != null && file.MimeType.StartsWith("image/"))
                             {
+                                var metaKey = $"DriveMeta_{file.Id}";
+                                _cache.Set(metaKey, (file.Name, file.MimeType, file.Size), TimeSpan.FromHours(24));
+
                                 folderResult.Add(new GoogleDriveImageDto
                                 {
                                     FileId = file.Id,
@@ -226,7 +229,9 @@ namespace AquaSolution.Server.Services.ImgsService
                                     FolderName = folder.Value,
                                     FileSize = file.Size,
                                     CreatedTime = file.CreatedTimeDateTimeOffset?.AddHours(7).DateTime,
-                                    ThumbnailLink = file.ThumbnailLink
+                                    ThumbnailLink = !string.IsNullOrEmpty(file.ThumbnailLink)
+                                        ? file.ThumbnailLink.Replace("=s220", "=s1200")
+                                        : null
                                 });
                             }
                         }
@@ -248,22 +253,53 @@ namespace AquaSolution.Server.Services.ImgsService
 
         public async Task<byte[]> GetFileBytesAsync(string fileId)
         {
+            var cacheKey = $"DriveImage_{fileId}";
+            if (_cache.TryGetValue(cacheKey, out byte[]? cachedBytes) && cachedBytes != null)
+            {
+                return cachedBytes;
+            }
+
             var service = GetDriveService();
             var request = service.Files.Get(fileId);
             using var memoryStream = new MemoryStream();
-            await request.DownloadAsync(memoryStream);
-            return memoryStream.ToArray();
+            var progress = await request.DownloadAsync(memoryStream);
+
+            if (progress.Status == Google.Apis.Download.DownloadStatus.Failed)
+            {
+                throw new Exception($"Không thể tải hình ảnh từ Google Drive: {progress.Exception?.Message ?? "Lỗi không xác định"}");
+            }
+
+            var bytes = memoryStream.ToArray();
+            if (bytes != null && bytes.Length > 0)
+            {
+                var cacheOptions = new MemoryCacheEntryOptions()
+                    .SetSlidingExpiration(TimeSpan.FromHours(2))
+                    .SetAbsoluteExpiration(TimeSpan.FromHours(24));
+                _cache.Set(cacheKey, bytes, cacheOptions);
+            }
+            return bytes;
         }
 
         public async Task<(string Name, string MimeType, long? Size)?> GetFileMetadataAsync(string fileId)
         {
+            var cacheKey = $"DriveMeta_{fileId}";
+            if (_cache.TryGetValue(cacheKey, out (string Name, string MimeType, long? Size)? cachedMeta) && cachedMeta != null)
+            {
+                return cachedMeta;
+            }
+
             try
             {
                 var service = GetDriveService();
                 var request = service.Files.Get(fileId);
                 request.Fields = "id, name, mimeType, size";
                 var file = await request.ExecuteAsync();
-                return (file.Name, file.MimeType, file.Size);
+                var meta = (file.Name, file.MimeType, file.Size);
+                var cacheOptions = new MemoryCacheEntryOptions()
+                    .SetSlidingExpiration(TimeSpan.FromHours(2))
+                    .SetAbsoluteExpiration(TimeSpan.FromHours(24));
+                _cache.Set(cacheKey, meta, cacheOptions);
+                return meta;
             }
             catch (Exception ex)
             {
@@ -279,6 +315,8 @@ namespace AquaSolution.Server.Services.ImgsService
                 var service = GetDriveService();
                 await service.Files.Delete(fileId).ExecuteAsync();
                 _cache.Remove("GoogleDrive_AllImages");
+                _cache.Remove($"DriveImage_{fileId}");
+                _cache.Remove($"DriveMeta_{fileId}");
                 return true;
             }
             catch

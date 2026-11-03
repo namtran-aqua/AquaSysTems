@@ -1,5 +1,6 @@
 using AquaService.Shared.AuthModels;
 using AquaSolution.Shared.PasswordHelpers;
+using Blazored.LocalStorage;
 using Blazored.SessionStorage;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -23,6 +24,7 @@ public partial class Login
     [Inject] private CustomAuthenticationStateProvider AuthProvider { get; set; }
     [Inject] private NavigationManager Nav { get; set; }
     [Inject] private ISessionStorageService _sessionStorage { get; set; }
+    [Inject] private ILocalStorageService _localStorage { get; set; }
     
     private string username { get; set; }
     private string password { get; set; }
@@ -77,6 +79,7 @@ public partial class Login
         var token = handler.ReadJwtToken(content["token"]);
         var claims = token.Claims.ToList();
 
+        await _localStorage.SetItemAsync("authToken", content["token"]);
         await _sessionStorage.SetItemAsync("authToken", content["token"]);
         AuthProvider.MarkUserAsAuthenticated(username, claims);
 

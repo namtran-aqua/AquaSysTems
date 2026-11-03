@@ -1,3 +1,4 @@
+using Blazored.LocalStorage;
 using Blazored.SessionStorage;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -7,17 +8,27 @@ using System.Security.Claims;
 public class CustomAuthenticationStateProvider : AuthenticationStateProvider
 {
     private readonly ISessionStorageService _sessionStorage;
+    private readonly ILocalStorageService _localStorage;
     private readonly NavigationManager _navigation;
 
-    public CustomAuthenticationStateProvider(ISessionStorageService sessionStorage, NavigationManager navigation)
+    public CustomAuthenticationStateProvider(
+        ISessionStorageService sessionStorage,
+        ILocalStorageService localStorage,
+        NavigationManager navigation)
     {
         _sessionStorage = sessionStorage;
+        _localStorage = localStorage;
         _navigation = navigation;
     }
 
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
-        var token = await _sessionStorage.GetItemAsync<string>("authToken");
+        var token = await _localStorage.GetItemAsync<string>("authToken");
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            token = await _sessionStorage.GetItemAsync<string>("authToken");
+        }
+
         var currentUri = _navigation.Uri;
 
         bool isPublicPage = currentUri.Contains("/login", StringComparison.OrdinalIgnoreCase) ||
@@ -39,6 +50,7 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
 
             if (jwt.ValidTo < DateTime.UtcNow)
             {
+                await _localStorage.RemoveItemAsync("authToken");
                 await _sessionStorage.RemoveItemAsync("authToken");
                 if (!isPublicPage)
                 {
@@ -54,6 +66,8 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
         }
         catch
         {
+            await _localStorage.RemoveItemAsync("authToken");
+            await _sessionStorage.RemoveItemAsync("authToken");
             if (!isPublicPage)
             {
                 _navigation.NavigateTo($"{_navigation.BaseUri}login", forceLoad: false);

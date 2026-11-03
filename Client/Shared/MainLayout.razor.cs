@@ -1,4 +1,4 @@
-﻿using AquaSolution.Shared.Menus;
+using AquaSolution.Shared.Menus;
 using AquaSolution.Shared.UserManagements;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -33,7 +33,11 @@ namespace AquaSolution.Client.Shared
 
             _hubConnection.On("ReloadMenu", async () =>
             {
-                var token = await _sessionStorage.GetItemAsync<string>("authToken");
+                var token = await _localStorage.GetItemAsync<string>("authToken");
+                if (string.IsNullOrEmpty(token))
+                {
+                    token = await _sessionStorage.GetItemAsync<string>("authToken");
+                }
                 if (!string.IsNullOrEmpty(token))
                 {
                     try
@@ -51,7 +55,11 @@ namespace AquaSolution.Client.Shared
 
         private async Task CheckTokenExpired()
         {
-            var token = await _sessionStorage.GetItemAsync<string>("authToken");
+            var token = await _localStorage.GetItemAsync<string>("authToken");
+            if (string.IsNullOrEmpty(token))
+            {
+                token = await _sessionStorage.GetItemAsync<string>("authToken");
+            }
             if (string.IsNullOrEmpty(token)) return;
 
             JwtSecurityToken jwt;
@@ -73,6 +81,7 @@ namespace AquaSolution.Client.Shared
 
         private async Task LogoutUser()
         {
+            await _localStorage.RemoveItemAsync("authToken");
             await _sessionStorage.RemoveItemAsync("authToken");
             await Http.PostAsync("api/auth/logout", null);
             //NavigationManager.NavigateTo("/login"); // không reload toàn trang

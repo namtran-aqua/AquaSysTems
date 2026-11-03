@@ -15,6 +15,7 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // ===================== MVC + API =====================
+builder.Services.AddMemoryCache();
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 builder.Services.AddControllers()
@@ -41,7 +42,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes("VerySecretKey12345"))
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "ThisIsASuperSecretJwtKeyThatIsAtLeast32Chars!"))
         };
     });
 builder.Services.AddAuthorization();

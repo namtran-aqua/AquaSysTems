@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="AntDesign.ProLayout" Version="1.1.2" />
+    <PackageReference Include="Blazored.LocalStorage" Version="2.4.0" />
     <PackageReference Include="Blazored.SessionStorage" Version="2.4.0" />
     <PackageReference Include="DeepCloner" Version="0.10.4" />
     <PackageReference Include="EPPlus" Version="7.4.0" />

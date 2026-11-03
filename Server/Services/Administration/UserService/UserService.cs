@@ -130,7 +130,7 @@ public class UserService : IUserService
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            var expires = DateTime.UtcNow.AddMinutes(60);
+            var expires = GetNextMidnightUtc();
             var token = new JwtSecurityToken(
                 claims: claims,
                 expires: expires,
@@ -148,7 +148,24 @@ public class UserService : IUserService
             throw;
         }
     }
-    public async Task<UserDto?> GetCurrentUserAsync(Guid userId)
+        /// <summary>
+    /// Tính toán thời điểm hết hạn phiên đăng nhập vào nửa đêm (00:00:00) theo giờ Việt Nam (UTC+7).
+    /// Người dùng đăng nhập 1 lần sẽ dùng được cho cả ngày đến hết ngày hôm đó.
+    /// Nếu đăng nhập sát nửa đêm (trong vòng 60 phút trước 00:00), phiên sẽ duy trì đến nửa đêm hôm sau.
+    /// </summary>
+    private static DateTime GetNextMidnightUtc()
+    {
+        var nowVn = DateTime.UtcNow.AddHours(7);
+        var nextMidnightVn = nowVn.Date.AddDays(1);
+
+        if ((nextMidnightVn - nowVn).TotalMinutes < 60)
+        {
+            nextMidnightVn = nextMidnightVn.AddDays(1);
+        }
+
+        return nextMidnightVn.AddHours(-7);
+    }
+public async Task<UserDto?> GetCurrentUserAsync(Guid userId)
     {
         try
         {
